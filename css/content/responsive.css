@@ -1,0 +1,332 @@
+/* ═══════════════════════════════════════════════════════
+   responsive.css
+   Responsive overrides for content pages.
+   No scrollbars — all content must fit the visible board.
+═══════════════════════════════════════════════════════ */
+
+/* ── Tablet landscape: 768px – 1023px ────────────────── */
+
+@media (max-width: 1023px) {
+  .cp-welcome {
+    padding: clamp(8px, 1.5vh, 20px) clamp(16px, 3.5vw, 40px);
+  }
+
+  .cp-title {
+    font-size: clamp(18px, 2.8vw, 32px);
+  }
+
+  .cp-number-card {
+    font-size: clamp(12px, 1.6vw, 22px);
+    padding: clamp(8px, 1.2vh, 16px) clamp(6px, 1vw, 14px);
+  }
+
+  /* Page 2 */
+  .cp-compare,
+  .cp-layer-reveal {
+    padding: clamp(8px, 1.3vh, 16px) clamp(14px, 3vw, 36px);
+  }
+
+  .cp-num-card__value {
+    font-size: clamp(16px, 2.2vw, 30px);
+  }
+}
+
+/* ── Portrait / small tablet: ≤ 767px ────────────────── */
+
+@media (max-width: 767px) {
+  .cp-welcome {
+    padding: 10px 12px;
+    justify-content: space-evenly;
+  }
+
+  .cp-title {
+    font-size: clamp(17px, 4.5vw, 26px);
+  }
+
+  .cp-subtitle,
+  .cp-note {
+    font-size: clamp(11px, 2.8vw, 14px);
+  }
+
+  .cp-prompt {
+    font-size: clamp(12px, 3vw, 15px);
+  }
+
+  /* 4 cards still in one row, just smaller */
+  .cp-number-card {
+    font-size: clamp(11px, 3vw, 16px);
+    padding: 10px 6px;
+  }
+
+  .cp-btn-primary {
+    width: 100%;
+    max-width: 320px;
+    font-size: clamp(13px, 3.5vw, 16px);
+    padding: 10px 20px;
+  }
+
+  /* Page 2 */
+  .cp-compare,
+  .cp-layer-reveal {
+    padding: 8px 12px;
+  }
+
+  .cp-num-card__value {
+    font-size: clamp(16px, 4.5vw, 24px);
+  }
+
+  .cp-number-pair--compact .cp-num-card__value {
+    font-size: clamp(14px, 3.8vw, 20px);
+  }
+
+  .cp-reveal-cards {
+    gap: 6px;
+  }
+
+  .cp-reveal-card__title {
+    font-size: clamp(13px, 3.8vw, 18px);
+  }
+
+  .cp-prompt-banner {
+    font-size: clamp(14px, 3.5vw, 18px);
+    padding: 10px 14px;
+  }
+}
+
+/* ── Very small phones: ≤ 480px ──────────────────────── */
+
+@media (max-width: 480px) {
+  /* Welcome: allow 2 × 2 only at the smallest size */
+  .cp-number-cards {
+    flex-wrap: wrap;
+  }
+
+  .cp-number-card {
+    flex: 0 0 calc(50% - 6px);
+    font-size: clamp(13px, 4vw, 18px);
+    padding: 10px 8px;
+    white-space: nowrap;
+  }
+
+  .cp-title {
+    font-size: clamp(15px, 5vw, 22px);
+  }
+
+  /* Page 2: tighter grid cells */
+  .cp-grid__cell {
+    font-size: 11px;
+    padding: 5px 2px;
+    border-radius: 5px;
+  }
+
+  .cp-grid__table {
+    gap: 2px;
+  }
+
+  /* Reveal cards: stack to 2 per row on the narrowest screens */
+  .cp-reveal-cards {
+    flex-wrap: wrap;
+  }
+
+  .cp-reveal-card {
+    flex: 0 0 calc(50% - 4px);
+  }
+
+  /* Winner card always full width at 480px so it reads clearly */
+  .cp-reveal-card--winner {
+    flex: 1 0 100%;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Section 5 — Staircase / Hint / Drag / Completion / Pattern
+═══════════════════════════════════════════════════════ */
+
+@media (max-width: 1023px) {
+  .cp-staircase__step {
+    min-width: clamp(64px, 12vw, 110px);
+  }
+
+  .cp-ds-tile,
+  .cp-ds-slot {
+    min-width: clamp(80px, 14vw, 130px);
+  }
+}
+
+@media (max-width: 767px) {
+  .cp-hint-card__text {
+    font-size: clamp(26px, 6vw, 48px);
+  }
+
+  .cp-staircase__steps {
+    gap: 8px;
+  }
+
+  .cp-staircase__step {
+    min-width: clamp(56px, 13vw, 90px);
+  }
+
+  .cp-staircase__step-value {
+    font-size: clamp(11px, 2.8vw, 16px);
+  }
+
+  .cp-ds-tiles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .cp-ds-tile-placeholder {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .cp-ds-tile {
+    min-width: unset;
+    width: 100%;
+    min-height: clamp(52px, 9vh, 80px);
+    font-size: clamp(15px, 4vw, 22px);
+  }
+
+  .cp-ds-slots {
+    gap: 8px;
+  }
+
+  .cp-ds-slot {
+    min-height: clamp(68px, 10vh, 100px);
+  }
+
+  .cp-ds-slot__label {
+    font-size: clamp(9px, 2.5vw, 12px);
+  }
+
+  .cp-cr-tiles {
+    gap: 10px;
+  }
+
+  .cp-cr-tile {
+    min-width: clamp(80px, 14vw, 130px);
+    font-size: clamp(14px, 4vw, 22px);
+  }
+
+  .cp-ap-compare-row {
+    gap: 12px;
+  }
+
+  .cp-ap-digit {
+    font-size: clamp(18px, 5vw, 36px);
+  }
+}
+
+@media (max-width: 480px) {
+  .cp-ds-slots {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .cp-ds-slot {
+    flex-direction: row;
+    justify-content: flex-start;
+    min-height: clamp(52px, 8vh, 72px);
+    padding-left: 12px;
+    gap: 10px;
+    max-width: unset;
+  }
+
+  .cp-ap-num-card {
+    padding: 12px 14px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Section 7 — Architect / Digit-Place / Greatest
+═══════════════════════════════════════════════════════ */
+
+@media (max-width: 1023px) {
+  .cp-dp-tile,
+  .cp-dp-tile-placeholder {
+    width: clamp(48px, 7vw, 80px);
+    height: clamp(48px, 6vh, 74px);
+  }
+
+  .cp-dp-slot {
+    min-width: clamp(48px, 7vw, 80px);
+  }
+}
+
+@media (max-width: 767px) {
+  .cp-dp-tile {
+    font-size: clamp(20px, 5vw, 36px);
+  }
+
+  .cp-architect-icon {
+    font-size: clamp(36px, 9vw, 64px);
+  }
+
+  .cp-nlr-number {
+    font-size: clamp(32px, 8vw, 72px);
+  }
+
+  .cp-gp-digit {
+    width: clamp(36px, 9vw, 64px);
+    height: clamp(36px, 7vh, 60px);
+    font-size: clamp(16px, 4.5vw, 36px);
+  }
+}
+
+@media (max-width: 480px) {
+  .cp-dp-tiles,
+  .cp-dp-slots {
+    gap: 5px;
+  }
+
+  .cp-dp-tile,
+  .cp-dp-tile-placeholder {
+    width: clamp(40px, 12vw, 60px);
+    height: clamp(40px, 8vh, 56px);
+  }
+
+  .cp-dp-tile {
+    font-size: clamp(18px, 5.5vw, 28px);
+  }
+
+  .cp-dp-slot {
+    min-width: clamp(40px, 12vw, 60px);
+    min-height: clamp(56px, 9vh, 72px);
+  }
+
+  .cp-architect-boxes {
+    gap: 4px;
+  }
+
+  .cp-architect-box {
+    width: clamp(30px, 8vw, 48px);
+    height: clamp(30px, 6vh, 44px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Section 6 — Staircase Flip / Flip Rule Card
+═══════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  .cp-frc-rules {
+    gap: 12px;
+  }
+
+  .cp-frc-rule {
+    min-width: clamp(100px, 35vw, 150px);
+    padding: 12px 14px;
+  }
+
+  .cp-frc-rule__icon {
+    font-size: clamp(28px, 7vw, 48px);
+  }
+}
+
+@media (max-width: 480px) {
+  .cp-frc-rules {
+    gap: 8px;
+  }
+}

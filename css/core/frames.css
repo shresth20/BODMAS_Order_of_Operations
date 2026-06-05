@@ -1,0 +1,64 @@
+/* ═══════════════════════════════════════════════════════════
+   FRAMES — Layout configurations for the game
+   frame--1: Explanation Frame  (transparent board, single-column)
+   frame--2: Question / Activity Frame  (standard white board)
+   Frame is set programmatically per slide — no user-facing switcher.
+   ═══════════════════════════════════════════════════════════ */
+
+
+/* ══════════════════════════════════
+   FRAME 01 — Explanation Frame
+   Transparent board, single-column.
+   Used for: intro slides, rule reveals, skill-unlocked cards,
+   insight-reveal flows, descending-rule explainer, session summary.
+   ══════════════════════════════════ */
+body.frame--1 #board {
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+
+/* ══════════════════════════════════
+   FRAME 02 — Question / Activity Frame
+   Standard centered white board.
+   Used for: comparison grids, timer challenges, MCQs,
+   drag-and-drop ordering, digit-tile arrangement, rapid practice.
+   ══════════════════════════════════ */
+/* Deco layer fades out in activity frame */
+.layer-deco {
+  transition: opacity 300ms ease;
+}
+
+body.frame--2 .layer-deco {
+  pointer-events: none;
+}
+
+body.frame--2 .board-container {
+  gap: 0;
+}
+
+body.frame--2 #board {
+  background: var(--color-board);
+  border: 2px solid var(--color-border);
+  border-radius: var(--board-radius);
+}
+
+/* Decoration positions for frame--2 */
+body.frame--2 .deco--times3-tl  { top: 9.5vh;  left: 3vw; }
+body.frame--2 .deco--pencil     { top: 15.5vh; left: 2vw; }
+body.frame--2 .deco--times-grn-l{ top: 15vh;   left: 12.5vw; }
+body.frame--2 .deco--eq-red-l   { top: 28vh;   left: 11vw; }
+body.frame--2 .deco--half-l     { top: 30vh;   left: 5vw; }
+
+body.frame--2 .deco--half-r     { top: 10vh;  right: 17.5vw; }
+body.frame--2 .deco--bodmas     { top: 12vh;  right: 6.5vw; }
+body.frame--2 .deco--times-grn  { top: 13vh;  right: 5vw; }
+body.frame--2 .deco--eq-red-r   { top: 23vh;  right: 13vw; }
+body.frame--2 .deco--times3-tr  { top: 24vh;  right: 5vw; }
+
+body.frame--2 .deco--calc       { top: 65vh; right: 1vw; }
+body.frame--2 .deco--plus-br    { top: 65vh; right: 7vw; }
+body.frame--2 .deco--vector-br  { top: 73vh; right: 12vw; }
+body.frame--2 .deco--pi-br      { top: 86vh; right: 12vw; }
+body.frame--2 .deco--equaction  { top: 69vh; left: 3vw; }
