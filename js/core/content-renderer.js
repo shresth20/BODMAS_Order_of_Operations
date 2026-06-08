@@ -39,7 +39,8 @@ var ContentRenderer = (function () {
          page.type === 'round-feedback' || page.type === 'level-complete' ||
          page.type === 'session-summary' || page.type === 'key-insight' ||
          page.type === 'end-screen' ||
-         page.type === 'bodmas-ask' || page.type === 'bodmas-reveal') ? 1 : 2
+         page.type === 'bodmas-ask' || page.type === 'bodmas-reveal' ||
+         page.type === 'l1-intro'  || page.type === 'l1-reveal') ? 1 : 2
       );
     }
 
@@ -111,6 +112,10 @@ var ContentRenderer = (function () {
       case 'mbs-try':                      _renderMbsTry(page, area);                   break;
       case 'mbs-reveal':                   _renderMbsReveal(page, area);                break;
       case 'mbs-practice':                 _renderMbsPractice(page, area);              break;
+      case 'l1-intro':                     _renderL1Intro(page, area);                  break;
+      case 'l1-lab':                       _renderL1Lab(page, area);                    break;
+      case 'l1-reveal':                    _renderL1Reveal(page, area);                 break;
+      case 'l1-practice':                  _renderL1Practice(page, area);               break;
       default:
         console.warn('[ContentRenderer] Unknown page type:', page.type);
     }
@@ -12540,6 +12545,936 @@ var ContentRenderer = (function () {
     wrap.appendChild(playBtn);
 
     area.appendChild(wrap);
+  }
+
+  /* ══════════════════════════════════════════════════════
+     PAGE 2.0 — l1-intro   (Level 1 story intro)
+  ══════════════════════════════════════════════════════ */
+
+  function _renderL1Intro(page, area) {
+    var wrap = _el('div', 'cp-l1i-wrap');
+    wrap.dataset.pageId = page.id;
+
+    var scenarioEl = _el('p', 'cp-l1i-scenario');
+    scenarioEl.textContent = page.scenario || '';
+    wrap.appendChild(scenarioEl);
+
+    var exprBox = _el('div', 'cp-l1i-expr-box');
+    var exprEl  = _el('div', 'cp-l1i-expr');
+    exprEl.setAttribute('aria-label', page.expression || '');
+    exprEl.textContent = page.expression || '';
+    exprBox.appendChild(exprEl);
+    wrap.appendChild(exprBox);
+
+    var qEl = _el('p', 'cp-l1i-question');
+    qEl.textContent = page.question || '';
+    wrap.appendChild(qEl);
+
+    var btn = _el('button', 'cp-l1i-cta');
+    btn.textContent = page.buttonLabel || "Let's Investigate!";
+    btn.addEventListener('click', function () {
+      if (typeof playStartWhoosh === 'function') playStartWhoosh();
+      _wipeLeftTo(page.next);
+    });
+    wrap.appendChild(btn);
+
+    area.appendChild(wrap);
+
+    if (typeof anime !== 'undefined') {
+      anime.set(scenarioEl, { opacity: 0, translateY: 24 });
+      anime.set(exprBox,    { opacity: 0, scale: 0.88 });
+      anime.set(qEl,        { opacity: 0 });
+      anime.set(btn,        { opacity: 0, translateY: 14 });
+      anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
+      anime({ targets: exprBox,    opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack' });
+      anime({ targets: qEl,        opacity: 1, duration: 400, delay: 460 });
+      anime({ targets: btn,        opacity: 1, translateY: 0, duration: 450, delay: 660, easing: 'easeOutBack' });
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════
+     PAGE 2.1 — l1-lab   (Classroom board, 4 rounds)
+  ══════════════════════════════════════════════════════ */
+
+  function _renderL1Lab(page, area) {
+    var rounds   = page.rounds || [];
+    var roundIdx = 0;
+    var phase    = 'idle'; /* idle | merging | add-wait | final-merge | complete */
+
+    /* ── SVG characters ── */
+    function _aaravSvg() {
+      return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
+        /* pants */
+        '<rect x="23" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
+        '<rect x="50" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
+        /* shoes */
+        '<ellipse cx="31" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
+        '<ellipse cx="58" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
+        /* body */
+        '<rect x="17" y="62" width="56" height="48" rx="14" fill="#5B9BD5"/>' +
+        '<path d="M33 62 L45 78 L57 62" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+        /* neck */
+        '<rect x="37" y="54" width="16" height="14" fill="#FDDCB5"/>' +
+        /* arms */
+        '<rect x="3" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
+        '<rect x="70" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
+        /* hands */
+        '<ellipse cx="11.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
+        '<ellipse cx="78.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
+        /* head */
+        '<circle cx="45" cy="32" r="28" fill="#FDDCB5"/>' +
+        '<path d="M17 32 Q17 4 45 4 Q73 4 73 32 Q72 14 59 9 Q45 5 31 9 Q18 14 17 32Z" fill="#3D2510"/>' +
+        /* ears */
+        '<ellipse cx="17" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
+        '<ellipse cx="73" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
+        /* eyebrows */
+        '<path d="M32 20 Q37 17 42 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
+        '<path d="M48 20 Q53 17 58 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
+        /* eyes */
+        '<ellipse cx="37" cy="29" rx="5.5" ry="6" fill="white"/>' +
+        '<ellipse cx="53" cy="29" rx="5.5" ry="6" fill="white"/>' +
+        '<circle cx="37" cy="30" r="3.5" fill="#1E0D00"/>' +
+        '<circle cx="53" cy="30" r="3.5" fill="#1E0D00"/>' +
+        '<circle cx="38.5" cy="28.5" r="1.5" fill="white"/>' +
+        '<circle cx="54.5" cy="28.5" r="1.5" fill="white"/>' +
+        /* nose */
+        '<ellipse cx="45" cy="37" rx="3" ry="2.5" fill="#E8B897"/>' +
+        /* smile */
+        '<path d="M36 45 Q45 53 54 45" stroke="#C07858" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+        /* cheeks */
+        '<circle cx="28" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
+        '<circle cx="62" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
+        '</svg>';
+    }
+
+    function _meeraSvg() {
+      return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+        '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
+        /* pants */
+        '<rect x="23" y="104" width="17" height="38" rx="8.5" fill="#AD1457"/>' +
+        '<rect x="50" y="104" width="17" height="38" rx="8.5" fill="#AD1457"/>' +
+        '<ellipse cx="31" cy="141" rx="13" ry="7" fill="#880E4F"/>' +
+        '<ellipse cx="58" cy="141" rx="13" ry="7" fill="#880E4F"/>' +
+        /* body */
+        '<rect x="17" y="62" width="56" height="48" rx="14" fill="#F48FB1"/>' +
+        '<path d="M33 62 L45 78 L57 62" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
+        /* neck */
+        '<rect x="37" y="54" width="16" height="14" fill="#FDDCB5"/>' +
+        /* arms */
+        '<rect x="3" y="64" width="17" height="38" rx="8.5" fill="#F48FB1"/>' +
+        '<rect x="70" y="64" width="17" height="38" rx="8.5" fill="#F48FB1"/>' +
+        '<ellipse cx="11.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
+        '<ellipse cx="78.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
+        /* head */
+        '<circle cx="45" cy="32" r="28" fill="#FDDCB5"/>' +
+        /* hair with side buns */
+        '<path d="M17 32 Q17 4 45 4 Q73 4 73 32 Q72 14 59 9 Q45 5 31 9 Q18 14 17 32Z" fill="#3D2510"/>' +
+        '<ellipse cx="17" cy="28" rx="7" ry="7" fill="#3D2510"/>' +
+        '<ellipse cx="73" cy="28" rx="7" ry="7" fill="#3D2510"/>' +
+        /* ears */
+        '<ellipse cx="17" cy="36" rx="5" ry="6" fill="#FDDCB5"/>' +
+        '<ellipse cx="73" cy="36" rx="5" ry="6" fill="#FDDCB5"/>' +
+        /* eyebrows */
+        '<path d="M32 20 Q37 17 42 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
+        '<path d="M48 20 Q53 17 58 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
+        /* eyes (slightly larger for Meera) */
+        '<ellipse cx="37" cy="29" rx="6" ry="6.5" fill="white"/>' +
+        '<ellipse cx="53" cy="29" rx="6" ry="6.5" fill="white"/>' +
+        '<circle cx="37" cy="30" r="3.8" fill="#1E0D00"/>' +
+        '<circle cx="53" cy="30" r="3.8" fill="#1E0D00"/>' +
+        '<circle cx="38.5" cy="28.5" r="1.5" fill="white"/>' +
+        '<circle cx="54.5" cy="28.5" r="1.5" fill="white"/>' +
+        /* eyelashes */
+        '<path d="M31 24 L30 21" stroke="#3D2510" stroke-width="1.5" stroke-linecap="round"/>' +
+        '<path d="M37 23 L36.5 20" stroke="#3D2510" stroke-width="1.5" stroke-linecap="round"/>' +
+        '<path d="M43 24 L44 21" stroke="#3D2510" stroke-width="1.5" stroke-linecap="round"/>' +
+        '<path d="M47 24 L46 21" stroke="#3D2510" stroke-width="1.5" stroke-linecap="round"/>' +
+        '<path d="M53 23 L53.5 20" stroke="#3D2510" stroke-width="1.5" stroke-linecap="round"/>' +
+        '<path d="M59 24 L60 21" stroke="#3D2510" stroke-width="1.5" stroke-linecap="round"/>' +
+        /* nose */
+        '<ellipse cx="45" cy="37" rx="3" ry="2.5" fill="#E8B897"/>' +
+        /* smile */
+        '<path d="M36 45 Q45 54 54 45" stroke="#C07858" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
+        /* cheeks */
+        '<circle cx="28" cy="39" r="6.5" fill="#FFB8A0" opacity="0.55"/>' +
+        '<circle cx="62" cy="39" r="6.5" fill="#FFB8A0" opacity="0.55"/>' +
+        /* hair bow */
+        '<ellipse cx="45" cy="4" rx="8" ry="5" fill="#F06292"/>' +
+        '<circle cx="45" cy="4" r="3" fill="#E91E63"/>' +
+        '</svg>';
+    }
+
+    /* ── Build DOM ── */
+    var wrap = _el('div', 'cp-l1l-wrap');
+    wrap.dataset.pageId = page.id;
+
+    /* Round header */
+    var roundHeader = _el('div', 'cp-l1l-round-header');
+    var roundLabel  = _el('span', 'cp-l1l-round-label');
+    roundLabel.setAttribute('aria-live', 'polite');
+    var dotsEl = _el('div', 'cp-l1l-dots');
+    dotsEl.setAttribute('aria-hidden', 'true');
+    var dotEls = [];
+    rounds.forEach(function (_, i) {
+      var dot = _el('span', 'cp-l1l-dot');
+      dotsEl.appendChild(dot);
+      dotEls.push(dot);
+    });
+    roundHeader.appendChild(roundLabel);
+    roundHeader.appendChild(dotsEl);
+    wrap.appendChild(roundHeader);
+
+    /* Classroom row: student-left | board | student-right */
+    var classEl = _el('div', 'cp-l1l-classroom');
+
+    var aaravEl = _el('div', 'cp-l1l-student cp-l1l-student--left');
+    aaravEl.setAttribute('aria-hidden', 'true');
+    var aaravBubble = _el('div', 'cp-l1l-bubble cp-l1l-bubble--aarav');
+    var aaravBName  = _el('span', 'cp-l1l-bubble__name cp-l1l-bubble__name--blue'); aaravBName.textContent = 'Aarav';
+    var aaravBText  = _el('p', 'cp-l1l-bubble__text'); aaravBText.textContent = 'I usually go left to right...';
+    aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
+    aaravEl.appendChild(aaravBubble);
+    var aaravSvgWrap = _el('div', 'cp-l1l-student__svg-wrap'); aaravSvgWrap.innerHTML = _aaravSvg();
+    aaravEl.appendChild(aaravSvgWrap);
+    classEl.appendChild(aaravEl);
+
+    var boardEl = _el('div', 'cp-l1l-board');
+    var boardTitle = _el('div', 'cp-l1l-board__title');
+    boardTitle.innerHTML = '&#9733; MATH LAB &#9733;';
+    boardTitle.setAttribute('aria-hidden', 'true');
+    boardEl.appendChild(boardTitle);
+
+    var tilesRow = _el('div', 'cp-l1l-tiles');
+    tilesRow.setAttribute('role', 'group');
+    tilesRow.setAttribute('aria-label', 'Expression tiles');
+    boardEl.appendChild(tilesRow);
+
+    classEl.appendChild(boardEl);
+
+    var meeraEl = _el('div', 'cp-l1l-student cp-l1l-student--right');
+    meeraEl.setAttribute('aria-hidden', 'true');
+    var meeraBubble = _el('div', 'cp-l1l-bubble cp-l1l-bubble--meera');
+    var meeraBName  = _el('span', 'cp-l1l-bubble__name cp-l1l-bubble__name--pink'); meeraBName.textContent = 'Meera';
+    var meeraBText  = _el('p', 'cp-l1l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
+    meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
+    meeraEl.appendChild(meeraBubble);
+    var meeraSvgWrap = _el('div', 'cp-l1l-student__svg-wrap'); meeraSvgWrap.innerHTML = _meeraSvg();
+    meeraEl.appendChild(meeraSvgWrap);
+    classEl.appendChild(meeraEl);
+
+    wrap.appendChild(classEl);
+
+    /* Guide bar */
+    var guideBar    = _el('div', 'cp-l1l-guide-bar');
+    var guideText   = _el('p',   'cp-l1l-guide-text');
+    guideText.setAttribute('aria-live', 'polite');
+    var comparePanel = _el('div', 'cp-l1l-compare');
+    comparePanel.hidden = true;
+    comparePanel.setAttribute('aria-live', 'polite');
+    var nextBtn = _el('button', 'cp-l1l-next-btn');
+    nextBtn.hidden = true;
+
+    guideBar.appendChild(guideText);
+    guideBar.appendChild(comparePanel);
+    guideBar.appendChild(nextBtn);
+    wrap.appendChild(guideBar);
+
+    area.appendChild(wrap);
+
+    /* ── Helpers ── */
+
+    function _tileClass(tok, isMul) {
+      if (isMul) {
+        return tok === '×' ? 'cp-l1l-tile cp-l1l-tile--mul-op' : 'cp-l1l-tile cp-l1l-tile--mul-num';
+      }
+      if (tok === '+') return 'cp-l1l-tile cp-l1l-tile--add-op';
+      return 'cp-l1l-tile cp-l1l-tile--num';
+    }
+
+    function _buildReducedTokens(round) {
+      var result = [];
+      var mulStart = round.mulIndices[0];
+      for (var i = 0; i < round.tokens.length; i++) {
+        if (round.mulIndices.indexOf(i) !== -1) {
+          if (i === mulStart) result.push({ text: String(round.mulResult), kind: 'product' });
+        } else {
+          var tok = round.tokens[i];
+          result.push({ text: tok, kind: tok === '+' ? 'add-op' : 'num' });
+        }
+      }
+      return result;
+    }
+
+    function _spawnStars(anchorEl) {
+      if (!anchorEl) return;
+      var rect  = anchorEl.getBoundingClientRect();
+      var wRect = wrap.getBoundingClientRect();
+      var colors = ['#F59E0B', '#22C55E', '#3B82F6', '#A855F7', '#F97316', '#EC4899'];
+      for (var s = 0; s < 16; s++) {
+        var star = document.createElement('div');
+        star.className = 'cp-l1l-star-particle';
+        star.textContent = s % 3 === 0 ? '★' : (s % 3 === 1 ? '✦' : '•');
+        star.style.color = colors[s % colors.length];
+        star.style.left  = ((rect.left - wRect.left) + rect.width / 2) + 'px';
+        star.style.top   = ((rect.top  - wRect.top)  + rect.height / 2) + 'px';
+        wrap.appendChild(star);
+        if (typeof anime !== 'undefined') {
+          anime({
+            targets: star,
+            translateX: (Math.random() - 0.5) * 140,
+            translateY: (Math.random() - 0.5) * 90 - 30,
+            rotate: Math.random() * 360,
+            scale: [0.5, 1.2, 0],
+            opacity: [1, 0],
+            duration: 800 + Math.random() * 400,
+            easing: 'easeOutCubic',
+            complete: function (an) { if (an.animatables[0]) an.animatables[0].target.remove(); }
+          });
+        } else {
+          (function (p) { setTimeout(function () { if (p.parentNode) p.remove(); }, 900); })(star);
+        }
+      }
+    }
+
+    function _showCompare(round) {
+      comparePanel.innerHTML = '';
+      comparePanel.hidden = false;
+
+      var tokens = round.tokens;
+      var tI     = round.mulIndices;
+
+      /* ── Compute wrong-method (left → right) steps ── */
+      var a   = parseInt(tokens[0], 10);
+      var op1 = tokens[1];
+      var b   = parseInt(tokens[2], 10);
+      var op2 = tokens[3];
+      var c   = parseInt(tokens[4], 10);
+      var r1  = op1 === '\xd7' ? a * b : a + b;
+      var wrongStep1 = tokens[0] + ' ' + op1 + ' ' + tokens[2] + ' = ' + r1;
+      var wrongStep2 = r1 + ' ' + op2 + ' ' + tokens[4] + ' = ' + round.compareWrong;
+
+      /* ── Compute correct-method (× first) steps ── */
+      var mulLeft  = tokens[tI[0]];
+      var mulRight = tokens[tI[2]];
+      var corrStep1 = mulLeft + ' \xd7 ' + mulRight + ' = ' + round.mulResult;
+      var corrStep2 = tI[0] === 0
+        ? round.mulResult + ' ' + tokens[3] + ' ' + tokens[4] + ' = ' + round.finalResult
+        : tokens[0] + ' ' + tokens[1] + ' ' + round.mulResult + ' = ' + round.finalResult;
+
+      /* ── Helper: build one card ── */
+      function _makeCard(cls, emoji, name, nameCls, method, steps, answerVal, ansCls) {
+        var card   = _el('div', 'cp-l1l-dc-card ' + cls);
+
+        var hdr    = _el('div', 'cp-l1l-dc-header');
+        var emEl   = _el('span', 'cp-l1l-dc-emoji');  emEl.textContent  = emoji;
+        var nmEl   = _el('span', 'cp-l1l-dc-name ' + nameCls); nmEl.textContent = name;
+        var mtEl   = _el('span', 'cp-l1l-dc-method'); mtEl.textContent  = method;
+        hdr.appendChild(emEl); hdr.appendChild(nmEl); hdr.appendChild(mtEl);
+        card.appendChild(hdr);
+
+        var stepsEl = _el('div', 'cp-l1l-dc-steps');
+        steps.forEach(function (s) {
+          var st = _el('div', 'cp-l1l-dc-step'); st.textContent = s;
+          stepsEl.appendChild(st);
+        });
+        card.appendChild(stepsEl);
+
+        var ansEl = _el('div', 'cp-l1l-dc-answer ' + ansCls);
+        ansEl.textContent = String(answerVal);
+        card.appendChild(ansEl);
+
+        return card;
+      }
+
+      var row = _el('div', 'cp-l1l-dc-row');
+
+      row.appendChild(_makeCard(
+        'cp-l1l-dc-card--wrong',
+        '🧒', 'Aarav', 'cp-l1l-dc-name--aarav',
+        '· left → right',
+        [wrongStep1, wrongStep2],
+        round.compareWrong, 'cp-l1l-dc-answer--wrong'
+      ));
+
+      row.appendChild(_makeCard(
+        'cp-l1l-dc-card--right',
+        '🧒', 'Meera', 'cp-l1l-dc-name--meera',
+        '· \xd7 first',
+        [corrStep1, corrStep2],
+        round.compareRight, 'cp-l1l-dc-answer--right'
+      ));
+
+      comparePanel.appendChild(row);
+
+      var caption = _el('p', 'cp-l1l-dc-caption');
+      caption.textContent = 'Two different answers for ' + tokens.join(' ') + ' 🤔';
+      comparePanel.appendChild(caption);
+
+      if (typeof anime !== 'undefined') {
+        anime.set(comparePanel, { opacity: 0, translateY: 14 });
+        anime({ targets: comparePanel, opacity: 1, translateY: 0, duration: 450, easing: 'easeOutBack' });
+      }
+    }
+
+    function _afterRoundComplete(round) {
+      if (round.hasCompare) _showCompare(round);
+
+      var isLast = (roundIdx === rounds.length - 1);
+      nextBtn.textContent = isLast ? 'See the Rule →' : 'Next Round ▶';
+      nextBtn.className   = 'cp-l1l-next-btn' + (isLast ? ' cp-l1l-next-btn--final' : '');
+      nextBtn.onclick = function () {
+        if (isLast) {
+          if (typeof playSweep === 'function') playSweep();
+          _wipeLeftTo(page.next);
+        } else {
+          roundIdx++;
+          _loadRound(roundIdx);
+        }
+      };
+      nextBtn.hidden = false;
+      if (typeof anime !== 'undefined') {
+        anime.set(nextBtn, { opacity: 0, translateY: 10 });
+        anime({ targets: nextBtn, opacity: 1, translateY: 0, duration: 420, delay: round.hasCompare ? 700 : 250, easing: 'easeOutBack' });
+      }
+    }
+
+    function _showFinalAnswer(round) {
+      tilesRow.innerHTML = '';
+
+      var eqTile  = _el('div', 'cp-l1l-tile cp-l1l-tile--eq');
+      eqTile.textContent = '=';
+      eqTile.setAttribute('aria-hidden', 'true');
+
+      var ansTile = _el('div', 'cp-l1l-tile cp-l1l-tile--answer');
+      ansTile.textContent = String(round.finalResult);
+      ansTile.setAttribute('aria-label', 'Answer: ' + round.finalResult);
+
+      tilesRow.appendChild(eqTile);
+      tilesRow.appendChild(ansTile);
+
+      if (typeof anime !== 'undefined') {
+        anime.set([eqTile, ansTile], { scale: 0, opacity: 0 });
+        anime({ targets: eqTile,  scale: [0, 1.15, 1], opacity: 1, duration: 450, easing: 'easeOutBack' });
+        anime({
+          targets: ansTile,
+          scale:   [0, 1.5, 1],
+          opacity: 1,
+          duration: 650,
+          delay: 130,
+          easing: 'easeOutBack',
+          complete: function () {
+            _spawnStars(ansTile);
+            if (typeof launchConfetti === 'function') launchConfetti();
+            _afterRoundComplete(round);
+          }
+        });
+      } else {
+        _spawnStars(ansTile);
+        if (typeof launchConfetti === 'function') launchConfetti();
+        _afterRoundComplete(round);
+      }
+
+      if (typeof playStarPop === 'function') playStarPop();
+      guideText.textContent = round.tokens.join(' ') + ' = ' + round.finalResult + ' ✓';
+      phase = 'complete';
+    }
+
+    function _onAddTap(round) {
+      if (phase !== 'add-wait') return;
+      phase = 'final-merge';
+      if (typeof playCorrect === 'function') playCorrect();
+      guideText.textContent = 'Brilliant! Merging now…';
+
+      var allTiles = Array.prototype.slice.call(tilesRow.querySelectorAll('.cp-l1l-tile'));
+      // allTiles after reduction = [left-number, + operator, right-number]
+      var numLeft  = allTiles[0];
+      var opTile   = allTiles[1];
+      var numRight = allTiles[2];
+
+      // Freeze interactions immediately
+      allTiles.forEach(function (t) { t.style.pointerEvents = 'none'; });
+
+      if (typeof anime === 'undefined') { _showFinalAnswer(round); return; }
+
+      // Measure positions (no transforms active)
+      var opR     = opTile.getBoundingClientRect();
+      var opCX    = opR.left + opR.width / 2;
+      var leftDx  = opCX - (numLeft.getBoundingClientRect().left  + numLeft.getBoundingClientRect().width  / 2);
+      var rightDx = opCX - (numRight.getBoundingClientRect().left + numRight.getBoundingClientRect().width / 2);
+
+      // + fades while 3 and 8 slide toward each other
+      anime({ targets: opTile, opacity: 0, scale: 0.3, duration: 360, easing: 'easeInQuad' });
+      anime({
+        targets:    [numLeft, numRight],
+        translateX: function (el, i) { return i === 0 ? leftDx : rightDx; },
+        duration:   400,
+        easing:     'easeInCubic',
+        complete:   function () {
+          if (_currentPageId !== page.id) return;
+          anime({
+            targets:  [numLeft, numRight],
+            scale:    0,
+            opacity:  0,
+            duration: 130,
+            easing:   'easeInBack',
+            complete: function () { _showFinalAnswer(round); }
+          });
+        }
+      });
+    }
+
+    function _showReducedExpression(round) {
+      var reduced = _buildReducedTokens(round);
+      tilesRow.innerHTML = '';
+
+      reduced.forEach(function (rt) {
+        var cls = 'cp-l1l-tile ' + (
+          rt.kind === 'product' ? 'cp-l1l-tile--product' :
+          rt.kind === 'add-op'  ? 'cp-l1l-tile--add-op'  :
+                                  'cp-l1l-tile--num'
+        );
+        var t = _el('button', cls);
+        t.textContent = rt.text;
+
+        if (rt.kind === 'add-op') {
+          t.setAttribute('aria-label', 'Tap + to add');
+          (function (tile, r) {
+            tile.addEventListener('click', function () { _onAddTap(r); });
+          }(t, round));
+        } else {
+          t.disabled = true;
+          t.setAttribute('aria-disabled', 'true');
+        }
+        tilesRow.appendChild(t);
+      });
+
+      if (typeof anime !== 'undefined') {
+        var allNewTiles = Array.prototype.slice.call(tilesRow.querySelectorAll('.cp-l1l-tile'));
+        var productTile = tilesRow.querySelector('.cp-l1l-tile--product');
+        var otherTiles  = allNewTiles.filter(function (t) { return !t.classList.contains('cp-l1l-tile--product'); });
+
+        anime.set(otherTiles, { opacity: 0, scale: 0.78 });
+        anime({ targets: otherTiles, opacity: 1, scale: 1, duration: 320, delay: anime.stagger(55), easing: 'easeOutBack' });
+
+        if (productTile) {
+          anime.set(productTile, { scale: 0, opacity: 0 });
+          anime({ targets: productTile, scale: [0, 1.38, 1], opacity: 1, duration: 580, delay: 100, easing: 'easeOutBack' });
+        }
+      }
+
+      guideText.textContent = 'Great! Now tap + to finish.';
+      phase = 'add-wait';
+    }
+
+    function _onTileTap(tile, tok, isMul) {
+      if (phase !== 'idle') return;
+      var round = rounds[roundIdx];
+
+      if (tok !== '\xd7' || !isMul) {
+        /* wrong */
+        if (typeof playWrong === 'function') playWrong();
+        tile.classList.add('cp-l1l-tile--wrong');
+        setTimeout(function () { tile.classList.remove('cp-l1l-tile--wrong'); }, 700);
+        if (typeof anime !== 'undefined') {
+          anime({ targets: tile, translateX: [0, -7, 7, -5, 5, 0], duration: 360, easing: 'easeInOutSine' });
+          var mulOpTile = tilesRow.querySelector('.cp-l1l-tile--mul-op');
+          if (mulOpTile) anime({ targets: mulOpTile, scale: [1, 1.18, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
+        }
+        guideText.textContent = 'Oops! × goes before +. Tap the × first!';
+        return;
+      }
+
+      /* correct — numbers slide toward each other and collide */
+      phase = 'merging';
+      if (typeof playCorrect === 'function') playCorrect();
+      guideText.textContent = 'Watch them come together!';
+
+      var allTiles = Array.prototype.slice.call(tilesRow.querySelectorAll('.cp-l1l-tile'));
+      var mulTiles = round.mulIndices.map(function (mi) { return allTiles[mi]; });
+      // mulTiles = [left-number, × operator, right-number]
+      var numLeft  = mulTiles[0];
+      var opTile   = mulTiles[1];
+      var numRight = mulTiles[2];
+
+      // Freeze all interactions immediately
+      allTiles.forEach(function (t) { t.style.pointerEvents = 'none'; });
+
+      if (typeof anime === 'undefined') { _showReducedExpression(round); return; }
+
+      // Measure positions now (no CSS transforms active yet)
+      var opR     = opTile.getBoundingClientRect();
+      var opCX    = opR.left + opR.width / 2;
+      var leftDx  = opCX - (numLeft.getBoundingClientRect().left  + numLeft.getBoundingClientRect().width  / 2);
+      var rightDx = opCX - (numRight.getBoundingClientRect().left + numRight.getBoundingClientRect().width / 2);
+
+      // Operator fades out while numbers slide toward each other (simultaneous)
+      anime({ targets: opTile, opacity: 0, scale: 0.3, duration: 360, easing: 'easeInQuad' });
+      anime({
+        targets:    [numLeft, numRight],
+        translateX: function (el, i) { return i === 0 ? leftDx : rightDx; },
+        duration:   400,
+        easing:     'easeInCubic',
+        complete:   function () {
+          if (_currentPageId !== page.id) return;
+          // Numbers have met — quick collapse into nothing, then 8 pops up
+          anime({
+            targets:  [numLeft, numRight],
+            scale:    0,
+            opacity:  0,
+            duration: 130,
+            easing:   'easeInBack',
+            complete: function () { _showReducedExpression(round); }
+          });
+        }
+      });
+    }
+
+    function _renderTiles(round) {
+      tilesRow.innerHTML = '';
+      round.tokens.forEach(function (tok, ti) {
+        var isMul = round.mulIndices.indexOf(ti) !== -1;
+        var cls   = _tileClass(tok, isMul);
+        var tile  = _el('button', cls);
+        tile.textContent = tok;
+        tile.dataset.idx = ti;
+        tile.setAttribute('aria-label', 'Tile: ' + tok);
+        (function (t, token, mul) {
+          t.addEventListener('click', function () { _onTileTap(t, token, mul); });
+        }(tile, tok, isMul));
+        tilesRow.appendChild(tile);
+      });
+
+      if (typeof anime !== 'undefined') {
+        var tiles = Array.prototype.slice.call(tilesRow.querySelectorAll('.cp-l1l-tile'));
+        anime.set(tiles, { opacity: 0, scale: 0.7 });
+        anime({ targets: tiles, opacity: 1, scale: 1, duration: 360, delay: anime.stagger(70), easing: 'easeOutBack' });
+      }
+    }
+
+    function _loadRound(idx) {
+      phase = 'idle';
+      var round = rounds[idx];
+
+      roundLabel.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+      dotEls.forEach(function (d, i) {
+        d.className = 'cp-l1l-dot' +
+          (i < idx  ? ' cp-l1l-dot--done'   : '') +
+          (i === idx ? ' cp-l1l-dot--active' : '');
+      });
+
+      nextBtn.hidden      = true;
+      comparePanel.hidden = true;
+      comparePanel.innerHTML = '';
+      guideText.textContent  = 'Tap the × to solve it first!';
+
+      _renderTiles(round);
+    }
+
+    /* ── Boot ── */
+    _loadRound(0);
+  }
+
+  /* ══════════════════════════════════════════════════════
+     PAGE 2.2 — l1-reveal   (Rule reveal)
+  ══════════════════════════════════════════════════════ */
+
+  function _renderL1Reveal(page, area) {
+    var wrap = _el('div', 'cp-l1r-wrap');
+    wrap.dataset.pageId = page.id;
+
+    /* ── Title with party poppers ── */
+    var titleEl = _el('h2', 'cp-l1r-title');
+    titleEl.innerHTML = '🎉 ' + (page.title || 'You Found the Rule!') + ' 🎉';
+    wrap.appendChild(titleEl);
+
+    /* ── Rule text — × in amber, + in green ── */
+    var ruleEl = _el('p', 'cp-l1r-rule');
+    ruleEl.innerHTML = (page.ruleText || '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/\xd7/g, '<span class="cp-l1r-rule__mul">\xd7</span>')
+      .replace(/\+/g,  '<span class="cp-l1r-rule__add">+</span>');
+    wrap.appendChild(ruleEl);
+
+    /* ── Worked steps box (dashed border) ── */
+    var stepsBox = _el('div', 'cp-l1r-steps-box');
+    (page.workedSteps || []).forEach(function (step) {
+      var lineEl = _el('div', 'cp-l1r-step');
+      var toks   = step.expr.split(' ');
+      var hlSet  = {};
+      (step.hlTokens || []).forEach(function (t) { hlSet[t] = true; });
+
+      var i = 0;
+      while (i < toks.length) {
+        if (i > 0) lineEl.appendChild(document.createTextNode(' '));
+        if (hlSet[toks[i]]) {
+          /* group consecutive highlighted tokens into one pill */
+          var group = [];
+          while (i < toks.length && hlSet[toks[i]]) { group.push(toks[i]); i++; }
+          var pill = _el('span', 'cp-l1r-step__hl');
+          pill.textContent = group.join(' ');
+          lineEl.appendChild(pill);
+        } else {
+          lineEl.appendChild(document.createTextNode(toks[i]));
+          i++;
+        }
+      }
+      stepsBox.appendChild(lineEl);
+    });
+    wrap.appendChild(stepsBox);
+
+    /* ── BODMAS tag ── */
+    var tagEl = _el('p', 'cp-l1r-bodmas-tag');
+    tagEl.textContent = page.bodmasTag || '';
+    wrap.appendChild(tagEl);
+
+    /* ── CTA button ── */
+    var btn = _el('button', 'cp-l1r-btn');
+    btn.textContent = page.buttonLabel || 'See the Detectives ►';
+    btn.addEventListener('click', function () {
+      if (typeof playStartWhoosh === 'function') playStartWhoosh();
+      _wipeLeftTo(page.next);
+    });
+    wrap.appendChild(btn);
+
+    area.appendChild(wrap);
+
+    /* Staggered entrance */
+    if (typeof anime !== 'undefined') {
+      var els = [titleEl, ruleEl, stepsBox, tagEl, btn];
+      anime.set(els, { opacity: 0, translateY: 24 });
+      anime({ targets: els, opacity: 1, translateY: 0, duration: 500,
+              delay: anime.stagger(80), easing: 'easeOutQuad' });
+    }
+
+    setTimeout(function () { if (typeof launchConfetti === 'function') launchConfetti(); }, 400);
+  }
+
+  /* ══════════════════════════════════════════════════════
+     PAGE 2.3 — l1-practice   (4 practice questions)
+  ══════════════════════════════════════════════════════ */
+
+  function _renderL1Practice(page, area) {
+    var questions = page.questions || [];
+    var qIdx      = 0;
+    var qDone     = 0;
+    var answered  = false;
+
+    var wrap    = _el('div', 'cp-l1p-wrap');
+    wrap.dataset.pageId = page.id;
+
+    var barEl   = _el('div', 'cp-l1p-progress-bar');
+    var fillEl  = _el('div', 'cp-l1p-progress-bar__fill');
+    barEl.appendChild(fillEl);
+    wrap.appendChild(barEl);
+
+    var cardEl      = _el('div', 'cp-l1p-card');
+    var labelEl     = _el('p',   'cp-l1p-card__label');  labelEl.setAttribute('aria-live', 'polite');
+    var exprEl      = _el('p',   'cp-l1p-card__expr');
+    var promptEl    = _el('p',   'cp-l1p-card__prompt');
+    var bodyEl      = _el('div', 'cp-l1p-card__body');
+    var feedbackEl  = _el('p',   'cp-l1p-feedback');     feedbackEl.setAttribute('aria-live', 'assertive');
+
+    cardEl.appendChild(labelEl);
+    cardEl.appendChild(exprEl);
+    cardEl.appendChild(promptEl);
+    cardEl.appendChild(bodyEl);
+    cardEl.appendChild(feedbackEl);
+    wrap.appendChild(cardEl);
+    area.appendChild(wrap);
+
+    function _onWrong(hintText) {
+      feedbackEl.textContent = hintText || '';
+      feedbackEl.className   = 'cp-l1p-feedback cp-l1p-feedback--hint';
+      if (typeof playWrong === 'function') playWrong();
+      if (typeof anime !== 'undefined') {
+        anime({ targets: cardEl, translateX: [0, -8, 8, -6, 6, 0], duration: 380, easing: 'easeInOutSine' });
+        anime.set(feedbackEl, { opacity: 0 });
+        anime({ targets: feedbackEl, opacity: 1, duration: 220 });
+      }
+    }
+
+    function _onCorrect(q, i) {
+      answered = true;
+      feedbackEl.textContent = q.okMsg || 'Correct!';
+      feedbackEl.className   = 'cp-l1p-feedback cp-l1p-feedback--ok';
+      if (typeof playCorrect === 'function') playCorrect();
+      if (typeof anime !== 'undefined') {
+        anime.set(feedbackEl, { opacity: 0 });
+        anime({ targets: feedbackEl, opacity: 1, duration: 220 });
+      }
+      qDone++;
+      var pct = (qDone / questions.length) * 100;
+      if (typeof anime !== 'undefined') {
+        anime({ targets: fillEl, width: pct + '%', duration: 500, easing: 'easeOutQuad' });
+      } else {
+        fillEl.style.width = pct + '%';
+      }
+      setTimeout(function () {
+        if (_currentPageId !== page.id) return;
+        if (i < questions.length - 1) {
+          qIdx     = i + 1;
+          answered = false;
+          _loadQuestion(questions[qIdx], qIdx);
+        } else {
+          _showCompletion();
+        }
+      }, 1500);
+    }
+
+    function _showCompletion() {
+      cardEl.innerHTML = '';
+      var msg = _el('p', 'cp-l1p-completion');
+      msg.textContent = page.completionMsg || 'Well done!';
+      cardEl.appendChild(msg);
+      if (typeof launchConfetti === 'function') launchConfetti();
+      if (typeof anime !== 'undefined') {
+        anime.set(cardEl, { opacity: 0, scale: 0.92 });
+        anime({ targets: cardEl, opacity: 1, scale: 1, duration: 500, easing: 'easeOutBack' });
+      }
+    }
+
+    function _loadQuestion(q, i) {
+      labelEl.textContent    = 'Question ' + (i + 1) + ' of ' + questions.length;
+      exprEl.textContent     = q.expression || '';
+      exprEl.style.display   = q.expression ? '' : 'none';
+      promptEl.textContent   = q.prompt || '';
+      feedbackEl.textContent = '';
+      feedbackEl.className   = 'cp-l1p-feedback';
+      bodyEl.innerHTML       = '';
+      answered = false;
+
+      if (typeof anime !== 'undefined') {
+        anime.set(bodyEl, { opacity: 0 });
+        anime({ targets: bodyEl, opacity: 1, duration: 300 });
+      }
+
+      if (q.kind === 'tap-operator') {
+        var opRow = _el('div', 'cp-l1p-op-row');
+        var tokens = (q.expression || '').split(' ');
+        var opButtonIdx = 0;
+        tokens.forEach(function (tok) {
+          if (tok === '+' || tok === '\xd7' || tok === '\xf7' || tok === '−') {
+            var localOpIdx = opButtonIdx++;
+            var cls = 'cp-l1p-op-btn cp-l1p-op-btn--' + (tok === '\xd7' ? 'mul' : 'add');
+            var opBtn = _el('button', cls);
+            opBtn.textContent = tok;
+            opBtn.setAttribute('aria-label', 'Operator: ' + tok);
+            (function (btn, oidx) {
+              btn.addEventListener('click', function () {
+                if (answered) return;
+                if (oidx === q.correctIndex) {
+                  btn.classList.add('cp-l1p-op-btn--correct');
+                  _onCorrect(q, i);
+                } else {
+                  btn.classList.add('cp-l1p-op-btn--wrong');
+                  setTimeout(function () { btn.classList.remove('cp-l1p-op-btn--wrong'); }, 700);
+                  _onWrong(q.wrongHint);
+                }
+              });
+            }(opBtn, localOpIdx));
+            opRow.appendChild(opBtn);
+          } else {
+            var numSpan = _el('span', 'cp-l1p-num-token');
+            numSpan.textContent = tok;
+            numSpan.setAttribute('aria-hidden', 'true');
+            opRow.appendChild(numSpan);
+          }
+        });
+        bodyEl.appendChild(opRow);
+
+      } else if (q.kind === 'choose-rule') {
+        var optList = _el('div', 'cp-l1p-rule-opts');
+        (q.options || []).forEach(function (opt, oi) {
+          var btn = _el('button', 'cp-l1p-rule-opt');
+          btn.textContent = opt;
+          (function (b, idx) {
+            b.addEventListener('click', function () {
+              if (answered) return;
+              if (idx === q.correctIndex) {
+                b.classList.add('cp-l1p-rule-opt--correct');
+                _onCorrect(q, i);
+              } else {
+                b.classList.add('cp-l1p-rule-opt--wrong');
+                setTimeout(function () { b.classList.remove('cp-l1p-rule-opt--wrong'); }, 700);
+                _onWrong(q.wrongHint);
+              }
+            });
+          }(btn, oi));
+          optList.appendChild(btn);
+        });
+        bodyEl.appendChild(optList);
+
+      } else if (q.kind === 'step-by-step') {
+        function _showStep(sIdx) {
+          bodyEl.innerHTML = '';
+          var step = q.steps[sIdx];
+          var inst = _el('p', 'cp-l1p-step-info'); inst.textContent = step.instruction;
+          var sub  = _el('p', 'cp-l1p-step-expr'); sub.textContent  = step.subExpr;
+          var row  = _el('div', 'cp-l1p-choices');
+          step.choices.forEach(function (ch) {
+            var btn = _el('button', 'cp-l1p-choice-btn');
+            btn.textContent = ch;
+            btn.addEventListener('click', function () {
+              if (answered) return;
+              if (ch === step.correct) {
+                btn.classList.add('cp-l1p-choice-btn--correct');
+                if (typeof playCorrect === 'function') playCorrect();
+                if (sIdx < q.steps.length - 1) {
+                  setTimeout(function () { _showStep(sIdx + 1); }, 750);
+                } else {
+                  _onCorrect(q, i);
+                }
+              } else {
+                btn.classList.add('cp-l1p-choice-btn--wrong');
+                setTimeout(function () { btn.classList.remove('cp-l1p-choice-btn--wrong'); }, 700);
+                _onWrong(q.wrongHint || '');
+              }
+            });
+            row.appendChild(btn);
+          });
+          bodyEl.appendChild(inst);
+          bodyEl.appendChild(sub);
+          bodyEl.appendChild(row);
+          if (typeof anime !== 'undefined') {
+            anime.set(bodyEl, { opacity: 0 });
+            anime({ targets: bodyEl, opacity: 1, duration: 280 });
+          }
+        }
+        _showStep(0);
+
+      } else if (q.kind === 'which-method') {
+        var methodRow = _el('div', 'cp-l1p-methods');
+        (q.methods || []).forEach(function (m) {
+          var card = _el('button', 'cp-l1p-method-card');
+          var lbl  = _el('p', 'cp-l1p-method-card__label');    lbl.textContent = m.label;
+          var lst  = _el('ul', 'cp-l1p-method-card__steps');
+          (m.steps || []).forEach(function (s) {
+            var li = _el('li', 'cp-l1p-method-card__step'); li.textContent = s;
+            lst.appendChild(li);
+          });
+          var ans  = _el('p', 'cp-l1p-method-card__answer');   ans.textContent = '= ' + m.answer;
+          card.appendChild(lbl); card.appendChild(lst); card.appendChild(ans);
+          (function (c, isCorrect) {
+            c.addEventListener('click', function () {
+              if (answered) return;
+              if (isCorrect) {
+                c.classList.add('cp-l1p-method-card--correct');
+                _onCorrect(q, i);
+              } else {
+                c.classList.add('cp-l1p-method-card--wrong');
+                setTimeout(function () { c.classList.remove('cp-l1p-method-card--wrong'); }, 700);
+                _onWrong(q.wrongHint || '');
+              }
+            });
+          }(card, m.correct));
+          methodRow.appendChild(card);
+        });
+        bodyEl.appendChild(methodRow);
+      }
+    }
+
+    _loadQuestion(questions[0], 0);
   }
 
   return {
