@@ -4,27 +4,7 @@
 var CONTENT_PAGES = [
 
   // ═══════════════════════════════════════════════════════════
-  // SECTION 01 — Welcome / Mission Start
-  // ═══════════════════════════════════════════════════════════
-
-  {
-    id: 'a1.0',
-    type: 'welcome',
-    title: 'Which step comes first?',
-    subtitle: 'Crack the secret order of maths — by playing.',
-    heroSum: '3 + 4 × 2 = ?',
-    answerTags: [
-      { label: '11?', side: 'left' },
-      { label: '14?', side: 'right' }
-    ],
-    caption: 'Same sum. Two answers. Only one is right.',
-    buttonLabel: 'Let\'s Begin →',
-    next: '2.0',
-    animation: 'welcomeIntro'
-  },
-
-  // ═══════════════════════════════════════════════════════════
-  // SECTION 02 — Level 1: × Before +
+  // SECTION 01 — Level 1: × Before +
   // ═══════════════════════════════════════════════════════════
 
   {
@@ -129,8 +109,8 @@ var CONTENT_PAGES = [
         prompt: 'Which method is correct?',
         expression: '6 + 2 × 3',
         methods: [
-          { label: '× first',      steps: ['2 × 3 = 6', '6 + 6 = 12'], answer: 12, correct: true  },
-          { label: 'Left → right', steps: ['6 + 2 = 8', '8 × 3 = 24'], answer: 24, correct: false }
+          { label: '× first',      steps: ['6 + 2 × 3', '6 + 6 = 12'], answer: 12, correct: true  },
+          { label: 'Left → right', steps: ['6 + 2 × 3', '8 × 3 = 24'], answer: 24, correct: false }
         ],
         okMsg: 'Correct! Always do × before +.',
         wrongHint: 'Look for the × sign — it goes first!'

@@ -1,4 +1,11 @@
 @font-face {
+  font-family: 'Sketchzone';
+  src: url('../../assets/fonts/Chalk_style/Sketchzone.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
   font-family: 'Lilita One';
   src: url('../../assets/fonts/lilita_one/lilitaone-regular.ttf') format('truetype');
   font-weight: 400;
@@ -48,6 +55,7 @@
   /* ── Fonts ── */
   --font-primary: 'Lilita One', system-ui, sans-serif;
   --font-accent: 'Nunito', system-ui, -apple-system, sans-serif;
+  --font-chalk: 'Sketchzone', cursive;
   --font-weight-title: 500;
   --font-weight-body:  500;
 

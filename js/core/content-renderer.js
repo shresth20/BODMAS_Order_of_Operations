@@ -12708,6 +12708,8 @@ var ContentRenderer = (function () {
     /* ── Build DOM ── */
     var wrap = _el('div', 'cp-l1l-wrap');
     wrap.dataset.pageId = page.id;
+    var aaravFadeTimer = null;
+    var meeraFadeTimer = null;
 
     /* Round header */
     var roundHeader = _el('div', 'cp-l1l-round-header');
@@ -12725,12 +12727,22 @@ var ContentRenderer = (function () {
     roundHeader.appendChild(dotsEl);
     wrap.appendChild(roundHeader);
 
+    /* Hint card — floats above the board (in wrap flex flow) on wrong tile tap */
+    var hintBox  = _el('div', 'cp-l1l-hint-box');
+    var hintText = _el('p',   'cp-l1l-hint-text');
+    hintBox.setAttribute('aria-live', 'polite');
+    hintBox.hidden = true;
+    hintBox.appendChild(hintText);
+    wrap.appendChild(hintBox);
+
     /* Classroom row: student-left | board | student-right */
     var classEl = _el('div', 'cp-l1l-classroom');
 
     var aaravEl = _el('div', 'cp-l1l-student cp-l1l-student--left');
     aaravEl.setAttribute('aria-hidden', 'true');
-    var aaravBubble = _el('div', 'cp-l1l-bubble cp-l1l-bubble--aarav');
+    var aaravLabel = _el('span', 'cp-l1l-student__label cp-l1l-student__label--blue'); aaravLabel.textContent = 'Aarav';
+    aaravEl.appendChild(aaravLabel);
+    var aaravBubble = _el('div', 'cp-l1l-bubble cp-l1l-bubble--aarav cp-l1l-bubble--faded');
     var aaravBName  = _el('span', 'cp-l1l-bubble__name cp-l1l-bubble__name--blue'); aaravBName.textContent = 'Aarav';
     var aaravBText  = _el('p', 'cp-l1l-bubble__text'); aaravBText.textContent = 'I usually go left to right...';
     aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
@@ -12754,7 +12766,9 @@ var ContentRenderer = (function () {
 
     var meeraEl = _el('div', 'cp-l1l-student cp-l1l-student--right');
     meeraEl.setAttribute('aria-hidden', 'true');
-    var meeraBubble = _el('div', 'cp-l1l-bubble cp-l1l-bubble--meera');
+    var meeraLabel = _el('span', 'cp-l1l-student__label cp-l1l-student__label--pink'); meeraLabel.textContent = 'Meera';
+    meeraEl.appendChild(meeraLabel);
+    var meeraBubble = _el('div', 'cp-l1l-bubble cp-l1l-bubble--meera cp-l1l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l1l-bubble__name cp-l1l-bubble__name--pink'); meeraBName.textContent = 'Meera';
     var meeraBText  = _el('p', 'cp-l1l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
     meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
@@ -12767,6 +12781,13 @@ var ContentRenderer = (function () {
 
     /* Guide bar */
     var guideBar    = _el('div', 'cp-l1l-guide-bar');
+    var guideAvatar = _el('div', 'cp-l1l-guide-avatar');
+    var guideAvatarImg = document.createElement('img');
+    guideAvatarImg.src = 'assets/images/Swiftee01.png';
+    guideAvatarImg.alt = '';
+    guideAvatarImg.setAttribute('aria-hidden', 'true');
+    guideAvatarImg.setAttribute('draggable', 'false');
+    guideAvatar.appendChild(guideAvatarImg);
     var guideText   = _el('p',   'cp-l1l-guide-text');
     guideText.setAttribute('aria-live', 'polite');
     var comparePanel = _el('div', 'cp-l1l-compare');
@@ -12775,10 +12796,11 @@ var ContentRenderer = (function () {
     var nextBtn = _el('button', 'cp-l1l-next-btn');
     nextBtn.hidden = true;
 
+    guideBar.appendChild(guideAvatar);
     guideBar.appendChild(guideText);
-    guideBar.appendChild(comparePanel);
-    guideBar.appendChild(nextBtn);
     wrap.appendChild(guideBar);
+    wrap.appendChild(comparePanel);
+    wrap.appendChild(nextBtn);
 
     area.appendChild(wrap);
 
@@ -12840,6 +12862,7 @@ var ContentRenderer = (function () {
     function _showCompare(round) {
       comparePanel.innerHTML = '';
       comparePanel.hidden = false;
+      boardEl.classList.add('cp-l1l-board--blurred');
 
       var tokens = round.tokens;
       var tI     = round.mulIndices;
@@ -12887,9 +12910,15 @@ var ContentRenderer = (function () {
         return card;
       }
 
-      var row = _el('div', 'cp-l1l-dc-row');
+      /* Cancel any pending speech-bubble fade timers */
+      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
+      if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
 
-      row.appendChild(_makeCard(
+      /* ── Place wrong card in Aarav's bubble ── */
+      aaravBubble.innerHTML = '';
+      aaravBubble.classList.remove('cp-l1l-bubble--faded');
+      aaravBubble.classList.add('cp-l1l-bubble--expanded');
+      aaravBubble.appendChild(_makeCard(
         'cp-l1l-dc-card--wrong',
         '🧒', 'Aarav', 'cp-l1l-dc-name--aarav',
         '· left → right',
@@ -12897,7 +12926,11 @@ var ContentRenderer = (function () {
         round.compareWrong, 'cp-l1l-dc-answer--wrong'
       ));
 
-      row.appendChild(_makeCard(
+      /* ── Place right card in Meera's bubble ── */
+      meeraBubble.innerHTML = '';
+      meeraBubble.classList.remove('cp-l1l-bubble--faded');
+      meeraBubble.classList.add('cp-l1l-bubble--expanded');
+      meeraBubble.appendChild(_makeCard(
         'cp-l1l-dc-card--right',
         '🧒', 'Meera', 'cp-l1l-dc-name--meera',
         '· \xd7 first',
@@ -12905,15 +12938,15 @@ var ContentRenderer = (function () {
         round.compareRight, 'cp-l1l-dc-answer--right'
       ));
 
-      comparePanel.appendChild(row);
-
+      /* ── Caption only in compare panel ── */
       var caption = _el('p', 'cp-l1l-dc-caption');
       caption.textContent = 'Two different answers for ' + tokens.join(' ') + ' 🤔';
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
-        anime.set(comparePanel, { opacity: 0, translateY: 14 });
-        anime({ targets: comparePanel, opacity: 1, translateY: 0, duration: 450, easing: 'easeOutBack' });
+        anime.set([aaravBubble, meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
+        anime({ targets: [aaravBubble, meeraBubble], opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
+        anime({ targets: comparePanel, opacity: 1, translateY: 0, duration: 380, delay: 200, easing: 'easeOutCubic' });
       }
     }
 
@@ -12976,7 +13009,7 @@ var ContentRenderer = (function () {
       }
 
       if (typeof playStarPop === 'function') playStarPop();
-      guideText.textContent = round.tokens.join(' ') + ' = ' + round.finalResult + ' ✓';
+      guideText.textContent = '';
       phase = 'complete';
     }
 
@@ -13081,7 +13114,19 @@ var ContentRenderer = (function () {
           var mulOpTile = tilesRow.querySelector('.cp-l1l-tile--mul-op');
           if (mulOpTile) anime({ targets: mulOpTile, scale: [1, 1.18, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
         }
-        guideText.textContent = 'Oops! × goes before +. Tap the × first!';
+        /* Show hint box above the classroom */
+        hintText.textContent = '🔍 Look again. Is there a multiplication × sign in the sum?';
+        hintBox.hidden = false;
+        if (typeof anime !== 'undefined') {
+          anime.set(hintBox, { opacity: 0, translateY: -6 });
+          anime({ targets: hintBox, opacity: 1, translateY: 0, duration: 320, easing: 'easeOutBack' });
+        }
+        /* Aarav reacts in his speech bubble */
+        aaravBText.textContent = 'Oops — let me look again!';
+        if (typeof anime !== 'undefined') {
+          anime.set(aaravBubble, { scale: 0.92 });
+          anime({ targets: aaravBubble, scale: 1, duration: 280, easing: 'easeOutBack' });
+        }
         return;
       }
 
@@ -13089,6 +13134,13 @@ var ContentRenderer = (function () {
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
       guideText.textContent = 'Watch them come together!';
+      hintBox.hidden = true;
+      /* Meera gives a compliment */
+      meeraBText.textContent = 'Yes! × goes first! Brilliant! ⭐';
+      if (typeof anime !== 'undefined') {
+        anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
+        anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 380, delay: 80, easing: 'easeOutBack' });
+      }
 
       var allTiles = Array.prototype.slice.call(tilesRow.querySelectorAll('.cp-l1l-tile'));
       var mulTiles = round.mulIndices.map(function (mi) { return allTiles[mi]; });
@@ -13166,7 +13218,58 @@ var ContentRenderer = (function () {
       nextBtn.hidden      = true;
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
-      guideText.textContent  = 'Tap the × to solve it first!';
+      hintBox.hidden = true;
+      boardEl.classList.remove('cp-l1l-board--blurred');
+
+      /* Reset bubble text before re-appending */
+      aaravBText.textContent = 'I usually go left to right...';
+      meeraBText.textContent = 'Tap what to solve first!';
+
+      /* Reset bubbles to speech-bubble state, hidden until guide text fires */
+      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
+      if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
+      aaravLabel.classList.remove('cp-l1l-student__label--hidden');
+      meeraLabel.classList.remove('cp-l1l-student__label--hidden');
+
+      aaravBubble.innerHTML = '';
+      aaravBubble.classList.remove('cp-l1l-bubble--expanded');
+      aaravBubble.classList.add('cp-l1l-bubble--faded');
+      aaravBubble.appendChild(aaravBName);
+      aaravBubble.appendChild(aaravBText);
+
+      meeraBubble.innerHTML = '';
+      meeraBubble.classList.remove('cp-l1l-bubble--expanded');
+      meeraBubble.classList.add('cp-l1l-bubble--faded');
+      meeraBubble.appendChild(meeraBName);
+      meeraBubble.appendChild(meeraBText);
+
+      function _showBubbles() {
+        aaravLabel.classList.add('cp-l1l-student__label--hidden');
+        meeraLabel.classList.add('cp-l1l-student__label--hidden');
+        aaravBubble.classList.remove('cp-l1l-bubble--faded');
+        meeraBubble.classList.remove('cp-l1l-bubble--faded');
+        aaravFadeTimer = setTimeout(function () {
+          aaravBubble.classList.add('cp-l1l-bubble--faded');
+          aaravLabel.classList.remove('cp-l1l-student__label--hidden');
+        }, 3000);
+        meeraFadeTimer = setTimeout(function () {
+          meeraBubble.classList.add('cp-l1l-bubble--faded');
+          meeraLabel.classList.remove('cp-l1l-student__label--hidden');
+        }, 3000);
+      }
+
+      /* Guide-bar intro: round 0 holds 1s before showing the tap prompt + bubbles */
+      if (idx === 0) {
+        guideText.textContent = 'Aarav and Meera are solving the equation with + and ×. Watch carefully.';
+        setTimeout(function () {
+          if (_currentPageId !== page.id || phase !== 'idle') return;
+          guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
+          _showBubbles();
+        }, 1000);
+      } else {
+        guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
+        _showBubbles();
+      }
 
       _renderTiles(round);
     }
