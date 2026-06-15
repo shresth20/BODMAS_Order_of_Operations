@@ -7,9 +7,9 @@ var _sounds   = {};
 (function() {
   try {
     var files = {
-      click:   { src: 'assets/sounds/button-click.wav',      vol: 1.0 },
-      correct: { src: 'assets/sounds/correct-answer.mp3',    vol: 1.0 },
-      wrong:   { src: 'assets/sounds/incorrect-answer.mp3',  vol: 1.0 },
+      click:   { src: 'assets/sounds/button-click.ogg',      vol: 1.0 },
+      correct: { src: 'assets/sounds/correct-answer.ogg',    vol: 1.0 },
+      wrong:   { src: 'assets/sounds/incorrect-answer.ogg',  vol: 1.0 },
       /* ── Section 1.0 background audio ── */
       s1_chime: { src: 'assets/sounds/intro-chime.ogg',      vol: 0.18 }
     };

@@ -4,10 +4,10 @@ var Narration = (function () {
 
   /* ── Source paths — fresh Audio created on every play ── */
   var _srcs = {
-    'line_1_0_1':      'assets/voiceovers/1.0_Line_1.wav',
-    'line_1_0_2':      'assets/voiceovers/1.0_Line_2.wav',
-    'line_1_0_3':      'assets/voiceovers/1.0_Line_3.wav',
-    'line_1_0_4':      'assets/voiceovers/1.0_Line_4.wav',
+    'line_1_0_1':      'assets/voiceovers/1.0_Line_1.ogg',
+    'line_1_0_2':      'assets/voiceovers/1.0_Line_2.ogg',
+    'line_1_0_3':      'assets/voiceovers/1.0_Line_3.ogg',
+    'line_1_0_4':      'assets/voiceovers/1.0_Line_4.ogg',
     /* ── Section 2 ── */
 
   };

@@ -3006,12 +3006,12 @@ var ContentRenderer = (function () {
     if (isWrong) {
       toast.className   = 'feedback-toast feedback-toast--wrong';
       toast.textContent = text;
-      if (gif) { gif.src = 'assets/GIFs/incorrect.gif'; gif.alt = 'Incorrect'; gif.className = 'feedback-char-gif'; }
+      if (gif) { gif.src = 'assets/GIFs/incorrect.webp'; gif.alt = 'Incorrect'; gif.className = 'feedback-char-gif'; }
       if (typeof playWrong   === 'function') playWrong();
     } else {
       toast.className   = 'feedback-toast';
       toast.textContent = text;
-      if (gif) { gif.src = 'assets/GIFs/correct.gif'; gif.alt = 'Correct'; gif.className = 'feedback-char-gif feedback-char-gif--correct'; }
+      if (gif) { gif.src = 'assets/GIFs/correct.webp'; gif.alt = 'Correct'; gif.className = 'feedback-char-gif feedback-char-gif--correct'; }
       if (typeof playCorrect === 'function') playCorrect();
     }
     overlay.hidden = false;
@@ -12989,7 +12989,7 @@ var ContentRenderer = (function () {
     var classEl = _el('div', 'cp-l1l-classroom');
 
     var classBg = document.createElement('img');
-    classBg.src = 'assets/images/class-bg.png';
+    classBg.src = 'assets/images/class-bg.webp';
     classBg.alt = '';
     classBg.setAttribute('aria-hidden', 'true');
     classBg.setAttribute('draggable', 'false');
@@ -14320,7 +14320,7 @@ var ContentRenderer = (function () {
     /* Classroom row: student-left | board | student-right */
     var classEl = _el('div', 'cp-l2l-classroom');
     var classBg = document.createElement('img');
-    classBg.src = 'assets/images/class-bg.png';
+    classBg.src = 'assets/images/class-bg.webp';
     classBg.alt = '';
     classBg.setAttribute('aria-hidden', 'true');
     classBg.setAttribute('draggable', 'false');
@@ -15553,7 +15553,7 @@ var ContentRenderer = (function () {
 
     var classEl = _el('div', 'cp-l3l-classroom');
     var classBg = document.createElement('img');
-    classBg.src = 'assets/images/class-bg.png';
+    classBg.src = 'assets/images/class-bg.webp';
     classBg.alt = '';
     classBg.setAttribute('aria-hidden', 'true');
     classBg.setAttribute('draggable', 'false');
@@ -16579,7 +16579,7 @@ var ContentRenderer = (function () {
 
     var classEl = _el('div', 'cp-l4l-classroom');
     var classBg = document.createElement('img');
-    classBg.src = 'assets/images/class-bg.png';
+    classBg.src = 'assets/images/class-bg.webp';
     classBg.alt = '';
     classBg.setAttribute('aria-hidden', 'true');
     classBg.setAttribute('draggable', 'false');
@@ -17557,7 +17557,7 @@ var ContentRenderer = (function () {
 
     var classEl = _el('div', 'cp-l5l-classroom');
     var classBg = document.createElement('img');
-    classBg.src = 'assets/images/class-bg.png';
+    classBg.src = 'assets/images/class-bg.webp';
     classBg.alt = '';
     classBg.setAttribute('aria-hidden', 'true');
     classBg.setAttribute('draggable', 'false');
@@ -18532,7 +18532,7 @@ var ContentRenderer = (function () {
 
     var classEl = _el('div', 'cp-l6l-classroom');
     var classBg = document.createElement('img');
-    classBg.src = 'assets/images/class-bg.png';
+    classBg.src = 'assets/images/class-bg.webp';
     classBg.alt = '';
     classBg.setAttribute('aria-hidden', 'true');
     classBg.setAttribute('draggable', 'false');
@@ -20222,7 +20222,7 @@ var ContentRenderer = (function () {
     var instructorEl = _el('div', 'cp-l9ib-instructor');
     instructorEl.appendChild(instrEl);
     var swifteeImg = document.createElement('img');
-    swifteeImg.src = 'assets/images/Swiftee06.png';
+    swifteeImg.src = 'assets/images/Swiftee06.webp';
     swifteeImg.alt = '';
     swifteeImg.setAttribute('aria-hidden', 'true');
     swifteeImg.className = 'cp-l9ib-instructor__img';
