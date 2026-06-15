@@ -1,9 +1,17 @@
 @font-face {
-  font-family: 'Sketchzone';
-  src: url('../../assets/fonts/Chalk_style/Sketchzone.ttf') format('truetype');
+  font-family: 'SketchChalk';
+  src: url('../../assets/fonts/Chalk_style/SketchChalk.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+}
+@font-face {
+  font-family: 'SketchChalk';
+  src: url('../../assets/fonts/nunito/nunito-variablefont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+00F7;
 }
 @font-face {
   font-family: 'Lilita One';
@@ -28,6 +36,28 @@
 }
 
 :root {
+  /* ── Global design tokens ── */
+  --gl-sky:    #3BC6FF;
+  --gl-orange: #FFA93A;
+  --gl-mint:   #18D6A0;
+  --gl-lilac:  #C48AFF;
+  --gl-pink:   #FF6FA8;
+  --gl-lime:   #B7EA33;
+  --gl-coral:  #FF6A58;
+  --gl-blue:   #6F8BFF;
+  --gl-yellow: #FFDF50;
+  --gl-navy:   #1F507F;
+  --gl-ink:    #1B3A6B;
+  --gl-ink-2:  rgba(31, 80, 127, 0.62);
+  --gl-ink-3:  rgba(31, 80, 127, 0.36);
+  --gl-line:   rgba(31, 80, 127, 0.14);
+
+  --accent:      #FFA93A;
+  --accent-deep: #E5891A;
+  --accent-soft: rgba(255, 169, 58, 0.12);
+  --accent-line: rgba(255, 169, 58, 0.45);
+  --accent-glow: rgba(255, 169, 58, 0.40);
+
   /* ── Colors ── */
   --color-bg: #FFFEF6;
   --color-board: #FFFFFF;
@@ -55,7 +85,7 @@
   /* ── Fonts ── */
   --font-primary: 'Lilita One', system-ui, sans-serif;
   --font-accent: 'Nunito', system-ui, -apple-system, sans-serif;
-  --font-chalk: 'Sketchzone', cursive;
+  --font-chalk: 'SketchChalk', cursive;
   --font-weight-title: 500;
   --font-weight-body:  500;
 
@@ -176,6 +206,16 @@ body {
   pointer-events: none;
   user-select: none;
   line-height: 1;
+}
+
+/* Hide decoration layer on all lab screens */
+body:has(.cp-l1l-wrap) .layer-deco,
+body:has(.cp-l2l-wrap) .layer-deco,
+body:has(.cp-l3l-wrap) .layer-deco,
+body:has(.cp-l4l-wrap) .layer-deco,
+body:has(.cp-l5l-wrap) .layer-deco,
+body:has(.cp-l6l-wrap) .layer-deco {
+  opacity: 0;
 }
 
 /* ── Decoration positions — fixed, no animation, matches Figma Layer 5 ── */

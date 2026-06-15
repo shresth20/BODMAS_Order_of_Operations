@@ -11,8 +11,10 @@ var CONTENT_PAGES = [
     id: '1.0',
     type: 'l1-intro',
     scenario: 'A child buys 3 packets of crayons with 4 crayons each, and gets 2 extra crayons.',
+    scenarioHtml: 'A child buys <span class="cp-l1i-hl">3 packets</span> of crayons with <span class="cp-l1i-hl">4 crayons</span> each, and gets <span class="cp-l1i-hl">2 extra</span> crayons.',
     expression: '3 × 4 + 2',
-    question: '🤔 How many crayons in all? Which part do you solve first?',
+    question: 'How many crayons in all? Which part do you solve first?',
+    questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many crayons in all? Which part do you solve first?',
     buttonLabel: '🔍 Let\'s Investigate!',
     next: '1.1'
   },
@@ -22,36 +24,36 @@ var CONTENT_PAGES = [
     type: 'l1-lab',
     rounds: [
       {
-        tokens:     ['3', '+', '4', '×', '2'],
+        tokens: ['3', '+', '4', '×', '2'],
         mulIndices: [2, 3, 4],
-        mulResult:  8,
+        mulResult: 8,
         finalResult: 11,
-        hasCompare:  true,
+        hasCompare: true,
         compareWrong: 14,
         compareRight: 11
       },
       {
-        tokens:     ['5', '×', '2', '+', '6'],
+        tokens: ['5', '×', '2', '+', '6'],
         mulIndices: [0, 1, 2],
-        mulResult:  10,
+        mulResult: 10,
         finalResult: 16,
-        hasCompare:  false
+        hasCompare: false
       },
       {
-        tokens:     ['7', '+', '3', '×', '4'],
+        tokens: ['7', '+', '3', '×', '4'],
         mulIndices: [2, 3, 4],
-        mulResult:  12,
+        mulResult: 12,
         finalResult: 19,
-        hasCompare:  true,
+        hasCompare: true,
         compareWrong: 40,
         compareRight: 19
       },
       {
-        tokens:     ['2', '×', '6', '+', '5'],
+        tokens: ['2', '×', '6', '+', '5'],
         mulIndices: [0, 1, 2],
-        mulResult:  12,
+        mulResult: 12,
         finalResult: 17,
-        hasCompare:  false
+        hasCompare: false
       }
     ],
     next: '1.2'
@@ -64,17 +66,18 @@ var CONTENT_PAGES = [
     ruleText: 'When a sum has × and +, solve × first, then +.',
     workedSteps: [
       { expr: '3 + 4 × 2', hlTokens: ['4', '×', '2'] },
-      { expr: '= 3 + 8',   hlTokens: ['8'] },
-      { expr: '= 11',      hlTokens: [] }
+      { expr: '= 3 + 8', hlTokens: ['8'] },
+      { expr: '= 11', hlTokens: [] }
     ],
-    bodmasTag: 'Part of BODMAS — Multiplication is done before Addition.',
-    buttonLabel: 'See the Detectives ►',
+    bodmasTag: 'Multiplication is done before Addition.',
+    buttonLabel: 'Continue',
     next: '1.3'
   },
 
   {
     id: '1.3',
     type: 'l1-practice',
+    animation: 'l1PracticeEntrance',
     questions: [
       {
         kind: 'tap-operator',
@@ -100,8 +103,9 @@ var CONTENT_PAGES = [
         expression: '5 + 3 × 4',
         steps: [
           { instruction: 'Do × first', subExpr: '3 × 4 = ?', choices: [12, 7, 20], correct: 12 },
-          { instruction: 'Now add',    subExpr: '5 + 12 = ?', choices: [17, 9, 20], correct: 17 }
+          { instruction: 'Now add', subExpr: '5 + 12 = ?', choices: [17, 9, 20], correct: 17 }
         ],
+        wrongHint: 'Try again!',
         okMsg: 'Perfect! 5 + 3 × 4 = 17.'
       },
       {
@@ -109,7 +113,7 @@ var CONTENT_PAGES = [
         prompt: 'Which method is correct?',
         expression: '6 + 2 × 3',
         methods: [
-          { label: '× first',      steps: ['6 + 2 × 3', '6 + 6 = 12'], answer: 12, correct: true  },
+          { label: '× first', steps: ['6 + 2 × 3', '6 + 6 = 12'], answer: 12, correct: true },
           { label: 'Left → right', steps: ['6 + 2 × 3', '8 × 3 = 24'], answer: 24, correct: false }
         ],
         okMsg: 'Correct! Always do × before +.',
@@ -128,6 +132,7 @@ var CONTENT_PAGES = [
     id: '2.0',
     type: 'l2-intro',
     scenario: 'A shopkeeper has 20 bananas. He sells 3 baskets with 4 bananas each.',
+    scenarioHtml: 'A shopkeeper has <span class="cp-l2i-hl">20 bananas</span>. He sells <span class="cp-l2i-hl">3 baskets</span> with <span class="cp-l2i-hl">4 bananas</span> each.',
     expression: '20 − 3 × 4',
     question: '🤔 How many bananas are left? Which part do you solve first?',
     buttonLabel: '🔍 Let\'s Investigate!',
@@ -139,36 +144,36 @@ var CONTENT_PAGES = [
     type: 'l2-lab',
     rounds: [
       {
-        tokens:     ['10', '−', '3', '×', '2'],
+        tokens: ['10', '−', '3', '×', '2'],
         mulIndices: [2, 3, 4],
-        mulResult:  6,
+        mulResult: 6,
         finalResult: 4,
-        hasCompare:  true,
+        hasCompare: true,
         compareWrong: 14,
         compareRight: 4
       },
       {
-        tokens:     ['4', '×', '3', '−', '7'],
+        tokens: ['4', '×', '3', '−', '7'],
         mulIndices: [0, 1, 2],
-        mulResult:  12,
+        mulResult: 12,
         finalResult: 5,
-        hasCompare:  false
+        hasCompare: false
       },
       {
-        tokens:     ['20', '−', '4', '×', '3'],
+        tokens: ['20', '−', '4', '×', '3'],
         mulIndices: [2, 3, 4],
-        mulResult:  12,
+        mulResult: 12,
         finalResult: 8,
-        hasCompare:  true,
+        hasCompare: true,
         compareWrong: 48,
         compareRight: 8
       },
       {
-        tokens:     ['5', '×', '4', '−', '9'],
+        tokens: ['5', '×', '4', '−', '9'],
         mulIndices: [0, 1, 2],
-        mulResult:  20,
+        mulResult: 20,
         finalResult: 11,
-        hasCompare:  false
+        hasCompare: false
       }
     ],
     next: '2.2'
@@ -181,17 +186,18 @@ var CONTENT_PAGES = [
     ruleText: 'When a sum has × and −, solve × first, then −.',
     workedSteps: [
       { expr: '10 − 3 × 2', hlTokens: ['3', '×', '2'] },
-      { expr: '= 10 − 6',   hlTokens: ['6'] },
-      { expr: '= 4',        hlTokens: [] }
+      { expr: '= 10 − 6', hlTokens: ['6'] },
+      { expr: '= 4', hlTokens: [] }
     ],
-    bodmasTag: 'Part of BODMAS — Multiplication is done before Subtraction.',
-    buttonLabel: 'See the Detectives ►',
+    bodmasTag: 'Multiplication is done before Subtraction.',
+    buttonLabel: 'Continue',
     next: '2.3'
   },
 
   {
     id: '2.3',
     type: 'l2-practice',
+    animation: 'l2PracticeEntrance',
     questions: [
       {
         kind: 'tap-operator',
@@ -216,8 +222,8 @@ var CONTENT_PAGES = [
         prompt: 'Solve step by step.',
         expression: '9 − 2 × 4',
         steps: [
-          { instruction: 'Do × first',   subExpr: '2 × 4 = ?', choices: [8, 6, 12], correct: 8 },
-          { instruction: 'Now subtract', subExpr: '9 − 8 = ?', choices: [1, 17, 2],  correct: 1 }
+          { instruction: 'Do × first', subExpr: '2 × 4 = ?', choices: [8, 6, 12], correct: 8 },
+          { instruction: 'Now subtract', subExpr: '9 − 8 = ?', choices: [1, 17, 2], correct: 1 }
         ],
         okMsg: 'Perfect! 9 − 2 × 4 = 1.'
       },
@@ -226,7 +232,7 @@ var CONTENT_PAGES = [
         prompt: 'Which method is correct?',
         expression: '15 − 3 × 4',
         methods: [
-          { label: '× first',      steps: ['15 − 3 × 4', '3 × 4 = 12', '15 − 12 = 3'], answer: 3,  correct: true  },
+          { label: '× first', steps: ['15 − 3 × 4', '3 × 4 = 12', '15 − 12 = 3'], answer: 3, correct: true },
           { label: 'Left → right', steps: ['15 − 3 × 4', '15 − 3 = 12', '12 × 4 = 48'], answer: 48, correct: false }
         ],
         okMsg: 'Correct! Always do × before −.',
@@ -256,36 +262,36 @@ var CONTENT_PAGES = [
     type: 'l3-lab',
     rounds: [
       {
-        tokens:     ['6', '+', '9', '÷', '3'],
+        tokens: ['6', '+', '9', '÷', '3'],
         divIndices: [2, 3, 4],
-        divResult:  3,
+        divResult: 3,
         finalResult: 9,
-        hasCompare:  true,
+        hasCompare: true,
         compareWrong: 5,
         compareRight: 9
       },
       {
-        tokens:     ['10', '÷', '2', '+', '7'],
+        tokens: ['10', '÷', '2', '+', '7'],
         divIndices: [0, 1, 2],
-        divResult:  5,
+        divResult: 5,
         finalResult: 12,
-        hasCompare:  false
+        hasCompare: false
       },
       {
-        tokens:     ['10', '−', '6', '÷', '2'],
+        tokens: ['10', '−', '6', '÷', '2'],
         divIndices: [2, 3, 4],
-        divResult:  3,
+        divResult: 3,
         finalResult: 7,
-        hasCompare:  true,
+        hasCompare: true,
         compareWrong: 2,
         compareRight: 7
       },
       {
-        tokens:     ['15', '÷', '3', '−', '2'],
+        tokens: ['15', '÷', '3', '−', '2'],
         divIndices: [0, 1, 2],
-        divResult:  5,
+        divResult: 5,
         finalResult: 3,
-        hasCompare:  false
+        hasCompare: false
       }
     ],
     next: '3.2'
@@ -298,17 +304,18 @@ var CONTENT_PAGES = [
     ruleText: 'When a sum has ÷ and + or −, solve ÷ first.',
     workedSteps: [
       { expr: '10 + 12 ÷ 3', hlTokens: ['12', '÷', '3'] },
-      { expr: '= 10 + 4',    hlTokens: ['4'] },
-      { expr: '= 14',        hlTokens: [] }
+      { expr: '= 10 + 4', hlTokens: ['4'] },
+      { expr: '= 14', hlTokens: [] }
     ],
-    bodmasTag: 'Part of BODMAS — Division is done before Addition and Subtraction.',
-    buttonLabel: 'See the Detectives ►',
+    bodmasTag: 'Division is done before Addition and Subtraction.',
+    buttonLabel: 'Continue',
     next: '3.3'
   },
 
   {
     id: '3.3',
     type: 'l3-practice',
+    animation: 'l3PracticeEntrance',
     questions: [
       {
         kind: 'tap-operator',
@@ -334,7 +341,7 @@ var CONTENT_PAGES = [
         expression: '4 + 10 ÷ 2',
         steps: [
           { instruction: 'Do ÷ first', subExpr: '10 ÷ 2 = ?', choices: [5, 12, 3], correct: 5 },
-          { instruction: 'Now add',    subExpr: '4 + 5 = ?',   choices: [9, 14, 7], correct: 9 }
+          { instruction: 'Now add', subExpr: '4 + 5 = ?', choices: [9, 14, 7], correct: 9 }
         ],
         okMsg: 'Perfect! 4 + 10 ÷ 2 = 9.'
       },
@@ -343,8 +350,8 @@ var CONTENT_PAGES = [
         prompt: 'Which method is correct?',
         expression: '12 + 8 ÷ 4',
         methods: [
-          { label: '÷ first',       steps: ['12 + 8 ÷ 4', '8 ÷ 4 = 2', '12 + 2 = 14'], answer: 14, correct: true  },
-          { label: 'Left → right',  steps: ['12 + 8 ÷ 4', '12 + 8 = 20', '20 ÷ 4 = 5'], answer: 5,  correct: false }
+          { label: '÷ first', steps: ['12 + 8 ÷ 4', '8 ÷ 4 = 2', '12 + 2 = 14'], answer: 14, correct: true },
+          { label: 'Left → right', steps: ['12 + 8 ÷ 4', '12 + 8 = 20', '20 ÷ 4 = 5'], answer: 5, correct: false }
         ],
         okMsg: 'Correct! Always do ÷ before +.',
         wrongHint: 'Look for the ÷ sign — it goes first!'
@@ -414,16 +421,17 @@ var CONTENT_PAGES = [
     ruleText: 'When a sum has + and −, solve from LEFT to RIGHT.',
     workedSteps: [
       { expr: '10 − 4 + 3', hlTokens: ['10', '−', '4'] },
-      { expr: '= 6 + 3',    hlTokens: ['6'] },
-      { expr: '= 9',        hlTokens: [] }
+      { expr: '= 6 + 3', hlTokens: ['6'] },
+      { expr: '= 9', hlTokens: [] }
     ],
-    bodmasTag: 'Part of BODMAS — Addition and Subtraction are solved left to right.',
+    bodmasTag: 'Addition and Subtraction are solved left to right.',
     next: '4.3'
   },
 
   {
     id: '4.3',
     type: 'l4-practice',
+    animation: 'l4PracticeEntrance',
     questions: [
       {
         kind: 'tap-operator',
@@ -449,7 +457,7 @@ var CONTENT_PAGES = [
         expression: '9 − 2 + 4',
         steps: [
           { label: 'Do − first', subExpr: '9 − 2 = ?', choices: [7, 11, 6], correct: 7 },
-          { label: 'Now add',    subExpr: '7 + 4 = ?', choices: [11, 3, 10], correct: 11 }
+          { label: 'Now add', subExpr: '7 + 4 = ?', choices: [11, 3, 10], correct: 11 }
         ],
         okMsg: 'Perfect! 9 − 2 + 4 = 11.'
       },
@@ -458,8 +466,8 @@ var CONTENT_PAGES = [
         prompt: 'Which method is correct?',
         expression: '10 − 3 + 5',
         methods: [
-          { label: 'Left → right', steps: ['10 − 3 + 5', '10 − 3 = 7', '7 + 5 = 12'], answer: 12, correct: true  },
-          { label: '+ first',      steps: ['10 − 3 + 5', '3 + 5 = 8',  '10 − 8 = 2'], answer: 2,  correct: false }
+          { label: 'Left → right', steps: ['10 − 3 + 5', '10 − 3 = 7', '7 + 5 = 12'], answer: 12, correct: true },
+          { label: '+ first', steps: ['10 − 3 + 5', '3 + 5 = 8', '10 − 8 = 2'], answer: 2, correct: false }
         ],
         okMsg: 'Correct! Always solve + and − left to right.',
         wrongHint: '+ and − have equal priority — go left to right!'
@@ -529,16 +537,17 @@ var CONTENT_PAGES = [
     ruleText: 'When a sum has × and ÷, solve from LEFT to RIGHT.',
     workedSteps: [
       { expr: '12 ÷ 2 × 3', hlTokens: ['12', '÷', '2'] },
-      { expr: '= 6 × 3',    hlTokens: ['6'] },
-      { expr: '= 18',       hlTokens: [] }
+      { expr: '= 6 × 3', hlTokens: ['6'] },
+      { expr: '= 18', hlTokens: [] }
     ],
-    bodmasTag: 'Part of BODMAS — Multiplication and Division are solved left to right.',
+    bodmasTag: 'Multiplication and Division are solved left to right.',
     next: '5.3'
   },
 
   {
     id: '5.3',
     type: 'l5-practice',
+    animation: 'l5PracticeEntrance',
     questions: [
       {
         kind: 'tap-operator',
@@ -563,8 +572,8 @@ var CONTENT_PAGES = [
         prompt: 'Solve step by step.',
         expression: '20 ÷ 4 × 3',
         steps: [
-          { label: 'Do ÷ first',    subExpr: '20 ÷ 4 = ?', choices: [5, 15, 80], correct: 5  },
-          { label: 'Now multiply',  subExpr: '5 × 3 = ?',  choices: [15, 8, 60], correct: 15 }
+          { label: 'Do ÷ first', subExpr: '20 ÷ 4 = ?', choices: [5, 15, 80], correct: 5 },
+          { label: 'Now multiply', subExpr: '5 × 3 = ?', choices: [15, 8, 60], correct: 15 }
         ],
         okMsg: 'Perfect! 20 ÷ 4 × 3 = 15.'
       },
@@ -573,8 +582,8 @@ var CONTENT_PAGES = [
         prompt: 'Which method is correct?',
         expression: '24 ÷ 4 × 2',
         methods: [
-          { label: 'Left → right', steps: ['24 ÷ 4 × 2', '24 ÷ 4 = 6', '6 × 2 = 12'], answer: 12, correct: true  },
-          { label: '× first',      steps: ['24 ÷ 4 × 2', '4 × 2 = 8',  '24 ÷ 8 = 3'], answer: 3,  correct: false }
+          { label: 'Left → right', steps: ['24 ÷ 4 × 2', '24 ÷ 4 = 6', '6 × 2 = 12'], answer: 12, correct: true },
+          { label: '× first', steps: ['24 ÷ 4 × 2', '4 × 2 = 8', '24 ÷ 8 = 3'], answer: 3, correct: false }
         ],
         okMsg: 'Correct! Always solve × and ÷ left to right.',
         wrongHint: '× and ÷ have equal priority — go left to right!'
@@ -654,17 +663,18 @@ var CONTENT_PAGES = [
     ruleText: 'When a sum has ( ), solve inside the ( ) first.',
     workedSteps: [
       { expr: '(2 + 3) \xd7 4', hlTokens: ['(2', '+', '3)'] },
-      { expr: '= 5 \xd7 4',     hlTokens: ['5'] },
-      { expr: '= 20',           hlTokens: [] }
+      { expr: '= 5 \xd7 4', hlTokens: ['5'] },
+      { expr: '= 20', hlTokens: [] }
     ],
-    bodmasTag: 'Part of BODMAS — Brackets are solved before everything else.',
-    buttonLabel: 'See the Detectives ►',
+    bodmasTag: 'Brackets are solved before everything else.',
+    buttonLabel: 'Continue',
     next: '6.3'
   },
 
   {
     id: '6.3',
     type: 'l6-practice',
+    animation: 'l6PracticeEntrance',
     questions: [
       {
         kind: 'tap-operator',
@@ -689,8 +699,8 @@ var CONTENT_PAGES = [
         prompt: 'Solve step by step.',
         expression: '(2 + 5) \xd7 4',
         steps: [
-          { instruction: 'Solve inside ( ) first', subExpr: '2 + 5 = ?', choices: [7, 9, 3],   correct: 7  },
-          { instruction: 'Now multiply',           subExpr: '7 \xd7 4 = ?', choices: [28, 11, 24], correct: 28 }
+          { instruction: 'Solve inside ( ) first', subExpr: '2 + 5 = ?', choices: [7, 9, 3], correct: 7 },
+          { instruction: 'Now multiply', subExpr: '7 \xd7 4 = ?', choices: [28, 11, 24], correct: 28 }
         ],
         okMsg: 'Perfect! (2 + 5) \xd7 4 = 28.'
       },
@@ -699,7 +709,7 @@ var CONTENT_PAGES = [
         prompt: 'Which method is correct?',
         expression: '(4 + 2) \xd7 3',
         methods: [
-          { label: '( ) first',  steps: ['(4 + 2) \xd7 3', '4 + 2 = 6', '6 \xd7 3 = 18'], answer: 18, correct: true  },
+          { label: '( ) first', steps: ['(4 + 2) \xd7 3', '4 + 2 = 6', '6 \xd7 3 = 18'], answer: 18, correct: true },
           { label: '\xd7 first', steps: ['(4 + 2) \xd7 3', '2 \xd7 3 = 6', '4 + 6 = 10'], answer: 10, correct: false }
         ],
         okMsg: 'Correct! Always solve inside brackets first.',
@@ -717,6 +727,10 @@ var CONTENT_PAGES = [
   {
     id: '7.0',
     type: 'l7-grand-challenge',
+    animation: 'l7GrandChallengeEntrance',
+    title: '🏆 Welcome to the Grand Challenge!',
+    description: 'Solve 2 phases packed with 3 questions each.',
+    buttonLabel: '🚀 Start Challenge!',
     phases: [
       {
         label: 'Phase 1 — No Brackets',
@@ -792,16 +806,16 @@ var CONTENT_PAGES = [
     instruction: 'ARRANGE THE BODMAS LADDER',
     dragLabel: 'DRAG FROM HERE',
     tiles: [
-      { id: 'O',  label: 'O — Of',                          sub: 'means multiply', colorKey: 'yellow' },
-      { id: 'B',  label: 'B — Brackets',                    sub: '',               colorKey: 'purple' },
-      { id: 'AS', label: 'A/S — Addition & Subtraction',    sub: '',               colorKey: 'green'  },
-      { id: 'DM', label: 'D/M — Division & Multiplication', sub: '',               colorKey: 'teal'   }
+      { id: 'O', label: 'O — Of', sub: 'means multiply', colorKey: 'yellow' },
+      { id: 'B', label: 'B — Brackets', sub: '', colorKey: 'purple' },
+      { id: 'AS', label: 'A/S — Addition & Subtraction', sub: '', colorKey: 'green' },
+      { id: 'DM', label: 'D/M — Division & Multiplication', sub: '', colorKey: 'teal' }
     ],
     correctOrder: ['B', 'O', 'DM', 'AS'],
     checkLabel: 'Check Order',
     wrongHint: 'Not quite! Think about which operation comes first in BODMAS.',
     completionMsg: '🎉 You discovered the order rule. Mathematicians call it BODMAS!',
-    bodmasHint: 'O is for “Of” — it means multiply · e.g. half of 10 = 5',
+    bodmasHint: 'O is for "Of" — it means multiply · e.g. half of 10 = 5',
     next: '9.0'
   },
 
@@ -812,23 +826,28 @@ var CONTENT_PAGES = [
   {
     id: '9.0',
     type: 'l9-nested-brackets',
-    title: 'NESTED BRACKETS',
     instruction: 'Tap which operator to solve FIRST!',
-    hintInner:  '🔍 Find the innermost ( ) brackets and tap the operator inside!',
+    hintInner: '🔍 Find the innermost ( ) brackets and tap the operator inside!',
     hintMiddle: '✨ Inner brackets solved! Tap the next operator to use.',
-    hintLast:   '🎯 Almost done — tap the last remaining operator!',
-    wrongHint:  'That\'s not inside the innermost brackets — look for the ( ) with no other ( ) inside it.',
+    hintLast: '🎯 Almost done — tap the last remaining operator!',
+    wrongHint: 'That\'s not inside the innermost brackets — look for the ( ) with no other ( ) inside it.',
     questions: [
       {
         label: 'Question 1 of 2',
         expression: '( 2 + ( 3 × 4 ) ) − 5',
         steps: [
-          { correctOp: '×', subExpr: '3 × 4', answer: 12,
-            reducedExpression: '( 2 + 12 ) − 5', phase: 'inner' },
-          { correctOp: '+', subExpr: '2 + 12', answer: 14,
-            reducedExpression: '14 − 5', phase: 'middle' },
-          { correctOp: '−', subExpr: '14 − 5', answer: 9,
-            phase: 'last', isFinal: true }
+          {
+            correctOp: '×', subExpr: '3 × 4', answer: 12,
+            reducedExpression: '( 2 + 12 ) − 5', phase: 'inner'
+          },
+          {
+            correctOp: '+', subExpr: '2 + 12', answer: 14,
+            reducedExpression: '14 − 5', phase: 'middle'
+          },
+          {
+            correctOp: '−', subExpr: '14 − 5', answer: 9,
+            phase: 'last', isFinal: true
+          }
         ],
         finalAnswer: 9,
         fullExpression: '(2 + (3 × 4)) − 5 = 9'
@@ -837,12 +856,18 @@ var CONTENT_PAGES = [
         label: 'Question 2 of 2',
         expression: '3 × ( 2 + ( 8 ÷ 4 ) )',
         steps: [
-          { correctOp: '÷', subExpr: '8 ÷ 4', answer: 2,
-            reducedExpression: '3 × ( 2 + 2 )', phase: 'inner' },
-          { correctOp: '+', subExpr: '2 + 2', answer: 4,
-            reducedExpression: '3 × 4', phase: 'middle' },
-          { correctOp: '×', subExpr: '3 × 4', answer: 12,
-            phase: 'last', isFinal: true }
+          {
+            correctOp: '÷', subExpr: '8 ÷ 4', answer: 2,
+            reducedExpression: '3 × ( 2 + 2 )', phase: 'inner'
+          },
+          {
+            correctOp: '+', subExpr: '2 + 2', answer: 4,
+            reducedExpression: '3 × 4', phase: 'middle'
+          },
+          {
+            correctOp: '×', subExpr: '3 × 4', answer: 12,
+            phase: 'last', isFinal: true
+          }
         ],
         finalAnswer: 12,
         fullExpression: '3 × (2 + (8 ÷ 4)) = 12'
@@ -862,14 +887,22 @@ var CONTENT_PAGES = [
     instruction: 'Place the brackets to make it true!',
     subInstruction: 'Tap where ( goes, then where ) goes.',
     puzzles: [
-      { id: 1, tokens: ['2', '+', '3', '×', '4'], target: 20,
-        solution: { open: 0, close: 3 }, working: '(2 + 3) × 4 = 5 × 4 = 20' },
-      { id: 2, tokens: ['8', '−', '2', '×', '3'], target: 18,
-        solution: { open: 0, close: 3 }, working: '(8 − 2) × 3 = 6 × 3 = 18' },
-      { id: 3, tokens: ['3', '×', '4', '+', '2'], target: 18,
-        solution: { open: 2, close: 5 }, working: '3 × (4 + 2) = 3 × 6 = 18' },
-      { id: 4, tokens: ['10', '−', '2', '+', '3'], target: 5,
-        solution: { open: 2, close: 5 }, working: '10 − (2 + 3) = 10 − 5 = 5' }
+      {
+        id: 1, tokens: ['2', '+', '3', '×', '4'], target: 20,
+        solution: { open: 0, close: 3 }, working: '(2 + 3) × 4 = 5 × 4 = 20'
+      },
+      {
+        id: 2, tokens: ['8', '−', '2', '×', '3'], target: 18,
+        solution: { open: 0, close: 3 }, working: '(8 − 2) × 3 = 6 × 3 = 18'
+      },
+      {
+        id: 3, tokens: ['3', '×', '4', '+', '2'], target: 18,
+        solution: { open: 2, close: 5 }, working: '3 × (4 + 2) = 3 × 6 = 18'
+      },
+      {
+        id: 4, tokens: ['10', '−', '2', '+', '3'], target: 5,
+        solution: { open: 2, close: 5 }, working: '10 − (2 + 3) = 10 − 5 = 5'
+      }
     ],
     next: '9.2'
   },
@@ -883,18 +916,30 @@ var CONTENT_PAGES = [
     type: 'l9-bodmas-review',
     title: 'FINAL BODMAS REVIEW',
     questions: [
-      { n: 1, rule: '× before +',              expr: '7 + 2 × 3',   correctOp: '×', answer: 13,
-        okMsg: '✓ Correct! × is solved first → 7 + 6 = 13' },
-      { n: 2, rule: '× before −',              expr: '15 − 2 × 4',  correctOp: '×', answer: 7,
-        okMsg: '✓ Correct! × is solved first → 15 − 8 = 7' },
-      { n: 3, rule: '÷ before + and −',        expr: '5 + 12 ÷ 4',  correctOp: '÷', answer: 8,
-        okMsg: '✓ Correct! ÷ is solved first → 5 + 3 = 8' },
-      { n: 4, rule: '+ and − left to right',   expr: '11 − 4 + 2',  correctOp: '−', answer: 9,
-        okMsg: '✓ Correct! Leftmost − is solved first → 7 + 2 = 9' },
-      { n: 5, rule: '× and ÷ left to right',   expr: '18 ÷ 3 × 2',  correctOp: '÷', answer: 12,
-        okMsg: '✓ Correct! Leftmost ÷ is solved first → 6 × 2 = 12' },
-      { n: 6, rule: 'Brackets ( ) come FIRST', expr: '( 5 + 3 ) × 4', correctOp: '+', answer: 32,
-        okMsg: '✓ Correct! + inside ( ) is solved first → 8 × 4 = 32' }
+      {
+        n: 1, rule: '× before +', expr: '7 + 2 × 3', correctOp: '×', answer: 13,
+        okMsg: '✓ Correct! × is solved first → 7 + 6 = 13'
+      },
+      {
+        n: 2, rule: '× before −', expr: '15 − 2 × 4', correctOp: '×', answer: 7,
+        okMsg: '✓ Correct! × is solved first → 15 − 8 = 7'
+      },
+      {
+        n: 3, rule: '÷ before + and −', expr: '5 + 12 ÷ 4', correctOp: '÷', answer: 8,
+        okMsg: '✓ Correct! ÷ is solved first → 5 + 3 = 8'
+      },
+      {
+        n: 4, rule: '+ and − left to right', expr: '11 − 4 + 2', correctOp: '−', answer: 9,
+        okMsg: '✓ Correct! Leftmost − is solved first → 7 + 2 = 9'
+      },
+      {
+        n: 5, rule: '× and ÷ left to right', expr: '18 ÷ 3 × 2', correctOp: '÷', answer: 12,
+        okMsg: '✓ Correct! Leftmost ÷ is solved first → 6 × 2 = 12'
+      },
+      {
+        n: 6, rule: 'Brackets ( ) come FIRST', expr: '( 5 + 3 ) × 4', correctOp: '+', answer: 32,
+        okMsg: '✓ Correct! + inside ( ) is solved first → 8 × 4 = 32'
+      }
     ],
     stepOrder: {
       n: 7,
@@ -902,9 +947,9 @@ var CONTENT_PAGES = [
       expression: '24 ÷ (6 − 2) + 3 × 2',
       steps: [
         { id: 'brackets', label: 'Step: (6 − 2) = 4' },
-        { id: 'div',      label: 'Step: 24 ÷ 4 = 6'  },
-        { id: 'mul',      label: 'Step: 3 × 2 = 6'   },
-        { id: 'add',      label: 'Step: 6 + 6 = 12'  }
+        { id: 'div', label: 'Step: 24 ÷ 4 = 6' },
+        { id: 'mul', label: 'Step: 3 × 2 = 6' },
+        { id: 'add', label: 'Step: 6 + 6 = 12' }
       ],
       correctOrder: ['brackets', 'div', 'mul', 'add'],
       wrongHint: 'Not quite — remember: brackets first, then × and ÷, then + and −.',

@@ -3184,6 +3184,249 @@ var ContentAnimations = (function () {
       }
     },
 
+    /* ── Page 1.3 — l1-practice entrance ───────────── */
+    l1PracticeEntrance: function () {
+      var bar   = document.querySelector('.cp-l1p-progress-bar');
+      var card  = document.querySelector('.cp-l1p-card');
+      var inner = card ? [
+        card.querySelector('.cp-l1p-card__label'),
+        card.querySelector('.cp-l1p-card__expr'),
+        card.querySelector('.cp-l1p-card__prompt'),
+        card.querySelector('.cp-l1p-card__body')
+      ].filter(Boolean) : [];
+
+      if (typeof anime === 'undefined') {
+        if (bar)  bar.style.opacity  = '1';
+        if (card) card.style.opacity = '1';
+        inner.forEach(function (el) { el.style.opacity = '1'; });
+        return;
+      }
+
+      if (bar) {
+        anime.set(bar, { opacity: 0, translateY: -8 });
+        anime({ targets: bar, opacity: 1, translateY: 0, duration: 340, easing: 'easeOutQuad' });
+      }
+      if (card) {
+        anime.set(card, { opacity: 0, scale: 0.88, translateY: 16 });
+        anime({ targets: card, opacity: 1, scale: 1, translateY: 0, duration: 520, delay: 110, easing: 'easeOutBack' });
+      }
+      if (inner.length) {
+        anime.set(inner, { opacity: 0, translateY: 10 });
+        anime({
+          targets: inner,
+          opacity: 1, translateY: 0,
+          duration: 320,
+          delay: anime.stagger(80, { start: 380 }),
+          easing: 'easeOutQuad'
+        });
+      }
+    },
+
+    /* ── Page 2.3 — l2-practice entrance ───────────── */
+    l2PracticeEntrance: function () {
+      var bar   = document.querySelector('.cp-l2p-progress-bar');
+      var card  = document.querySelector('.cp-l2p-card');
+      var inner = card ? [
+        card.querySelector('.cp-l2p-card__label'),
+        card.querySelector('.cp-l2p-card__expr'),
+        card.querySelector('.cp-l2p-card__prompt'),
+        card.querySelector('.cp-l2p-card__body')
+      ].filter(Boolean) : [];
+
+      if (typeof anime === 'undefined') {
+        if (bar)  bar.style.opacity  = '1';
+        if (card) card.style.opacity = '1';
+        inner.forEach(function (el) { el.style.opacity = '1'; });
+        return;
+      }
+
+      if (bar) {
+        anime.set(bar, { opacity: 0, translateY: -8 });
+        anime({ targets: bar, opacity: 1, translateY: 0, duration: 340, easing: 'easeOutQuad' });
+      }
+      if (card) {
+        anime.set(card, { opacity: 0, scale: 0.88, translateY: 16 });
+        anime({ targets: card, opacity: 1, scale: 1, translateY: 0, duration: 520, delay: 110, easing: 'easeOutBack' });
+      }
+      if (inner.length) {
+        anime.set(inner, { opacity: 0, translateY: 10 });
+        anime({
+          targets: inner,
+          opacity: 1, translateY: 0,
+          duration: 320,
+          delay: anime.stagger(80, { start: 380 }),
+          easing: 'easeOutQuad'
+        });
+      }
+    },
+
+    /* ── Page 3.3 — l3-practice entrance ───────────── */
+    l3PracticeEntrance: function () {
+      var bar   = document.querySelector('.cp-l3p-progress-bar');
+      var card  = document.querySelector('.cp-l3p-card');
+      var inner = card ? [
+        card.querySelector('.cp-l3p-card__label'),
+        card.querySelector('.cp-l3p-card__expr'),
+        card.querySelector('.cp-l3p-card__prompt'),
+        card.querySelector('.cp-l3p-card__body')
+      ].filter(Boolean) : [];
+
+      if (typeof anime === 'undefined') {
+        if (bar)  bar.style.opacity  = '1';
+        if (card) card.style.opacity = '1';
+        inner.forEach(function (el) { el.style.opacity = '1'; });
+        return;
+      }
+
+      if (bar) {
+        anime.set(bar, { opacity: 0, translateY: -8 });
+        anime({ targets: bar, opacity: 1, translateY: 0, duration: 340, easing: 'easeOutQuad' });
+      }
+      if (card) {
+        anime.set(card, { opacity: 0, scale: 0.88, translateY: 16 });
+        anime({ targets: card, opacity: 1, scale: 1, translateY: 0, duration: 520, delay: 110, easing: 'easeOutBack' });
+      }
+      if (inner.length) {
+        anime.set(inner, { opacity: 0, translateY: 10 });
+        anime({
+          targets: inner,
+          opacity: 1, translateY: 0,
+          duration: 320,
+          delay: anime.stagger(80, { start: 380 }),
+          easing: 'easeOutQuad'
+        });
+      }
+    },
+
+    /* ── Page 4.3 — l4-practice entrance ───────────── */
+    l4PracticeEntrance: function () {
+      var bar   = document.querySelector('.cp-l4p-progress-bar');
+      var card  = document.querySelector('.cp-l4p-card');
+      var inner = card ? [
+        card.querySelector('.cp-l4p-card__label'),
+        card.querySelector('.cp-l4p-card__expr'),
+        card.querySelector('.cp-l4p-card__prompt'),
+        card.querySelector('.cp-l4p-card__body')
+      ].filter(Boolean) : [];
+
+      if (typeof anime === 'undefined') {
+        if (bar)  bar.style.opacity  = '1';
+        if (card) card.style.opacity = '1';
+        inner.forEach(function (el) { el.style.opacity = '1'; });
+        return;
+      }
+
+      if (bar) {
+        anime.set(bar, { opacity: 0, translateY: -8 });
+        anime({ targets: bar, opacity: 1, translateY: 0, duration: 340, easing: 'easeOutQuad' });
+      }
+      if (card) {
+        anime.set(card, { opacity: 0, scale: 0.88, translateY: 16 });
+        anime({ targets: card, opacity: 1, scale: 1, translateY: 0, duration: 520, delay: 110, easing: 'easeOutBack' });
+      }
+      if (inner.length) {
+        anime.set(inner, { opacity: 0, translateY: 10 });
+        anime({
+          targets: inner,
+          opacity: 1, translateY: 0,
+          duration: 320,
+          delay: anime.stagger(80, { start: 380 }),
+          easing: 'easeOutQuad'
+        });
+      }
+    },
+
+    /* ── Page 5.3 — l5-practice entrance ───────────── */
+    l5PracticeEntrance: function () {
+      var bar   = document.querySelector('.cp-l5p-progress-bar');
+      var card  = document.querySelector('.cp-l5p-card');
+      var inner = card ? [
+        card.querySelector('.cp-l5p-card__label'),
+        card.querySelector('.cp-l5p-card__expr'),
+        card.querySelector('.cp-l5p-card__prompt'),
+        card.querySelector('.cp-l5p-card__body')
+      ].filter(Boolean) : [];
+
+      if (typeof anime === 'undefined') {
+        if (bar)  bar.style.opacity  = '1';
+        if (card) card.style.opacity = '1';
+        inner.forEach(function (el) { el.style.opacity = '1'; });
+        return;
+      }
+
+      if (bar) {
+        anime.set(bar, { opacity: 0, translateY: -8 });
+        anime({ targets: bar, opacity: 1, translateY: 0, duration: 340, easing: 'easeOutQuad' });
+      }
+      if (card) {
+        anime.set(card, { opacity: 0, scale: 0.88, translateY: 16 });
+        anime({ targets: card, opacity: 1, scale: 1, translateY: 0, duration: 520, delay: 110, easing: 'easeOutBack' });
+      }
+      if (inner.length) {
+        anime.set(inner, { opacity: 0, translateY: 10 });
+        anime({
+          targets: inner,
+          opacity: 1, translateY: 0,
+          duration: 320,
+          delay: anime.stagger(80, { start: 380 }),
+          easing: 'easeOutQuad'
+        });
+      }
+    },
+
+    /* ── Page 6.3 — l6-practice entrance ───────────── */
+    l6PracticeEntrance: function () {
+      var bar   = document.querySelector('.cp-l6p-progress-bar');
+      var card  = document.querySelector('.cp-l6p-card');
+      var inner = card ? [
+        card.querySelector('.cp-l6p-card__label'),
+        card.querySelector('.cp-l6p-card__expr'),
+        card.querySelector('.cp-l6p-card__prompt'),
+        card.querySelector('.cp-l6p-card__body')
+      ].filter(Boolean) : [];
+
+      if (typeof anime === 'undefined') {
+        if (bar)  bar.style.opacity  = '1';
+        if (card) card.style.opacity = '1';
+        inner.forEach(function (el) { el.style.opacity = '1'; });
+        return;
+      }
+
+      if (bar) {
+        anime.set(bar, { opacity: 0, translateY: -8 });
+        anime({ targets: bar, opacity: 1, translateY: 0, duration: 340, easing: 'easeOutQuad' });
+      }
+      if (card) {
+        anime.set(card, { opacity: 0, scale: 0.88, translateY: 16 });
+        anime({ targets: card, opacity: 1, scale: 1, translateY: 0, duration: 520, delay: 110, easing: 'easeOutBack' });
+      }
+      if (inner.length) {
+        anime.set(inner, { opacity: 0, translateY: 10 });
+        anime({
+          targets: inner,
+          opacity: 1, translateY: 0,
+          duration: 320,
+          delay: anime.stagger(80, { start: 380 }),
+          easing: 'easeOutQuad'
+        });
+      }
+    },
+
+    l7GrandChallengeEntrance: function () {
+      var welcome = document.querySelector('.cp-l7gc-welcome');
+
+      if (typeof anime === 'undefined') {
+        if (welcome) welcome.style.opacity = '1';
+        return;
+      }
+
+      if (welcome) {
+        anime.set(welcome, { opacity: 0, scale: 0.88, translateY: 16 });
+        anime({ targets: welcome, opacity: 1, scale: 1, translateY: 0,
+                duration: 520, delay: 80, easing: 'easeOutBack' });
+      }
+    },
+
     mbsPractice: function () {
       var bar  = document.querySelector('.cp-bp-progress-bar');
       var card = document.querySelector('.cp-bp-card');

@@ -330,3 +330,62 @@
     gap: 8px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   Lab screens — student & guide-bar by aspect ratio
+   Breakpoints: 2:1 → 16:9 → 3:2 → 4:3 → 5:4 → portrait
+═══════════════════════════════════════════════════════ */
+
+/* 2:1 and wider (ultra-wide) */
+@media (min-aspect-ratio: 2/1) {
+  .cp-l1l-student, .cp-l2l-student, .cp-l3l-student,
+  .cp-l4l-student, .cp-l5l-student, .cp-l6l-student { width: clamp(82px, 11.5vw, 140px); }
+
+  .cp-l1l-guide-bar, .cp-l2l-guide-bar, .cp-l3l-guide-bar,
+  .cp-l4l-guide-bar, .cp-l5l-guide-bar, .cp-l6l-guide-bar { width: clamp(280px, 58%, 680px); }
+}
+
+/* 16:9 to 2:1 (interactive panels, most laptops) */
+@media (max-aspect-ratio: 2/1) and (min-aspect-ratio: 16/9) {
+  .cp-l1l-student, .cp-l2l-student, .cp-l3l-student,
+  .cp-l4l-student, .cp-l5l-student, .cp-l6l-student { width: clamp(92px, 13.5vw, 160px); }
+
+  .cp-l1l-guide-bar, .cp-l2l-guide-bar, .cp-l3l-guide-bar,
+  .cp-l4l-guide-bar, .cp-l5l-guide-bar, .cp-l6l-guide-bar { width: clamp(290px, 64%, 700px); }
+}
+
+/* 3:2 to 16:9 */
+@media (max-aspect-ratio: 16/9) and (min-aspect-ratio: 3/2) {
+  .cp-l1l-student, .cp-l2l-student, .cp-l3l-student,
+  .cp-l4l-student, .cp-l5l-student, .cp-l6l-student { width: clamp(86px, 12.5vw, 148px); }
+
+  .cp-l1l-guide-bar, .cp-l2l-guide-bar, .cp-l3l-guide-bar,
+  .cp-l4l-guide-bar, .cp-l5l-guide-bar, .cp-l6l-guide-bar { width: clamp(280px, 62%, 680px); }
+}
+
+/* 4:3 to 3:2 */
+@media (max-aspect-ratio: 3/2) and (min-aspect-ratio: 4/3) {
+  .cp-l1l-student, .cp-l2l-student, .cp-l3l-student,
+  .cp-l4l-student, .cp-l5l-student, .cp-l6l-student { width: clamp(80px, 11.5vw, 138px); }
+
+  .cp-l1l-guide-bar, .cp-l2l-guide-bar, .cp-l3l-guide-bar,
+  .cp-l4l-guide-bar, .cp-l5l-guide-bar, .cp-l6l-guide-bar { width: clamp(270px, 60%, 660px); }
+}
+
+/* 5:4 to 4:3 */
+@media (max-aspect-ratio: 4/3) and (min-aspect-ratio: 5/4) {
+  .cp-l1l-student, .cp-l2l-student, .cp-l3l-student,
+  .cp-l4l-student, .cp-l5l-student, .cp-l6l-student { width: clamp(74px, 10.5vw, 125px); }
+
+  .cp-l1l-guide-bar, .cp-l2l-guide-bar, .cp-l3l-guide-bar,
+  .cp-l4l-guide-bar, .cp-l5l-guide-bar, .cp-l6l-guide-bar { width: clamp(260px, 58%, 640px); }
+}
+
+/* Narrower than 5:4 (portrait / phone) */
+@media (max-aspect-ratio: 5/4) {
+  .cp-l1l-student, .cp-l2l-student, .cp-l3l-student,
+  .cp-l4l-student, .cp-l5l-student, .cp-l6l-student { width: clamp(66px, 10vw, 110px); }
+
+  .cp-l1l-guide-bar, .cp-l2l-guide-bar, .cp-l3l-guide-bar,
+  .cp-l4l-guide-bar, .cp-l5l-guide-bar, .cp-l6l-guide-bar { width: clamp(240px, 78%, 580px); }
+}

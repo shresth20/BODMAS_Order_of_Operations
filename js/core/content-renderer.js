@@ -1,4 +1,4 @@
-/* content-renderer.js — Dispatches page data to type-specific renderers.
+﻿/* content-renderer.js — Dispatches page data to type-specific renderers.
    Depends on: CONTENT_PAGES, ContentAnimations */
 
 var ContentRenderer = (function () {
@@ -23,6 +23,15 @@ var ContentRenderer = (function () {
 
     area.classList.add('content-mode');
     area.innerHTML = '';
+    /* Restore header if a lab page customized it */
+    var _labBadge = document.querySelector('.cp-lab-round-badge');
+    if (_labBadge) _labBadge.remove();
+    var _labHdrDots = document.querySelector('.cp-lab-header-dots');
+    if (_labHdrDots) _labHdrDots.remove();
+    var _ibDots = document.querySelector('.cp-l9ib-dots');
+    if (_ibDots) _ibDots.remove();
+    var _pDotsEl = document.getElementById('progress-dots');
+    if (_pDotsEl) _pDotsEl.style.removeProperty('display');
     if (typeof Narration !== 'undefined') Narration.stop();
     _currentPageId = pageId;
 
@@ -8716,7 +8725,6 @@ var ContentRenderer = (function () {
       if (/^cp-l[1-6]l-classroom$/.test(token)) addClass('classroom-stage');
       if (/^cp-l[1-6]l-student$/.test(token)) addClass('student-avatar');
       if (/^cp-l[1-6]l-student__label$/.test(token)) addClass('student-avatar__label');
-      if (/^cp-l[1-6]l-student__label--hidden$/.test(token)) addClass('student-avatar__label--hidden');
       if (/^cp-l[1-6]l-student__label--blue$/.test(token)) addClass('student-avatar__label--blue');
       if (/^cp-l[1-6]l-student__label--pink$/.test(token)) addClass('student-avatar__label--pink');
       if (/^cp-l[1-6]l-student__svg-wrap$/.test(token)) addClass('student-avatar__svg-wrap');
@@ -11875,7 +11883,7 @@ var ContentRenderer = (function () {
       titleEl.textContent     = round.title;
       descEl.textContent      = round.desc;
       roundChip.textContent   = 'Round ' + (idx + 1) + ' of ' + page.rounds.length;
-      nextBtn.textContent     = (idx === page.rounds.length - 1) ? 'Finish Mission →' : 'Next Round →';
+      nextBtn.textContent     = (idx === page.rounds.length - 1) ? 'Finish Mission →' : 'Next Round';
       nextBtn.style.display   = 'none';
       nextBtn.classList.remove('cp-hq-next-btn--pulse');
       ansPanel.classList.add('cp-hq-ans-panel--locked');
@@ -12722,18 +12730,35 @@ var ContentRenderer = (function () {
     wrap.dataset.pageId = page.id;
 
     var scenarioEl = _el('p', 'cp-l1i-scenario');
-    scenarioEl.textContent = page.scenario || '';
+    if (page.scenarioHtml) {
+      scenarioEl.innerHTML = page.scenarioHtml;
+    } else {
+      scenarioEl.textContent = page.scenario || '';
+    }
     wrap.appendChild(scenarioEl);
 
     var exprBox = _el('div', 'cp-l1i-expr-box');
     var exprEl  = _el('div', 'cp-l1i-expr');
     exprEl.setAttribute('aria-label', page.expression || '');
-    exprEl.textContent = page.expression || '';
+
+    // Split expression into individual token spans for staggered animation
+    // Numbers get ink colour, operators get accent orange
+    (page.expression || '').split(' ').forEach(function (tok) {
+      var span = _el('span', 'cp-l1i-token');
+      span.textContent = tok;
+      span.classList.add(/^\d+$/.test(tok) ? 'cp-l1i-token--num' : 'cp-l1i-token--op');
+      exprEl.appendChild(span);
+    });
+
     exprBox.appendChild(exprEl);
     wrap.appendChild(exprBox);
 
     var qEl = _el('p', 'cp-l1i-question');
-    qEl.textContent = page.question || '';
+    if (page.questionHtml) {
+      qEl.innerHTML = page.questionHtml;
+    } else {
+      qEl.textContent = page.question || '';
+    }
     wrap.appendChild(qEl);
 
     var btn = _el('button', 'cp-l1i-cta');
@@ -12747,14 +12772,54 @@ var ContentRenderer = (function () {
     area.appendChild(wrap);
 
     if (typeof anime !== 'undefined') {
+      var tokenEls = exprEl.querySelectorAll('.cp-l1i-token');
+
       anime.set(scenarioEl, { opacity: 0, translateY: 24 });
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
+      anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
       anime.set(btn,        { opacity: 0, translateY: 14 });
+
+      // 1. Scenario slides in
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
-      anime({ targets: exprBox,    opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack' });
-      anime({ targets: qEl,        opacity: 1, duration: 400, delay: 460 });
-      anime({ targets: btn,        opacity: 1, translateY: 0, duration: 450, delay: 660, easing: 'easeOutBack' });
+
+      // 2. Expression box fades in, then tokens bounce in with stagger
+      anime({
+        targets: exprBox, opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack',
+        complete: function () {
+          anime({
+            targets: tokenEls,
+            opacity: 1, translateY: 0, scale: 1,
+            duration: 380,
+            delay: anime.stagger(90, { easing: 'easeOutQuad' }),
+            easing: 'easeOutBack',
+            complete: function () {
+              // Brief glow pulse after last token lands
+              anime({
+                targets: exprBox,
+                boxShadow: [
+                  '0 6px 24px rgba(245,158,11,0.22)',
+                  '0 8px 44px rgba(245,158,11,0.65)',
+                  '0 6px 24px rgba(245,158,11,0.22)'
+                ],
+                duration: 700,
+                easing: 'easeInOutSine'
+              });
+            }
+          });
+        }
+      });
+
+      // 3. Question fades in after box appears
+      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
+
+      // 4. Button slides in, then gets CSS pulse class to invite a tap
+      anime({
+        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
+        complete: function () {
+          btn.style.transform = '';   // clear inline transform left by anime so CSS :active works
+        }
+      });
     }
   }
 
@@ -12765,7 +12830,9 @@ var ContentRenderer = (function () {
   function _renderL1Lab(page, area) {
     var rounds   = page.rounds || [];
     var roundIdx = 0;
-    var phase    = 'idle'; /* idle | merging | add-wait | final-merge | complete */
+    var phase       = 'idle'; /* idle | merging | add-wait | final-merge | complete */
+    var roundBadge   = null;  /* badge injected into .progress-track */
+    var headerDotEls = [];    /* dots injected into .header__right   */
 
     /* ── SVG characters ── */
     function _aaravSvg() {
@@ -12892,17 +12959,42 @@ var ContentRenderer = (function () {
     roundHeader.appendChild(roundLabel);
     roundHeader.appendChild(dotsEl);
     wrap.appendChild(roundHeader);
+    roundHeader.style.display = 'none'; /* progress info moved to header */
 
-    /* Hint card — floats above the board (in wrap flex flow) on wrong tile tap */
-    var hintBox  = _el('div', 'cp-l1l-hint-box');
-    var hintText = _el('p',   'cp-l1l-hint-text');
-    hintBox.setAttribute('aria-live', 'polite');
-    hintBox.hidden = true;
-    hintBox.appendChild(hintText);
-    wrap.appendChild(hintBox);
+    /* ── Progress-track badge + header-right dots ── */
+    (function () {
+      var _pt = document.querySelector('.progress-track');
+      var _pd = document.getElementById('progress-dots');
+      if (_pt && _pd) {
+        _pd.style.display = 'none';
+        roundBadge = document.createElement('div');
+        roundBadge.className = 'cp-lab-round-badge';
+        _pt.appendChild(roundBadge);
+      }
+      var _hr = document.querySelector('.header__right');
+      if (_hr) {
+        var _ld = document.createElement('div');
+        _ld.className = 'cp-lab-header-dots';
+        rounds.forEach(function () {
+          var d = document.createElement('span');
+          d.className = 'cp-lab-header-dot';
+          _ld.appendChild(d);
+          headerDotEls.push(d);
+        });
+        _hr.insertBefore(_ld, _hr.firstChild);
+      }
+    }());
 
     /* Classroom row: student-left | board | student-right */
     var classEl = _el('div', 'cp-l1l-classroom');
+
+    var classBg = document.createElement('img');
+    classBg.src = 'assets/images/class-bg.png';
+    classBg.alt = '';
+    classBg.setAttribute('aria-hidden', 'true');
+    classBg.setAttribute('draggable', 'false');
+    classBg.className = 'cp-l1l-class-bg';
+    classEl.appendChild(classBg);
 
     var aaravEl = _el('div', 'cp-l1l-student cp-l1l-student--left');
     aaravEl.setAttribute('aria-hidden', 'true');
@@ -12913,7 +13005,7 @@ var ContentRenderer = (function () {
     var aaravBText  = _el('p', 'cp-l1l-bubble__text'); aaravBText.textContent = 'I usually go left to right...';
     aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
     aaravEl.appendChild(aaravBubble);
-    var aaravSvgWrap = _el('div', 'cp-l1l-student__svg-wrap'); aaravSvgWrap.innerHTML = _aaravSvg();
+    var aaravSvgWrap = _el('div', 'cp-l1l-student__svg-wrap'); var _aImg = document.createElement('img'); _aImg.src = 'assets/images/aarav.webp'; _aImg.alt = 'Aarav'; aaravSvgWrap.appendChild(_aImg);
     aaravEl.appendChild(aaravSvgWrap);
     classEl.appendChild(aaravEl);
 
@@ -12939,7 +13031,7 @@ var ContentRenderer = (function () {
     var meeraBText  = _el('p', 'cp-l1l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
     meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
-    var meeraSvgWrap = _el('div', 'cp-l1l-student__svg-wrap'); meeraSvgWrap.innerHTML = _meeraSvg();
+    var meeraSvgWrap = _el('div', 'cp-l1l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
     meeraEl.appendChild(meeraSvgWrap);
     classEl.appendChild(meeraEl);
 
@@ -12949,7 +13041,7 @@ var ContentRenderer = (function () {
     var guideBar    = _el('div', 'cp-l1l-guide-bar');
     var guideAvatar = _el('div', 'cp-l1l-guide-avatar');
     var guideAvatarImg = document.createElement('img');
-    guideAvatarImg.src = 'assets/images/Swiftee01.png';
+    guideAvatarImg.src = 'assets/face-emotions/Happy.webp';
     guideAvatarImg.alt = '';
     guideAvatarImg.setAttribute('aria-hidden', 'true');
     guideAvatarImg.setAttribute('draggable', 'false');
@@ -12959,14 +13051,16 @@ var ContentRenderer = (function () {
     var comparePanel = _el('div', 'cp-l1l-compare');
     comparePanel.hidden = true;
     comparePanel.setAttribute('aria-live', 'polite');
-    var nextBtn = _el('button', 'cp-l1l-next-btn');
-    nextBtn.hidden = true;
+    var nextBtn    = _el('button', 'cp-l1l-next-btn');
+    var nextBtnRow = _el('div', 'cp-l1l-btn-row');
+    nextBtnRow.hidden = true;
+    nextBtnRow.appendChild(nextBtn);
 
     guideBar.appendChild(guideAvatar);
     guideBar.appendChild(guideText);
     wrap.appendChild(guideBar);
     wrap.appendChild(comparePanel);
-    wrap.appendChild(nextBtn);
+    wrap.appendChild(nextBtnRow);
 
     area.appendChild(wrap);
 
@@ -13052,15 +13146,27 @@ var ContentRenderer = (function () {
         : tokens[0] + ' ' + tokens[1] + ' ' + round.mulResult + ' = ' + round.finalResult;
 
       /* ── Helper: build one card ── */
-      function _makeCard(cls, emoji, name, nameCls, method, steps, answerVal, ansCls) {
-        var card   = _el('div', 'cp-l1l-dc-card ' + cls);
+      function _makeCard(cls, avatarSrc, name, nameCls, method, steps, answerVal, ansCls) {
+        var card = _el('div', 'cp-l1l-dc-card ' + cls);
 
-        var hdr    = _el('div', 'cp-l1l-dc-header');
-        var emEl   = _el('span', 'cp-l1l-dc-emoji');  emEl.textContent  = emoji;
-        var nmEl   = _el('span', 'cp-l1l-dc-name ' + nameCls); nmEl.textContent = name;
-        var mtEl   = _el('span', 'cp-l1l-dc-method'); mtEl.textContent  = method;
-        hdr.appendChild(emEl); hdr.appendChild(nmEl); hdr.appendChild(mtEl);
+        var hdr = _el('div', 'cp-l1l-dc-header');
+        var av = _el('span', 'cp-l1l-dc-avatar');
+        var avImg = document.createElement('img');
+        avImg.src = avatarSrc;
+        avImg.alt = '';
+        avImg.setAttribute('aria-hidden', 'true');
+        avImg.setAttribute('draggable', 'false');
+        avImg.className = 'cp-l1l-dc-avatar__img';
+        av.appendChild(avImg);
+        var hdrInfo = _el('div', 'cp-l1l-dc-header-info');
+        var nmEl = _el('span', 'cp-l1l-dc-name ' + nameCls); nmEl.textContent = name;
+        var mtEl = _el('span', 'cp-l1l-dc-method'); mtEl.textContent = method;
+        hdrInfo.appendChild(nmEl); hdrInfo.appendChild(mtEl);
+        hdr.appendChild(av);
+        hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
+
+        card.appendChild(_el('div', 'cp-l1l-dc-divider cp-l1l-dc-divider--dashed'));
 
         var stepsEl = _el('div', 'cp-l1l-dc-steps');
         steps.forEach(function (s) {
@@ -13068,6 +13174,8 @@ var ContentRenderer = (function () {
           stepsEl.appendChild(st);
         });
         card.appendChild(stepsEl);
+
+        card.appendChild(_el('div', 'cp-l1l-dc-divider'));
 
         var ansEl = _el('div', 'cp-l1l-dc-answer ' + ansCls);
         ansEl.textContent = String(answerVal);
@@ -13082,11 +13190,11 @@ var ContentRenderer = (function () {
 
       /* ── Place wrong card in Aarav's bubble ── */
       aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l1l-bubble--faded');
+      aaravBubble.classList.remove('cp-l1l-bubble--faded', 'cp-l1l-bubble--guide-prompt');
       aaravBubble.classList.add('cp-l1l-bubble--expanded');
       aaravBubble.appendChild(_makeCard(
         'cp-l1l-dc-card--wrong',
-        '🧒', 'Aarav', 'cp-l1l-dc-name--aarav',
+        'assets/images/aarav.webp', 'Aarav', 'cp-l1l-dc-name--aarav',
         '· left → right',
         [wrongStep1, wrongStep2],
         round.compareWrong, 'cp-l1l-dc-answer--wrong'
@@ -13094,19 +13202,39 @@ var ContentRenderer = (function () {
 
       /* ── Place right card in Meera's bubble ── */
       meeraBubble.innerHTML = '';
-      meeraBubble.classList.remove('cp-l1l-bubble--faded');
+      meeraBubble.classList.remove('cp-l1l-bubble--faded', 'cp-l1l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l1l-bubble--expanded');
       meeraBubble.appendChild(_makeCard(
         'cp-l1l-dc-card--right',
-        '🧒', 'Meera', 'cp-l1l-dc-name--meera',
+        'assets/images/meera.webp', 'Meera', 'cp-l1l-dc-name--meera',
         '· \xd7 first',
         [corrStep1, corrStep2],
         round.compareRight, 'cp-l1l-dc-answer--right'
       ));
 
-      /* ── Caption only in compare panel ── */
-      var caption = _el('p', 'cp-l1l-dc-caption');
-      caption.textContent = 'Two different answers for ' + tokens.join(' ') + ' 🤔';
+      /* ── Caption pill in compare panel ── */
+      var caption = _el('div', 'cp-l1l-dc-caption');
+      var capAv = document.createElement('img');
+      capAv.src = 'assets/face-emotions/Idea.webp'; capAv.alt = '';
+      capAv.setAttribute('aria-hidden', 'true');
+      capAv.className = 'cp-l1l-dc-caption__avatar';
+      var capBody = _el('div', 'cp-l1l-dc-caption__body');
+      var capLabel = _el('span', 'cp-l1l-dc-caption__label');
+      capLabel.textContent = 'Two different answers for';
+      var capExpr = _el('span', 'cp-l1l-dc-caption__expr');
+      tokens.forEach(function (tok, i) {
+        if (i > 0) capExpr.appendChild(document.createTextNode(' '));
+        var s = document.createElement('span');
+        s.textContent = tok;
+        if (tok === '+') s.className = 'cp-l1l-dc-caption__op--add';
+        else if (tok === '\xd7') s.className = 'cp-l1l-dc-caption__op--mul';
+        else s.className = 'cp-l1l-dc-caption__num';
+        capExpr.appendChild(s);
+      });
+      capBody.appendChild(capLabel);
+      capBody.appendChild(capExpr);
+      caption.appendChild(capAv);
+      caption.appendChild(capBody);
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
@@ -13120,7 +13248,7 @@ var ContentRenderer = (function () {
       if (round.hasCompare) _showCompare(round);
 
       var isLast = (roundIdx === rounds.length - 1);
-      nextBtn.textContent = isLast ? 'See the Rule →' : 'Next Round ▶';
+      nextBtn.textContent = isLast ? 'See the Rule' : 'Next Round';
       nextBtn.className   = _sharedContentClasses('cp-l1l-next-btn' + (isLast ? ' cp-l1l-next-btn--final' : ''));
       nextBtn.onclick = function () {
         if (isLast) {
@@ -13131,7 +13259,7 @@ var ContentRenderer = (function () {
           _loadRound(roundIdx);
         }
       };
-      nextBtn.hidden = false;
+      nextBtnRow.hidden = false;
       if (typeof anime !== 'undefined') {
         anime.set(nextBtn, { opacity: 0, translateY: 10 });
         anime({ targets: nextBtn, opacity: 1, translateY: 0, duration: 420, delay: round.hasCompare ? 700 : 250, easing: 'easeOutBack' });
@@ -13280,14 +13408,17 @@ var ContentRenderer = (function () {
           var mulOpTile = tilesRow.querySelector('.cp-l1l-tile--mul-op');
           if (mulOpTile) anime({ targets: mulOpTile, scale: [1, 1.18, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
         }
-        /* Show hint box above the classroom */
-        hintText.textContent = '🔍 Look again. Is there a multiplication × sign in the sum?';
-        hintBox.hidden = false;
+        /* Meera gives a hint in her speech bubble */
+        if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
+        meeraBubble.classList.remove('cp-l1l-bubble--faded', 'cp-l1l-bubble--guide-prompt');
+        meeraBText.textContent = '🔍 Look again. Is there a multiplication \xd7 sign in the sum?';
         if (typeof anime !== 'undefined') {
-          anime.set(hintBox, { opacity: 0, translateY: -6 });
-          anime({ targets: hintBox, opacity: 1, translateY: 0, duration: 320, easing: 'easeOutBack' });
+          anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
+          anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
         /* Aarav reacts in his speech bubble */
+        if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
+        aaravBubble.classList.remove('cp-l1l-bubble--faded', 'cp-l1l-bubble--guide-prompt');
         aaravBText.textContent = 'Oops — let me look again!';
         if (typeof anime !== 'undefined') {
           anime.set(aaravBubble, { scale: 0.92 });
@@ -13300,8 +13431,9 @@ var ContentRenderer = (function () {
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
       guideText.textContent = 'Watch them come together!';
-      hintBox.hidden = true;
       /* Meera gives a compliment */
+      if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
+      meeraBubble.classList.remove('cp-l1l-bubble--faded', 'cp-l1l-bubble--guide-prompt');
       meeraBText.textContent = 'Yes! × goes first! Brilliant! ⭐';
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
@@ -13386,10 +13518,29 @@ var ContentRenderer = (function () {
           (i === idx ? ' cp-l1l-dot--active' : ''));
       });
 
-      nextBtn.hidden      = true;
+      /* Sync progress-track badge */
+      if (roundBadge) {
+        roundBadge.innerHTML = '';
+        var _bi = document.createElement('span');
+        _bi.className = 'cp-lab-round-badge__icon';
+        _bi.setAttribute('aria-hidden', 'true');
+        _bi.textContent = '🏆'; /* 🏆 */
+        var _bt = document.createElement('span');
+        _bt.className = 'cp-lab-round-badge__text';
+        _bt.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+        roundBadge.appendChild(_bi);
+        roundBadge.appendChild(_bt);
+      }
+      /* Sync header-right dots */
+      headerDotEls.forEach(function (d, i) {
+        d.className = 'cp-lab-header-dot' +
+          (i < idx  ? ' cp-lab-header-dot--done'   : '') +
+          (i === idx ? ' cp-lab-header-dot--active' : '');
+      });
+
+      nextBtnRow.hidden   = true;
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
-      hintBox.hidden = true;
       boardEl.classList.remove('cp-l1l-board--blurred');
 
       /* Reset bubble text before re-appending */
@@ -13399,33 +13550,28 @@ var ContentRenderer = (function () {
       /* Reset bubbles to speech-bubble state, hidden until guide text fires */
       if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-      aaravLabel.classList.remove('cp-l1l-student__label--hidden');
-      meeraLabel.classList.remove('cp-l1l-student__label--hidden');
-
       aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l1l-bubble--expanded');
+      aaravBubble.classList.remove('cp-l1l-bubble--expanded', 'cp-l1l-bubble--guide-prompt');
       aaravBubble.classList.add('cp-l1l-bubble--faded');
       aaravBubble.appendChild(aaravBName);
       aaravBubble.appendChild(aaravBText);
 
       meeraBubble.innerHTML = '';
-      meeraBubble.classList.remove('cp-l1l-bubble--expanded');
+      meeraBubble.classList.remove('cp-l1l-bubble--expanded', 'cp-l1l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l1l-bubble--faded');
       meeraBubble.appendChild(meeraBName);
       meeraBubble.appendChild(meeraBText);
 
       function _showBubbles() {
-        aaravLabel.classList.add('cp-l1l-student__label--hidden');
-        meeraLabel.classList.add('cp-l1l-student__label--hidden');
+        aaravBubble.classList.add('cp-l1l-bubble--guide-prompt');
+        meeraBubble.classList.add('cp-l1l-bubble--guide-prompt');
         aaravBubble.classList.remove('cp-l1l-bubble--faded');
         meeraBubble.classList.remove('cp-l1l-bubble--faded');
         aaravFadeTimer = setTimeout(function () {
           aaravBubble.classList.add('cp-l1l-bubble--faded');
-          aaravLabel.classList.remove('cp-l1l-student__label--hidden');
         }, 3000);
         meeraFadeTimer = setTimeout(function () {
           meeraBubble.classList.add('cp-l1l-bubble--faded');
-          meeraLabel.classList.remove('cp-l1l-student__label--hidden');
         }, 3000);
       }
 
@@ -13439,7 +13585,6 @@ var ContentRenderer = (function () {
         }, 1000);
       } else {
         guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
-        _showBubbles();
       }
 
       _renderTiles(round);
@@ -13457,54 +13602,113 @@ var ContentRenderer = (function () {
     var wrap = _el('div', 'cp-l1r-wrap');
     wrap.dataset.pageId = page.id;
 
-    /* ── Title with party poppers ── */
+    /* -- Title -- */
     var titleEl = _el('h2', 'cp-l1r-title');
     titleEl.innerHTML = '🎉 ' + (page.title || 'You Found the Rule!') + ' 🎉';
     wrap.appendChild(titleEl);
 
-    /* ── Rule text — × in amber, + in green ── */
-    var ruleEl = _el('p', 'cp-l1r-rule');
-    ruleEl.innerHTML = (page.ruleText || '')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/\xd7/g, '<span class="cp-l1r-rule__mul">\xd7</span>')
-      .replace(/\+/g,  '<span class="cp-l1r-rule__add">+</span>');
-    wrap.appendChild(ruleEl);
+    /* -- Combined box: rule explanation + worked example merged -- */
+    var box = _el('div', 'cp-l1r-steps-box');
 
-    /* ── Worked steps box (dashed border) ── */
-    var stepsBox = _el('div', 'cp-l1r-steps-box');
-    (page.workedSteps || []).forEach(function (step) {
-      var lineEl = _el('div', 'cp-l1r-step');
-      var toks   = step.expr.split(' ');
-      var hlSet  = {};
-      (step.hlTokens || []).forEach(function (t) { hlSet[t] = true; });
+    /*
+      Row definitions -- each token descriptor:
+        kind 'tw'      -> typewriter plain text (data-tw holds the string)
+             'mul'     -> x operator (amber pop-in)
+             'add'     -> + operator (green pop-in)
+             'sep'     -> separator text (fade in)
+             'hl'      -> amber highlight pill (mul step)
+             'hl-res'  -> green highlight pill (addition result)
+             'hl-fin'  -> large amber celebration pill (final answer)
+        id   -> optional DOM id for cross-row echo targeting
+        echo -> id of element to pulse when this token pops in
+    */
+    var rowDefs = [
+      /* Row 0: "When an equation has × and +" */
+      [
+        { kind: 'tw',   text: 'When an equation has ' },
+        { kind: 'mul',  text: '\xd7' },
+        { kind: 'tw',   text: ' and ' },
+        { kind: 'add',  text: '+' }
+      ],
+      /* Row 1: "3 + 4×2  solve × first" */
+      [
+        { kind: 'step-plain', text: '3 + ', center: true },
+        { kind: 'hl',         text: '4\xd72', id: 'l1r-mul-pill', center: true },
+        { kind: 'sep',        text: ' solve ', center: true },
+        { kind: 'mul',        text: '\xd7', center: true },
+        { kind: 'sep',        text: ' first', center: true }
+      ],
+      /* Row 2: "3 + 8" */
+      [
+        { kind: 'step-plain', text: '3 + ', center: true },
+        { kind: 'hl-res',     text: '8', id: 'l1r-res-pill', center: true }
+      ],
+      /* Row 3: "11" */
+      [
+        { kind: 'hl-fin',     text: '11', id: 'l1r-fin-pill', center: true }
+      ]
+    ];
 
-      var i = 0;
-      while (i < toks.length) {
-        if (i > 0) lineEl.appendChild(document.createTextNode(' '));
-        if (hlSet[toks[i]]) {
-          /* group consecutive highlighted tokens into one pill */
-          var group = [];
-          while (i < toks.length && hlSet[toks[i]]) { group.push(toks[i]); i++; }
-          var pill = _el('span', 'cp-l1r-step__hl');
-          pill.textContent = group.join(' ');
-          lineEl.appendChild(pill);
-        } else {
-          lineEl.appendChild(document.createTextNode(toks[i]));
-          i++;
+    var rowEls = rowDefs.map(function (tokens, rowIdx) {
+      var row = _el('div', 'cp-l1r-row');
+      if (tokens.length && tokens[0].center) row.classList.add('cp-l1r-row--center');
+      if (rowIdx > 0) row.classList.add('cp-l1r-row--step');
+      tokens.forEach(function (tok) {
+        var span;
+        if (tok.kind === 'tw') {
+          span = _el('span', 'cp-l1r-tw');
+          span.dataset.tw = tok.text;
+        } else if (tok.kind === 'glow') {
+          span = _el('span', 'cp-l1r-tw cp-l1r-glow-phrase');
+          span.dataset.tw = tok.text;
+        } else if (tok.kind === 'step-plain') {
+          span = _el('span', 'cp-l1r-tw cp-l1r-step-plain');
+          span.dataset.tw = tok.text;
+        } else if (tok.kind === 'mul') {
+          span = _el('span', 'cp-l1r-op cp-l1r-rule__mul');
+          span.textContent = tok.text;
+          if (tok.echo) span.dataset.echo = tok.echo;
+        } else if (tok.kind === 'add') {
+          span = _el('span', 'cp-l1r-op cp-l1r-rule__add');
+          span.textContent = tok.text;
+        } else if (tok.kind === 'sep') {
+          span = _el('span', 'cp-l1r-sep');
+          span.textContent = tok.text;
+        } else if (tok.kind === 'eq-num') {
+          span = _el('span', 'cp-l1r-eq-num');
+          span.textContent = tok.text;
+        } else if (tok.kind === 'eq-op') {
+          span = _el('span', 'cp-l1r-eq-op');
+          span.textContent = tok.text;
+        } else if (tok.kind === 'hl') {
+          span = _el('span', 'cp-l1r-step__hl');
+          span.textContent = tok.text;
+        } else if (tok.kind === 'hl-res') {
+          span = _el('span', 'cp-l1r-step__hl cp-l1r-step__hl--result');
+          span.textContent = tok.text;
+        } else if (tok.kind === 'hl-fin') {
+          span = _el('span', 'cp-l1r-step__hl cp-l1r-step__hl--final');
+          span.textContent = tok.text;
         }
-      }
-      stepsBox.appendChild(lineEl);
+        if (tok.id) span.id = tok.id;
+        span.style.opacity = '0';
+        row.appendChild(span);
+      });
+      box.appendChild(row);
+      return row;
     });
-    wrap.appendChild(stepsBox);
 
-    /* ── BODMAS tag ── */
+    wrap.appendChild(box);
+
+    /* -- BODMAS tag -- */
     var tagEl = _el('p', 'cp-l1r-bodmas-tag');
     tagEl.textContent = page.bodmasTag || '';
     wrap.appendChild(tagEl);
 
-    /* ── CTA button ── */
+    /* -- CTA button -- */
     var btn = _el('button', 'cp-l1r-btn');
-    btn.textContent = page.buttonLabel || 'See the Detectives ►';
+    btn.textContent = page.buttonLabel || 'Continue';
+    btn.disabled = true;
     btn.addEventListener('click', function () {
       if (typeof playStartWhoosh === 'function') playStartWhoosh();
       _wipeLeftTo(page.next);
@@ -13513,20 +13717,149 @@ var ContentRenderer = (function () {
 
     area.appendChild(wrap);
 
-    /* Staggered entrance */
-    if (typeof anime !== 'undefined') {
-      var els = [titleEl, ruleEl, stepsBox, tagEl, btn];
-      anime.set(els, { opacity: 0, translateY: 24 });
-      anime({ targets: els, opacity: 1, translateY: 0, duration: 500,
-              delay: anime.stagger(80), easing: 'easeOutQuad' });
+    /* -- Animation helpers -- */
+    if (typeof anime === 'undefined') {
+      /* Fallback: show everything immediately without animation */
+      Array.from(wrap.querySelectorAll('span')).forEach(function (el) {
+        el.style.opacity = '1';
+        if (el.dataset.tw) el.textContent = el.dataset.tw;
+      });
+      btn.disabled = false;
+      return;
     }
 
+    anime.set([titleEl, box, tagEl, btn], { opacity: 0, translateY: 28 });
+    var divider = null; /* divider removed in new layout */
+
+    /* Typewriter: reveal characters one by one */
+    function _tw(el, cb) {
+      var text = el.dataset.tw || '';
+      el.style.opacity = '1';
+      el.textContent = '';
+      var i = 0;
+      (function tick() {
+        if (i < text.length) {
+          el.textContent += text[i++];
+          setTimeout(tick, 30);
+        } else if (cb) { cb(); }
+      })();
+    }
+
+    /* Pop-in with elastic scale for operators and pills */
+    function _pop(el, scalePeak, dur, cb) {
+      anime({
+        targets: el, opacity: [0, 1],
+        scale: [0.25, scalePeak, 1],
+        duration: dur || 420,
+        easing: 'easeOutElastic(1, 0.55)',
+        complete: cb || null
+      });
+    }
+
+    /* Fade-in for separators */
+    function _fade(el, cb) {
+      anime({ targets: el, opacity: [0, 1], duration: 200, easing: 'easeOutQuad', complete: cb || null });
+    }
+
+    /* Pulse-glow an already-visible element to draw attention */
+    function _echoPulse(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('cp-l1r-echo-pulse');
+      void el.offsetWidth; /* force reflow so animation restarts */
+      el.classList.add('cp-l1r-echo-pulse');
+      setTimeout(function () { el.classList.remove('cp-l1r-echo-pulse'); }, 700);
+    }
+
+    /* Animate one row's child spans left-to-right, call cb when all done */
+    function _animateRow(rowEl, cb) {
+      var spans = Array.from(rowEl.children);
+      var idx = 0;
+      function next() {
+        if (idx >= spans.length) { if (cb) cb(); return; }
+        var s = spans[idx++];
+        if (s.classList.contains('cp-l1r-tw')) {
+          _tw(s, function () {
+            if (s.classList.contains('cp-l1r-glow-phrase')) {
+              s.classList.add('cp-l1r-glow-phrase--active');
+            }
+            next();
+          });
+        } else if (s.classList.contains('cp-l1r-op')) {
+          _pop(s, 1.35, 400, function () {
+            var echoId = s.dataset.echo;
+            if (echoId) _echoPulse(echoId);
+            setTimeout(next, 80);
+          });
+        } else if (s.classList.contains('cp-l1r-sep')) {
+          _fade(s, next);
+        } else if (s.classList.contains('cp-l1r-eq-num')) {
+          _fade(s, next);
+        } else if (s.classList.contains('cp-l1r-eq-op')) {
+          _pop(s, 1.2, 260, next);
+        } else if (s.classList.contains('cp-l1r-step__hl--final')) {
+          _pop(s, 1.55, 580, next);
+        } else if (s.classList.contains('cp-l1r-step__hl')) {
+          _pop(s, 1.3, 450, next);
+        } else {
+          _fade(s, next);
+        }
+      }
+      next();
+    }
+
+    /* -- Main animation sequence -- */
+
+    /* 1. Title smoothly fades in */
+    anime({
+      targets: titleEl, opacity: [0, 1],
+      translateY: [18, 0],
+      duration: 600, delay: 120,
+      easing: 'easeOutCubic'
+    });
+
+    /* 2. Box slides in, then rows animate sequentially via typewriter */
+    setTimeout(function () {
+      anime({
+        targets: box, opacity: [0, 1], translateY: [28, 0],
+        duration: 420, easing: 'easeOutQuad',
+        complete: function () {
+          _animateRow(rowEls[0], function () {
+            setTimeout(function () {
+              _animateRow(rowEls[1], function () {
+                setTimeout(function () {
+                  _animateRow(rowEls[2], function () {
+                    setTimeout(function () {
+                      _animateRow(rowEls[3], function () {
+                        /* 3. BODMAS tag fades in */
+                        anime({
+                          targets: tagEl, opacity: [0, 1], translateY: [10, 0],
+                          duration: 380, easing: 'easeOutQuad'
+                        });
+                        /* 4. Button pops in */
+                        setTimeout(function () {
+                          btn.disabled = false;
+                          anime({
+                            targets: btn, opacity: [0, 1],
+                            scale: [0.75, 1], translateY: [10, 0],
+                            duration: 420, easing: 'easeOutBack',
+                            complete: function () { btn.style.transform = ''; }
+                          });
+                        }, 420);
+                      });
+                    }, 200);
+                  });
+                }, 200);
+              });
+            }, 320);
+          });
+        }
+      });
+    }, 820);
+
+    /* Confetti fires at 400ms regardless of animation state */
     setTimeout(function () { if (typeof launchConfetti === 'function') launchConfetti(); }, 400);
   }
-
-  /* ══════════════════════════════════════════════════════
-     PAGE 2.3 — l1-practice   (4 practice questions)
-  ══════════════════════════════════════════════════════ */
 
   function _renderL1Practice(page, area) {
     var questions = page.questions || [];
@@ -13539,6 +13872,11 @@ var ContentRenderer = (function () {
 
     var barEl   = _el('div', 'cp-l1p-progress-bar');
     var fillEl  = _el('div', 'cp-l1p-progress-bar__fill');
+    barEl.setAttribute('role', 'progressbar');
+    barEl.setAttribute('aria-label', 'Practice progress');
+    barEl.setAttribute('aria-valuemin', '0');
+    barEl.setAttribute('aria-valuemax', String(questions.length));
+    barEl.setAttribute('aria-valuenow', '0');
     barEl.appendChild(fillEl);
     wrap.appendChild(barEl);
 
@@ -13578,6 +13916,7 @@ var ContentRenderer = (function () {
         anime({ targets: feedbackEl, opacity: 1, duration: 220 });
       }
       qDone++;
+      barEl.setAttribute('aria-valuenow', String(qDone));
       var pct = (qDone / questions.length) * 100;
       if (typeof anime !== 'undefined') {
         anime({ targets: fillEl, width: pct + '%', duration: 500, easing: 'easeOutQuad' });
@@ -13597,6 +13936,7 @@ var ContentRenderer = (function () {
     }
 
     function _showCompletion() {
+      cardEl.className = _sharedContentClasses('cp-l1p-card cp-l1p-card--complete');
       cardEl.innerHTML = '';
       var msg = _el('p', 'cp-l1p-completion');
       msg.textContent = page.completionMsg || 'Well done!';
@@ -13609,6 +13949,7 @@ var ContentRenderer = (function () {
     }
 
     function _loadQuestion(q, i) {
+      cardEl.className       = _sharedContentClasses('cp-l1p-card cp-l1p-card--' + (q.kind || 'question'));
       labelEl.textContent    = 'Question ' + (i + 1) + ' of ' + questions.length;
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
@@ -13760,18 +14101,31 @@ var ContentRenderer = (function () {
     wrap.dataset.pageId = page.id;
 
     var scenarioEl = _el('p', 'cp-l2i-scenario');
-    scenarioEl.textContent = page.scenario || '';
+    if (page.scenarioHtml) {
+      scenarioEl.innerHTML = page.scenarioHtml;
+    } else {
+      scenarioEl.textContent = page.scenario || '';
+    }
     wrap.appendChild(scenarioEl);
 
     var exprBox = _el('div', 'cp-l2i-expr-box');
     var exprEl  = _el('div', 'cp-l2i-expr');
     exprEl.setAttribute('aria-label', page.expression || '');
-    exprEl.textContent = page.expression || '';
+    (page.expression || '').split(' ').forEach(function (tok) {
+      var span = _el('span', 'cp-l2i-token');
+      span.textContent = tok;
+      span.classList.add(/^\d+$/.test(tok) ? 'cp-l2i-token--num' : 'cp-l2i-token--op');
+      exprEl.appendChild(span);
+    });
     exprBox.appendChild(exprEl);
     wrap.appendChild(exprBox);
 
     var qEl = _el('p', 'cp-l2i-question');
-    qEl.textContent = page.question || '';
+    if (page.questionHtml) {
+      qEl.innerHTML = page.questionHtml;
+    } else {
+      qEl.textContent = page.question || '';
+    }
     wrap.appendChild(qEl);
 
     var btn = _el('button', 'cp-l2i-cta');
@@ -13785,14 +14139,47 @@ var ContentRenderer = (function () {
     area.appendChild(wrap);
 
     if (typeof anime !== 'undefined') {
+      var tokenEls = exprEl.querySelectorAll('.cp-l2i-token');
+
       anime.set(scenarioEl, { opacity: 0, translateY: 24 });
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
+      anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
       anime.set(btn,        { opacity: 0, translateY: 14 });
+
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
-      anime({ targets: exprBox,    opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack' });
-      anime({ targets: qEl,        opacity: 1, duration: 400, delay: 460 });
-      anime({ targets: btn,        opacity: 1, translateY: 0, duration: 450, delay: 660, easing: 'easeOutBack' });
+
+      anime({
+        targets: exprBox, opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack',
+        complete: function () {
+          anime({
+            targets: tokenEls,
+            opacity: 1, translateY: 0, scale: 1,
+            duration: 380,
+            delay: anime.stagger(90, { easing: 'easeOutQuad' }),
+            easing: 'easeOutBack',
+            complete: function () {
+              anime({
+                targets: exprBox,
+                boxShadow: [
+                  '0 6px 24px rgba(196,138,255,0.22)',
+                  '0 8px 44px rgba(196,138,255,0.65)',
+                  '0 6px 24px rgba(196,138,255,0.22)'
+                ],
+                duration: 700,
+                easing: 'easeInOutSine'
+              });
+            }
+          });
+        }
+      });
+
+      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
+
+      anime({
+        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
+        complete: function () { btn.style.transform = ''; }
+      });
     }
   }
 
@@ -13887,6 +14274,8 @@ var ContentRenderer = (function () {
     wrap.dataset.pageId = page.id;
     var aaravFadeTimer = null;
     var meeraFadeTimer = null;
+    var roundBadge   = null;
+    var headerDotEls = [];
 
     /* Round header */
     var roundHeader = _el('div', 'cp-l2l-round-header');
@@ -13903,17 +14292,40 @@ var ContentRenderer = (function () {
     roundHeader.appendChild(roundLabel);
     roundHeader.appendChild(dotsEl);
     wrap.appendChild(roundHeader);
+    roundHeader.style.display = 'none';
 
-    /* Hint card */
-    var hintBox  = _el('div', 'cp-l2l-hint-box');
-    var hintText = _el('p',   'cp-l2l-hint-text');
-    hintBox.setAttribute('aria-live', 'polite');
-    hintBox.hidden = true;
-    hintBox.appendChild(hintText);
-    wrap.appendChild(hintBox);
+    (function () {
+      var _pt = document.querySelector('.progress-track');
+      var _pd = document.getElementById('progress-dots');
+      if (_pt && _pd) {
+        _pd.style.display = 'none';
+        roundBadge = document.createElement('div');
+        roundBadge.className = 'cp-lab-round-badge';
+        _pt.appendChild(roundBadge);
+      }
+      var _hr = document.querySelector('.header__right');
+      if (_hr) {
+        var _ld = document.createElement('div');
+        _ld.className = 'cp-lab-header-dots';
+        rounds.forEach(function () {
+          var d = document.createElement('span');
+          d.className = 'cp-lab-header-dot';
+          _ld.appendChild(d);
+          headerDotEls.push(d);
+        });
+        _hr.insertBefore(_ld, _hr.firstChild);
+      }
+    }());
 
     /* Classroom row: student-left | board | student-right */
     var classEl = _el('div', 'cp-l2l-classroom');
+    var classBg = document.createElement('img');
+    classBg.src = 'assets/images/class-bg.png';
+    classBg.alt = '';
+    classBg.setAttribute('aria-hidden', 'true');
+    classBg.setAttribute('draggable', 'false');
+    classBg.className = 'cp-l2l-class-bg';
+    classEl.appendChild(classBg);
 
     var aaravEl = _el('div', 'cp-l2l-student cp-l2l-student--left');
     aaravEl.setAttribute('aria-hidden', 'true');
@@ -13924,7 +14336,7 @@ var ContentRenderer = (function () {
     var aaravBText  = _el('p', 'cp-l2l-bubble__text'); aaravBText.textContent = 'I usually go left to right...';
     aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
     aaravEl.appendChild(aaravBubble);
-    var aaravSvgWrap = _el('div', 'cp-l2l-student__svg-wrap'); aaravSvgWrap.innerHTML = _aaravSvg();
+    var aaravSvgWrap = _el('div', 'cp-l2l-student__svg-wrap'); var _aImg = document.createElement('img'); _aImg.src = 'assets/images/aarav.webp'; _aImg.alt = 'Aarav'; aaravSvgWrap.appendChild(_aImg);
     aaravEl.appendChild(aaravSvgWrap);
     classEl.appendChild(aaravEl);
 
@@ -13950,7 +14362,7 @@ var ContentRenderer = (function () {
     var meeraBText  = _el('p', 'cp-l2l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
     meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
-    var meeraSvgWrap = _el('div', 'cp-l2l-student__svg-wrap'); meeraSvgWrap.innerHTML = _meeraSvg();
+    var meeraSvgWrap = _el('div', 'cp-l2l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
     meeraEl.appendChild(meeraSvgWrap);
     classEl.appendChild(meeraEl);
 
@@ -13960,7 +14372,7 @@ var ContentRenderer = (function () {
     var guideBar    = _el('div', 'cp-l2l-guide-bar');
     var guideAvatar = _el('div', 'cp-l2l-guide-avatar');
     var guideAvatarImg = document.createElement('img');
-    guideAvatarImg.src = 'assets/images/Swiftee01.png';
+    guideAvatarImg.src = 'assets/face-emotions/Happy.webp';
     guideAvatarImg.alt = '';
     guideAvatarImg.setAttribute('aria-hidden', 'true');
     guideAvatarImg.setAttribute('draggable', 'false');
@@ -13970,14 +14382,16 @@ var ContentRenderer = (function () {
     var comparePanel = _el('div', 'cp-l2l-compare');
     comparePanel.hidden = true;
     comparePanel.setAttribute('aria-live', 'polite');
-    var nextBtn = _el('button', 'cp-l2l-next-btn');
-    nextBtn.hidden = true;
+    var nextBtn    = _el('button', 'cp-l2l-next-btn');
+    var nextBtnRow = _el('div',    'cp-l2l-btn-row');
+    nextBtnRow.hidden = true;
+    nextBtnRow.appendChild(nextBtn);
 
     guideBar.appendChild(guideAvatar);
     guideBar.appendChild(guideText);
     wrap.appendChild(guideBar);
     wrap.appendChild(comparePanel);
-    wrap.appendChild(nextBtn);
+    wrap.appendChild(nextBtnRow);
 
     area.appendChild(wrap);
 
@@ -14062,20 +14476,28 @@ var ContentRenderer = (function () {
         ? round.mulResult + ' ' + tokens[3] + ' ' + tokens[4] + ' = ' + round.finalResult
         : tokens[0] + ' ' + tokens[1] + ' ' + round.mulResult + ' = ' + round.finalResult;
 
-      function _makeCard2(cls, emoji, name, nameCls, method, steps, answerVal, ansCls) {
-        var card   = _el('div', 'cp-l2l-dc-card ' + cls);
-        var hdr    = _el('div', 'cp-l2l-dc-header');
-        var emEl   = _el('span', 'cp-l2l-dc-emoji');  emEl.textContent  = emoji;
-        var nmEl   = _el('span', 'cp-l2l-dc-name ' + nameCls); nmEl.textContent = name;
-        var mtEl   = _el('span', 'cp-l2l-dc-method'); mtEl.textContent  = method;
-        hdr.appendChild(emEl); hdr.appendChild(nmEl); hdr.appendChild(mtEl);
+      function _makeCard2(cls, avatarSrc, name, nameCls, method, steps, answerVal, ansCls) {
+        var card = _el('div', 'cp-l2l-dc-card ' + cls);
+        var hdr  = _el('div', 'cp-l2l-dc-header');
+        var av   = _el('span', 'cp-l2l-dc-avatar');
+        var avImg = document.createElement('img');
+        avImg.src = avatarSrc; avImg.alt = '';
+        avImg.className = 'cp-l2l-dc-avatar__img';
+        av.appendChild(avImg);
+        var hdrInfo = _el('div', 'cp-l2l-dc-header-info');
+        var nmEl = _el('span', 'cp-l2l-dc-name ' + nameCls); nmEl.textContent = name;
+        var mtEl = _el('span', 'cp-l2l-dc-method'); mtEl.textContent = method;
+        hdrInfo.appendChild(nmEl); hdrInfo.appendChild(mtEl);
+        hdr.appendChild(av); hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
+        card.appendChild(_el('div', 'cp-l2l-dc-divider cp-l2l-dc-divider--dashed'));
         var stepsEl = _el('div', 'cp-l2l-dc-steps');
         steps.forEach(function (s) {
           var st = _el('div', 'cp-l2l-dc-step'); st.textContent = s;
           stepsEl.appendChild(st);
         });
         card.appendChild(stepsEl);
+        card.appendChild(_el('div', 'cp-l2l-dc-divider'));
         var ansEl = _el('div', 'cp-l2l-dc-answer ' + ansCls);
         ansEl.textContent = String(answerVal);
         card.appendChild(ansEl);
@@ -14090,7 +14512,7 @@ var ContentRenderer = (function () {
       aaravBubble.classList.add('cp-l2l-bubble--expanded');
       aaravBubble.appendChild(_makeCard2(
         'cp-l2l-dc-card--wrong',
-        '🧒', 'Aarav', 'cp-l2l-dc-name--aarav',
+        'assets/images/aarav.webp', 'Aarav', 'cp-l2l-dc-name--aarav',
         '· left → right',
         [wrongStep1, wrongStep2],
         round.compareWrong, 'cp-l2l-dc-answer--wrong'
@@ -14101,14 +14523,32 @@ var ContentRenderer = (function () {
       meeraBubble.classList.add('cp-l2l-bubble--expanded');
       meeraBubble.appendChild(_makeCard2(
         'cp-l2l-dc-card--right',
-        '🧒', 'Meera', 'cp-l2l-dc-name--meera',
+        'assets/images/meera.webp', 'Meera', 'cp-l2l-dc-name--meera',
         '· \xd7 first',
         [corrStep1, corrStep2],
         round.compareRight, 'cp-l2l-dc-answer--right'
       ));
 
-      var caption = _el('p', 'cp-l2l-dc-caption');
-      caption.textContent = 'Two different answers for ' + tokens.join(' ') + ' 🤔';
+      var caption = _el('div', 'cp-l2l-dc-caption');
+      var capAv = document.createElement('img');
+      capAv.src = 'assets/face-emotions/Idea.webp'; capAv.alt = '';
+      capAv.setAttribute('aria-hidden', 'true');
+      capAv.className = 'cp-l2l-dc-caption__avatar';
+      var capBody = _el('div', 'cp-l2l-dc-caption__body');
+      var capLabel = _el('span', 'cp-l2l-dc-caption__label');
+      capLabel.textContent = 'Two different answers for';
+      var capExpr = _el('span', 'cp-l2l-dc-caption__expr');
+      tokens.forEach(function (tok, i) {
+        if (i > 0) capExpr.appendChild(document.createTextNode(' '));
+        var s = document.createElement('span');
+        s.textContent = tok;
+        if (tok === '\xd7') s.className = 'cp-l2l-dc-caption__op--mul';
+        else if (tok === '−') s.className = 'cp-l2l-dc-caption__op--sub';
+        else s.className = 'cp-l2l-dc-caption__num';
+        capExpr.appendChild(s);
+      });
+      capBody.appendChild(capLabel); capBody.appendChild(capExpr);
+      caption.appendChild(capAv); caption.appendChild(capBody);
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
@@ -14122,7 +14562,7 @@ var ContentRenderer = (function () {
       if (round.hasCompare) _showCompare2(round);
 
       var isLast = (roundIdx === rounds.length - 1);
-      nextBtn.textContent = isLast ? 'See the Rule →' : 'Next Round ▶';
+      nextBtn.textContent = isLast ? 'See the Rule' : 'Next Round';
       nextBtn.className   = _sharedContentClasses('cp-l2l-next-btn' + (isLast ? ' cp-l2l-next-btn--final' : ''));
       nextBtn.onclick = function () {
         if (isLast) {
@@ -14133,7 +14573,7 @@ var ContentRenderer = (function () {
           _loadRound2(roundIdx);
         }
       };
-      nextBtn.hidden = false;
+      nextBtnRow.hidden = false;
       if (typeof anime !== 'undefined') {
         anime.set(nextBtn, { opacity: 0, translateY: 10 });
         anime({ targets: nextBtn, opacity: 1, translateY: 0, duration: 420, delay: round.hasCompare ? 700 : 250, easing: 'easeOutBack' });
@@ -14232,7 +14672,7 @@ var ContentRenderer = (function () {
                                   'cp-l2l-tile--num'
         );
         var t = _el('button', cls);
-        t.textContent = rt.text;
+        t.textContent = rt.text === '−' ? '-' : rt.text;
 
         if (rt.kind === 'sub-op') {
           t.setAttribute('aria-label', 'Tap − to subtract');
@@ -14277,16 +14717,19 @@ var ContentRenderer = (function () {
           var mulOpTile = tilesRow.querySelector('.cp-l2l-tile--mul-op');
           if (mulOpTile) anime({ targets: mulOpTile, scale: [1, 1.18, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
         }
-        hintText.textContent = '🔍 Look again. Is there a multiplication \xd7 sign in the sum?';
-        hintBox.hidden = false;
+        if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
+        meeraBubble.classList.remove('cp-l2l-bubble--faded', 'cp-l2l-bubble--guide-prompt');
+        meeraBText.textContent = '🔍 Look again. Is there a multiplication \xd7 sign in the sum?';
         if (typeof anime !== 'undefined') {
-          anime.set(hintBox, { opacity: 0, translateY: -6 });
-          anime({ targets: hintBox, opacity: 1, translateY: 0, duration: 320, easing: 'easeOutBack' });
+          anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
+          anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
+        if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
+        aaravBubble.classList.remove('cp-l2l-bubble--faded', 'cp-l2l-bubble--guide-prompt');
         aaravBText.textContent = 'Oops — let me look again!';
         if (typeof anime !== 'undefined') {
-          anime.set(aaravBubble, { scale: 0.92 });
-          anime({ targets: aaravBubble, scale: 1, duration: 280, easing: 'easeOutBack' });
+          anime.set(aaravBubble, { scale: 0.92, opacity: 0.7 });
+          anime({ targets: aaravBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
         return;
       }
@@ -14294,7 +14737,6 @@ var ContentRenderer = (function () {
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
       guideText.textContent = 'Watch them come together!';
-      hintBox.hidden = true;
       meeraBText.textContent = 'Yes! \xd7 goes first! Brilliant! ⭐';
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
@@ -14342,7 +14784,7 @@ var ContentRenderer = (function () {
         var isMul = round.mulIndices.indexOf(ti) !== -1;
         var cls   = _tileClass2(tok, isMul);
         var tile  = _el('button', cls);
-        tile.textContent = tok;
+        tile.textContent = tok === '−' ? '-' : tok;
         tile.dataset.idx = ti;
         tile.setAttribute('aria-label', 'Tile: ' + tok);
         (function (t, token, mul) {
@@ -14368,11 +14810,26 @@ var ContentRenderer = (function () {
           (i < idx  ? ' cp-l2l-dot--done'   : '') +
           (i === idx ? ' cp-l2l-dot--active' : ''));
       });
+      if (roundBadge) {
+        roundBadge.innerHTML = '';
+        var _bi2 = document.createElement('span');
+        _bi2.className = 'cp-lab-round-badge__icon';
+        _bi2.setAttribute('aria-hidden', 'true');
+        _bi2.textContent = '🏆';
+        var _bt2 = document.createElement('span');
+        _bt2.className = 'cp-lab-round-badge__text';
+        _bt2.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+        roundBadge.appendChild(_bi2); roundBadge.appendChild(_bt2);
+      }
+      headerDotEls.forEach(function (d, i) {
+        d.className = 'cp-lab-header-dot' +
+          (i < idx ? ' cp-lab-header-dot--done' : '') +
+          (i === idx ? ' cp-lab-header-dot--active' : '');
+      });
 
-      nextBtn.hidden      = true;
+      nextBtnRow.hidden   = true;
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
-      hintBox.hidden = true;
       boardEl.classList.remove('cp-l2l-board--blurred');
 
       aaravBText.textContent = 'I usually go left to right...';
@@ -14380,33 +14837,28 @@ var ContentRenderer = (function () {
 
       if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-      aaravLabel.classList.remove('cp-l2l-student__label--hidden');
-      meeraLabel.classList.remove('cp-l2l-student__label--hidden');
-
       aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l2l-bubble--expanded');
+      aaravBubble.classList.remove('cp-l2l-bubble--expanded', 'cp-l2l-bubble--guide-prompt');
       aaravBubble.classList.add('cp-l2l-bubble--faded');
       aaravBubble.appendChild(aaravBName);
       aaravBubble.appendChild(aaravBText);
 
       meeraBubble.innerHTML = '';
-      meeraBubble.classList.remove('cp-l2l-bubble--expanded');
+      meeraBubble.classList.remove('cp-l2l-bubble--expanded', 'cp-l2l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l2l-bubble--faded');
       meeraBubble.appendChild(meeraBName);
       meeraBubble.appendChild(meeraBText);
 
       function _showBubbles2() {
-        aaravLabel.classList.add('cp-l2l-student__label--hidden');
-        meeraLabel.classList.add('cp-l2l-student__label--hidden');
+        aaravBubble.classList.add('cp-l2l-bubble--guide-prompt');
+        meeraBubble.classList.add('cp-l2l-bubble--guide-prompt');
         aaravBubble.classList.remove('cp-l2l-bubble--faded');
         meeraBubble.classList.remove('cp-l2l-bubble--faded');
         aaravFadeTimer = setTimeout(function () {
           aaravBubble.classList.add('cp-l2l-bubble--faded');
-          aaravLabel.classList.remove('cp-l2l-student__label--hidden');
         }, 3000);
         meeraFadeTimer = setTimeout(function () {
           meeraBubble.classList.add('cp-l2l-bubble--faded');
-          meeraLabel.classList.remove('cp-l2l-student__label--hidden');
         }, 3000);
       }
 
@@ -14430,56 +14882,115 @@ var ContentRenderer = (function () {
   }
 
   /* ══════════════════════════════════════════════════════
-     PAGE 4.2 — l2-reveal   (Rule reveal)
+     SHARED HELPER — rule-reveal page (L2–L6)
+     Matches the styling and animation pattern of _renderL1Reveal.
+     pfx:    CSS class prefix, e.g. 'cp-l2r'
+     opDefs: [{char, cls}] — operators in the rule sentence that pop-in
   ══════════════════════════════════════════════════════ */
 
-  function _renderL2Reveal(page, area) {
-    var wrap = _el('div', 'cp-l2r-wrap');
+  function _renderLxReveal(page, area, pfx, opDefs) {
+    var wrap = _el('div', pfx + '-wrap');
     wrap.dataset.pageId = page.id;
 
-    var titleEl = _el('h2', 'cp-l2r-title');
-    titleEl.innerHTML = '🎉 ' + (page.title || 'You Found the Rule!') + ' 🎉';
+    /* -- Title -- */
+    var titleEl = _el('h2', pfx + '-title');
+    titleEl.innerHTML = '🎉 ' + (page.title || page.ruleTitle || 'You Found the Rule!') + ' 🎉';
     wrap.appendChild(titleEl);
 
-    /* Rule text — × in amber, − in red */
-    var ruleEl = _el('p', 'cp-l2r-rule');
-    ruleEl.innerHTML = (page.ruleText || '')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/\xd7/g, '<span class="cp-l2r-rule__mul">\xd7</span>')
-      .replace(/−/g, '<span class="cp-l2r-rule__sub">−</span>');
-    wrap.appendChild(ruleEl);
+    /* -- Combined box: rule row + worked step rows -- */
+    var box = _el('div', pfx + '-steps-box');
 
-    var stepsBox = _el('div', 'cp-l2r-steps-box');
-    (page.workedSteps || []).forEach(function (step) {
-      var lineEl = _el('div', 'cp-l2r-step');
-      var toks   = step.expr.split(' ');
-      var hlSet  = {};
-      (step.hlTokens || []).forEach(function (t) { hlSet[t] = true; });
-
-      var i = 0;
-      while (i < toks.length) {
-        if (i > 0) lineEl.appendChild(document.createTextNode(' '));
-        if (hlSet[toks[i]]) {
-          var group = [];
-          while (i < toks.length && hlSet[toks[i]]) { group.push(toks[i]); i++; }
-          var pill = _el('span', 'cp-l2r-step__hl');
-          pill.textContent = group.join(' ');
-          lineEl.appendChild(pill);
+    /* Row 0: Rule sentence — split on operators so each pops in */
+    var ruleRow = _el('div', pfx + '-row');
+    (function () {
+      var text = page.ruleText || '';
+      var segments = [{ text: text, isOp: false }];
+      (opDefs || []).forEach(function (def) {
+        var next = [];
+        segments.forEach(function (seg) {
+          if (seg.isOp) { next.push(seg); return; }
+          var parts = seg.text.split(def.char);
+          parts.forEach(function (p, idx) {
+            if (idx > 0) next.push({ text: def.char, isOp: true, cls: def.cls });
+            if (p.length > 0) next.push({ text: p, isOp: false });
+          });
+        });
+        segments = next;
+      });
+      segments.forEach(function (seg) {
+        var span;
+        if (seg.isOp) {
+          span = _el('span', pfx + '-op ' + seg.cls);
+          span.textContent = seg.text;
         } else {
-          lineEl.appendChild(document.createTextNode(toks[i]));
-          i++;
+          span = _el('span', pfx + '-tw');
+          span.dataset.tw = seg.text;
+        }
+        span.style.opacity = '0';
+        ruleRow.appendChild(span);
+      });
+    })();
+    box.appendChild(ruleRow);
+
+    /* Rows 1-N: Worked steps */
+    var stepRowEls = [];
+    (page.workedSteps || []).forEach(function (step, idx) {
+      var isLast = idx === (page.workedSteps.length - 1);
+      var rowEl = _el('div', pfx + '-row');
+      rowEl.classList.add(pfx + '-row--step');
+      rowEl.classList.add(pfx + '-row--center');
+
+      if (isLast && (!step.hlTokens || step.hlTokens.length === 0)) {
+        /* Final answer row: "Answer = [X]" */
+        var prefixSpan = _el('span', pfx + '-step-plain');
+        prefixSpan.dataset.tw = 'Answer = ';
+        prefixSpan.style.opacity = '0';
+        rowEl.appendChild(prefixSpan);
+        var finPill = _el('span', pfx + '-step__hl');
+        finPill.classList.add(pfx + '-step__hl--final');
+        finPill.textContent = step.expr.replace(/^= /, '');
+        finPill.style.opacity = '0';
+        rowEl.appendChild(finPill);
+      } else {
+        var toks = step.expr.split(' ');
+        var hlSet = {};
+        (step.hlTokens || []).forEach(function (t) { hlSet[t] = true; });
+        var isResult = (idx === 1 && step.hlTokens && step.hlTokens.length === 1);
+        var i = 0;
+        while (i < toks.length) {
+          if (hlSet[toks[i]]) {
+            var group = [];
+            while (i < toks.length && hlSet[toks[i]]) { group.push(toks[i++]); }
+            var pill = _el('span', pfx + '-step__hl');
+            if (isResult) pill.classList.add(pfx + '-step__hl--result');
+            pill.textContent = group.join(' ');
+            pill.style.opacity = '0';
+            rowEl.appendChild(pill);
+          } else {
+            var plainToks = [];
+            while (i < toks.length && !hlSet[toks[i]]) { plainToks.push(toks[i++]); }
+            var plain = _el('span', pfx + '-step-plain');
+            plain.dataset.tw = plainToks.join(' ') + (i < toks.length ? ' ' : '');
+            plain.style.opacity = '0';
+            rowEl.appendChild(plain);
+          }
         }
       }
-      stepsBox.appendChild(lineEl);
+      box.appendChild(rowEl);
+      stepRowEls.push(rowEl);
     });
-    wrap.appendChild(stepsBox);
 
-    var tagEl = _el('p', 'cp-l2r-bodmas-tag');
+    wrap.appendChild(box);
+
+    /* -- BODMAS tag -- */
+    var tagEl = _el('p', pfx + '-bodmas-tag');
     tagEl.textContent = page.bodmasTag || '';
     wrap.appendChild(tagEl);
 
-    var btn = _el('button', 'cp-l2r-btn');
-    btn.textContent = page.buttonLabel || 'See the Detectives ►';
+    /* -- CTA button (disabled until animation completes) -- */
+    var btn = _el('button', pfx + '-btn');
+    btn.textContent = page.buttonLabel || 'Continue';
+    btn.disabled = true;
     btn.addEventListener('click', function () {
       if (typeof playStartWhoosh === 'function') playStartWhoosh();
       _wipeLeftTo(page.next);
@@ -14488,14 +14999,105 @@ var ContentRenderer = (function () {
 
     area.appendChild(wrap);
 
-    if (typeof anime !== 'undefined') {
-      var els = [titleEl, ruleEl, stepsBox, tagEl, btn];
-      anime.set(els, { opacity: 0, translateY: 24 });
-      anime({ targets: els, opacity: 1, translateY: 0, duration: 500,
-              delay: anime.stagger(80), easing: 'easeOutQuad' });
+    /* -- Fallback without anime -- */
+    if (typeof anime === 'undefined') {
+      Array.from(wrap.querySelectorAll('[data-tw]')).forEach(function (el) {
+        el.style.opacity = '1';
+        el.textContent = el.dataset.tw;
+      });
+      Array.from(wrap.querySelectorAll('span')).forEach(function (el) { el.style.opacity = '1'; });
+      btn.disabled = false;
+      return;
     }
 
+    anime.set([titleEl, box, tagEl, btn], { opacity: 0, translateY: 28 });
+
+    function _tw(el, cb) {
+      var text = el.dataset.tw || '';
+      el.style.opacity = '1';
+      el.textContent = '';
+      var i = 0;
+      (function tick() {
+        if (i < text.length) { el.textContent += text[i++]; setTimeout(tick, 30); }
+        else if (cb) { cb(); }
+      })();
+    }
+
+    function _pop(el, scalePeak, dur, cb) {
+      anime({ targets: el, opacity: [0, 1], scale: [0.25, scalePeak, 1],
+              duration: dur || 420, easing: 'easeOutElastic(1, 0.55)', complete: cb || null });
+    }
+
+    function _fade(el, cb) {
+      anime({ targets: el, opacity: [0, 1], duration: 200, easing: 'easeOutQuad', complete: cb || null });
+    }
+
+    function _animateRow(rowEl, cb) {
+      var spans = Array.from(rowEl.children);
+      var si = 0;
+      function next() {
+        if (si >= spans.length) { if (cb) cb(); return; }
+        var s = spans[si++];
+        if (s.classList.contains(pfx + '-op')) {
+          _pop(s, 1.35, 400, function () { setTimeout(next, 80); });
+        } else if (s.classList.contains(pfx + '-step__hl--final')) {
+          _pop(s, 1.55, 580, next);
+        } else if (s.classList.contains(pfx + '-step__hl')) {
+          _pop(s, 1.3, 450, next);
+        } else if (s.dataset.tw !== undefined) {
+          _tw(s, next);
+        } else {
+          _fade(s, next);
+        }
+      }
+      next();
+    }
+
+    /* 1. Title fades in */
+    anime({ targets: titleEl, opacity: [0, 1],
+            translateY: [18, 0], duration: 600, delay: 120,
+            easing: 'easeOutCubic' });
+
+    /* 2. Box slides in, rows animate sequentially */
+    setTimeout(function () {
+      anime({ targets: box, opacity: [0, 1], translateY: [28, 0],
+              duration: 420, easing: 'easeOutQuad',
+        complete: function () {
+          var allRows = [ruleRow].concat(stepRowEls);
+          (function animNext(i) {
+            if (i >= allRows.length) {
+              /* 3. BODMAS tag fades in */
+              anime({ targets: tagEl, opacity: [0, 1], translateY: [10, 0],
+                      duration: 380, easing: 'easeOutQuad' });
+              /* 4. Button pops in */
+              setTimeout(function () {
+                btn.disabled = false;
+                anime({ targets: btn, opacity: [0, 1], scale: [0.75, 1],
+                        translateY: [10, 0], duration: 420, easing: 'easeOutBack',
+                        complete: function () { btn.style.transform = ''; } });
+              }, 420);
+              return;
+            }
+            _animateRow(allRows[i], function () {
+              setTimeout(function () { animNext(i + 1); }, i === 0 ? 320 : 200);
+            });
+          })(0);
+        }
+      });
+    }, 820);
+
     setTimeout(function () { if (typeof launchConfetti === 'function') launchConfetti(); }, 400);
+  }
+
+  /* ══════════════════════════════════════════════════════
+     PAGE 4.2 — l2-reveal   (Rule reveal)
+  ══════════════════════════════════════════════════════ */
+
+  function _renderL2Reveal(page, area) {
+    _renderLxReveal(page, area, 'cp-l2r', [
+      { char: '\xd7', cls: 'cp-l2r-rule__mul' },
+      { char: '−', cls: 'cp-l2r-rule__sub' }
+    ]);
   }
 
   /* ══════════════════════════════════════════════════════
@@ -14734,18 +15336,31 @@ var ContentRenderer = (function () {
     wrap.dataset.pageId = page.id;
 
     var scenarioEl = _el('p', 'cp-l3i-scenario');
-    scenarioEl.textContent = page.scenario || '';
+    if (page.scenarioHtml) {
+      scenarioEl.innerHTML = page.scenarioHtml;
+    } else {
+      scenarioEl.textContent = page.scenario || '';
+    }
     wrap.appendChild(scenarioEl);
 
     var exprBox = _el('div', 'cp-l3i-expr-box');
     var exprEl  = _el('div', 'cp-l3i-expr');
     exprEl.setAttribute('aria-label', page.expression || '');
-    exprEl.textContent = page.expression || '';
+    (page.expression || '').split(' ').forEach(function (tok) {
+      var span = _el('span', 'cp-l3i-token');
+      span.textContent = tok;
+      span.classList.add(/^\d+$/.test(tok) ? 'cp-l3i-token--num' : 'cp-l3i-token--op');
+      exprEl.appendChild(span);
+    });
     exprBox.appendChild(exprEl);
     wrap.appendChild(exprBox);
 
     var qEl = _el('p', 'cp-l3i-question');
-    qEl.textContent = page.question || '';
+    if (page.questionHtml) {
+      qEl.innerHTML = page.questionHtml;
+    } else {
+      qEl.textContent = page.question || '';
+    }
     wrap.appendChild(qEl);
 
     var btn = _el('button', 'cp-l3i-cta');
@@ -14759,14 +15374,47 @@ var ContentRenderer = (function () {
     area.appendChild(wrap);
 
     if (typeof anime !== 'undefined') {
+      var tokenEls = exprEl.querySelectorAll('.cp-l3i-token');
+
       anime.set(scenarioEl, { opacity: 0, translateY: 24 });
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
+      anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
       anime.set(btn,        { opacity: 0, translateY: 14 });
+
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
-      anime({ targets: exprBox,    opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack' });
-      anime({ targets: qEl,        opacity: 1, duration: 400, delay: 460 });
-      anime({ targets: btn,        opacity: 1, translateY: 0, duration: 450, delay: 660, easing: 'easeOutBack' });
+
+      anime({
+        targets: exprBox, opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack',
+        complete: function () {
+          anime({
+            targets: tokenEls,
+            opacity: 1, translateY: 0, scale: 1,
+            duration: 380,
+            delay: anime.stagger(90, { easing: 'easeOutQuad' }),
+            easing: 'easeOutBack',
+            complete: function () {
+              anime({
+                targets: exprBox,
+                boxShadow: [
+                  '0 6px 24px rgba(59,198,255,0.22)',
+                  '0 8px 44px rgba(59,198,255,0.65)',
+                  '0 6px 24px rgba(59,198,255,0.22)'
+                ],
+                duration: 700,
+                easing: 'easeInOutSine'
+              });
+            }
+          });
+        }
+      });
+
+      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
+
+      anime({
+        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
+        complete: function () { btn.style.transform = ''; }
+      });
     }
   }
 
@@ -14861,6 +15509,8 @@ var ContentRenderer = (function () {
     wrap.dataset.pageId = page.id;
     var aaravFadeTimer = null;
     var meeraFadeTimer = null;
+    var roundBadge   = null;
+    var headerDotEls = [];
 
     var roundHeader = _el('div', 'cp-l3l-round-header');
     var roundLabel  = _el('span', 'cp-l3l-round-label');
@@ -14876,15 +15526,39 @@ var ContentRenderer = (function () {
     roundHeader.appendChild(roundLabel);
     roundHeader.appendChild(dotsEl);
     wrap.appendChild(roundHeader);
+    roundHeader.style.display = 'none';
 
-    var hintBox  = _el('div', 'cp-l3l-hint-box');
-    var hintText = _el('p',   'cp-l3l-hint-text');
-    hintBox.setAttribute('aria-live', 'polite');
-    hintBox.hidden = true;
-    hintBox.appendChild(hintText);
-    wrap.appendChild(hintBox);
+    (function () {
+      var _pt = document.querySelector('.progress-track');
+      var _pd = document.getElementById('progress-dots');
+      if (_pt && _pd) {
+        _pd.style.display = 'none';
+        roundBadge = document.createElement('div');
+        roundBadge.className = 'cp-lab-round-badge';
+        _pt.appendChild(roundBadge);
+      }
+      var _hr = document.querySelector('.header__right');
+      if (_hr) {
+        var _ld = document.createElement('div');
+        _ld.className = 'cp-lab-header-dots';
+        rounds.forEach(function () {
+          var d = document.createElement('span');
+          d.className = 'cp-lab-header-dot';
+          _ld.appendChild(d);
+          headerDotEls.push(d);
+        });
+        _hr.insertBefore(_ld, _hr.firstChild);
+      }
+    }());
 
     var classEl = _el('div', 'cp-l3l-classroom');
+    var classBg = document.createElement('img');
+    classBg.src = 'assets/images/class-bg.png';
+    classBg.alt = '';
+    classBg.setAttribute('aria-hidden', 'true');
+    classBg.setAttribute('draggable', 'false');
+    classBg.className = 'cp-l3l-class-bg';
+    classEl.appendChild(classBg);
 
     var aaravEl = _el('div', 'cp-l3l-student cp-l3l-student--left');
     aaravEl.setAttribute('aria-hidden', 'true');
@@ -14895,7 +15569,7 @@ var ContentRenderer = (function () {
     var aaravBText  = _el('p', 'cp-l3l-bubble__text'); aaravBText.textContent = 'I usually go left to right...';
     aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
     aaravEl.appendChild(aaravBubble);
-    var aaravSvgWrap = _el('div', 'cp-l3l-student__svg-wrap'); aaravSvgWrap.innerHTML = _aaravSvg();
+    var aaravSvgWrap = _el('div', 'cp-l3l-student__svg-wrap'); var _aImg = document.createElement('img'); _aImg.src = 'assets/images/aarav.webp'; _aImg.alt = 'Aarav'; aaravSvgWrap.appendChild(_aImg);
     aaravEl.appendChild(aaravSvgWrap);
     classEl.appendChild(aaravEl);
 
@@ -14921,7 +15595,7 @@ var ContentRenderer = (function () {
     var meeraBText  = _el('p', 'cp-l3l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
     meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
-    var meeraSvgWrap = _el('div', 'cp-l3l-student__svg-wrap'); meeraSvgWrap.innerHTML = _meeraSvg();
+    var meeraSvgWrap = _el('div', 'cp-l3l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
     meeraEl.appendChild(meeraSvgWrap);
     classEl.appendChild(meeraEl);
 
@@ -14930,7 +15604,7 @@ var ContentRenderer = (function () {
     var guideBar    = _el('div', 'cp-l3l-guide-bar');
     var guideAvatar = _el('div', 'cp-l3l-guide-avatar');
     var guideAvatarImg = document.createElement('img');
-    guideAvatarImg.src = 'assets/images/Swiftee01.png';
+    guideAvatarImg.src = 'assets/face-emotions/Happy.webp';
     guideAvatarImg.alt = '';
     guideAvatarImg.setAttribute('aria-hidden', 'true');
     guideAvatarImg.setAttribute('draggable', 'false');
@@ -14940,14 +15614,16 @@ var ContentRenderer = (function () {
     var comparePanel = _el('div', 'cp-l3l-compare');
     comparePanel.hidden = true;
     comparePanel.setAttribute('aria-live', 'polite');
-    var nextBtn = _el('button', 'cp-l3l-next-btn');
-    nextBtn.hidden = true;
+    var nextBtn    = _el('button', 'cp-l3l-next-btn');
+    var nextBtnRow = _el('div',    'cp-l3l-btn-row');
+    nextBtnRow.hidden = true;
+    nextBtnRow.appendChild(nextBtn);
 
     guideBar.appendChild(guideAvatar);
     guideBar.appendChild(guideText);
     wrap.appendChild(guideBar);
     wrap.appendChild(comparePanel);
-    wrap.appendChild(nextBtn);
+    wrap.appendChild(nextBtnRow);
 
     area.appendChild(wrap);
 
@@ -15037,20 +15713,28 @@ var ContentRenderer = (function () {
         ? round.divResult + ' ' + tokens[3] + ' ' + tokens[4] + ' = ' + round.finalResult
         : tokens[0] + ' ' + tokens[1] + ' ' + round.divResult + ' = ' + round.finalResult;
 
-      function _makeCard3(cls, emoji, name, nameCls, method, steps, answerVal, ansCls) {
-        var card   = _el('div', 'cp-l3l-dc-card ' + cls);
-        var hdr    = _el('div', 'cp-l3l-dc-header');
-        var emEl   = _el('span', 'cp-l3l-dc-emoji');  emEl.textContent  = emoji;
-        var nmEl   = _el('span', 'cp-l3l-dc-name ' + nameCls); nmEl.textContent = name;
-        var mtEl   = _el('span', 'cp-l3l-dc-method'); mtEl.textContent  = method;
-        hdr.appendChild(emEl); hdr.appendChild(nmEl); hdr.appendChild(mtEl);
+      function _makeCard3(cls, avatarSrc, name, nameCls, method, steps, answerVal, ansCls) {
+        var card = _el('div', 'cp-l3l-dc-card ' + cls);
+        var hdr  = _el('div', 'cp-l3l-dc-header');
+        var av   = _el('span', 'cp-l3l-dc-avatar');
+        var avImg = document.createElement('img');
+        avImg.src = avatarSrc; avImg.alt = '';
+        avImg.className = 'cp-l3l-dc-avatar__img';
+        av.appendChild(avImg);
+        var hdrInfo = _el('div', 'cp-l3l-dc-header-info');
+        var nmEl = _el('span', 'cp-l3l-dc-name ' + nameCls); nmEl.textContent = name;
+        var mtEl = _el('span', 'cp-l3l-dc-method'); mtEl.textContent = method;
+        hdrInfo.appendChild(nmEl); hdrInfo.appendChild(mtEl);
+        hdr.appendChild(av); hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
+        card.appendChild(_el('div', 'cp-l3l-dc-divider cp-l3l-dc-divider--dashed'));
         var stepsEl = _el('div', 'cp-l3l-dc-steps');
         steps.forEach(function (s) {
           var st = _el('div', 'cp-l3l-dc-step'); st.textContent = s;
           stepsEl.appendChild(st);
         });
         card.appendChild(stepsEl);
+        card.appendChild(_el('div', 'cp-l3l-dc-divider'));
         var ansEl = _el('div', 'cp-l3l-dc-answer ' + ansCls);
         ansEl.textContent = String(answerVal);
         card.appendChild(ansEl);
@@ -15065,7 +15749,7 @@ var ContentRenderer = (function () {
       aaravBubble.classList.add('cp-l3l-bubble--expanded');
       aaravBubble.appendChild(_makeCard3(
         'cp-l3l-dc-card--wrong',
-        '🧒', 'Aarav', 'cp-l3l-dc-name--aarav',
+        'assets/images/aarav.webp', 'Aarav', 'cp-l3l-dc-name--aarav',
         '\xb7 left → right',
         [wrongStep1, wrongStep2],
         round.compareWrong, 'cp-l3l-dc-answer--wrong'
@@ -15076,14 +15760,33 @@ var ContentRenderer = (function () {
       meeraBubble.classList.add('cp-l3l-bubble--expanded');
       meeraBubble.appendChild(_makeCard3(
         'cp-l3l-dc-card--right',
-        '🧒', 'Meera', 'cp-l3l-dc-name--meera',
+        'assets/images/meera.webp', 'Meera', 'cp-l3l-dc-name--meera',
         '\xb7 \xf7 first',
         [corrStep1, corrStep2],
         round.compareRight, 'cp-l3l-dc-answer--right'
       ));
 
-      var caption = _el('p', 'cp-l3l-dc-caption');
-      caption.textContent = 'Two different answers for ' + tokens.join(' ') + ' 🤔';
+      var caption = _el('div', 'cp-l3l-dc-caption');
+      var capAv = document.createElement('img');
+      capAv.src = 'assets/face-emotions/Idea.webp'; capAv.alt = '';
+      capAv.setAttribute('aria-hidden', 'true');
+      capAv.className = 'cp-l3l-dc-caption__avatar';
+      var capBody = _el('div', 'cp-l3l-dc-caption__body');
+      var capLabel = _el('span', 'cp-l3l-dc-caption__label');
+      capLabel.textContent = 'Two different answers for';
+      var capExpr = _el('span', 'cp-l3l-dc-caption__expr');
+      tokens.forEach(function (tok, i) {
+        if (i > 0) capExpr.appendChild(document.createTextNode(' '));
+        var s = document.createElement('span');
+        s.textContent = tok;
+        if (tok === '\xf7') s.className = 'cp-l3l-dc-caption__op--div';
+        else if (tok === '+') s.className = 'cp-l3l-dc-caption__op--add';
+        else if (tok === '−') s.className = 'cp-l3l-dc-caption__op--sub';
+        else s.className = 'cp-l3l-dc-caption__num';
+        capExpr.appendChild(s);
+      });
+      capBody.appendChild(capLabel); capBody.appendChild(capExpr);
+      caption.appendChild(capAv); caption.appendChild(capBody);
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
@@ -15097,7 +15800,7 @@ var ContentRenderer = (function () {
       if (round.hasCompare) _showCompare3(round);
 
       var isLast = (roundIdx === rounds.length - 1);
-      nextBtn.textContent = isLast ? 'See the Rule →' : 'Next Round ▶';
+      nextBtn.textContent = isLast ? 'See the Rule' : 'Next Round';
       nextBtn.className   = _sharedContentClasses('cp-l3l-next-btn' + (isLast ? ' cp-l3l-next-btn--final' : ''));
       nextBtn.onclick = function () {
         if (isLast) {
@@ -15108,7 +15811,7 @@ var ContentRenderer = (function () {
           _loadRound3(roundIdx);
         }
       };
-      nextBtn.hidden = false;
+      nextBtnRow.hidden = false;
       if (typeof anime !== 'undefined') {
         anime.set(nextBtn, { opacity: 0, translateY: 10 });
         anime({ targets: nextBtn, opacity: 1, translateY: 0, duration: 420, delay: round.hasCompare ? 700 : 250, easing: 'easeOutBack' });
@@ -15208,7 +15911,7 @@ var ContentRenderer = (function () {
                                    'cp-l3l-tile--num'
         );
         var t = _el('button', cls);
-        t.textContent = rt.text;
+        t.textContent = rt.text === '−' ? '-' : rt.text;
 
         if (rt.kind === 'add-op' || rt.kind === 'sub-op') {
           var opLabel = rt.kind === 'add-op' ? 'Tap + to add' : 'Tap − to subtract';
@@ -15255,16 +15958,19 @@ var ContentRenderer = (function () {
           var divOpTile = tilesRow.querySelector('.cp-l3l-tile--div-op');
           if (divOpTile) anime({ targets: divOpTile, scale: [1, 1.18, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
         }
-        hintText.textContent = '🔍 Look again. Is there a division \xf7 sign in the sum?';
-        hintBox.hidden = false;
+        if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
+        meeraBubble.classList.remove('cp-l3l-bubble--faded', 'cp-l3l-bubble--guide-prompt');
+        meeraBText.textContent = '🔍 Look again. Is there a division \xf7 sign in the sum?';
         if (typeof anime !== 'undefined') {
-          anime.set(hintBox, { opacity: 0, translateY: -6 });
-          anime({ targets: hintBox, opacity: 1, translateY: 0, duration: 320, easing: 'easeOutBack' });
+          anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
+          anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
+        if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
+        aaravBubble.classList.remove('cp-l3l-bubble--faded', 'cp-l3l-bubble--guide-prompt');
         aaravBText.textContent = 'Oops — let me look again!';
         if (typeof anime !== 'undefined') {
-          anime.set(aaravBubble, { scale: 0.92 });
-          anime({ targets: aaravBubble, scale: 1, duration: 280, easing: 'easeOutBack' });
+          anime.set(aaravBubble, { scale: 0.92, opacity: 0.7 });
+          anime({ targets: aaravBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
         return;
       }
@@ -15272,7 +15978,6 @@ var ContentRenderer = (function () {
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
       guideText.textContent = 'Watch them come together!';
-      hintBox.hidden = true;
       meeraBText.textContent = 'Yes! \xf7 goes first! Brilliant! ⭐';
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
@@ -15320,7 +16025,8 @@ var ContentRenderer = (function () {
         var isDiv = round.divIndices.indexOf(ti) !== -1;
         var cls   = _tileClass3(tok, isDiv);
         var tile  = _el('button', cls);
-        tile.textContent = tok;
+        tile.textContent = tok === '−' ? '-' : tok;
+        if (tok === '\xf7') tile.classList.add('cp-op-div');
         tile.dataset.idx = ti;
         tile.setAttribute('aria-label', 'Tile: ' + tok);
         (function (t, token, div) {
@@ -15346,11 +16052,26 @@ var ContentRenderer = (function () {
           (i < idx  ? ' cp-l3l-dot--done'   : '') +
           (i === idx ? ' cp-l3l-dot--active' : ''));
       });
+      if (roundBadge) {
+        roundBadge.innerHTML = '';
+        var _bi3 = document.createElement('span');
+        _bi3.className = 'cp-lab-round-badge__icon';
+        _bi3.setAttribute('aria-hidden', 'true');
+        _bi3.textContent = '🏆';
+        var _bt3 = document.createElement('span');
+        _bt3.className = 'cp-lab-round-badge__text';
+        _bt3.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+        roundBadge.appendChild(_bi3); roundBadge.appendChild(_bt3);
+      }
+      headerDotEls.forEach(function (d, i) {
+        d.className = 'cp-lab-header-dot' +
+          (i < idx ? ' cp-lab-header-dot--done' : '') +
+          (i === idx ? ' cp-lab-header-dot--active' : '');
+      });
 
-      nextBtn.hidden      = true;
+      nextBtnRow.hidden   = true;
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
-      hintBox.hidden = true;
       boardEl.classList.remove('cp-l3l-board--blurred');
 
       aaravBText.textContent = 'I usually go left to right...';
@@ -15358,33 +16079,28 @@ var ContentRenderer = (function () {
 
       if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-      aaravLabel.classList.remove('cp-l3l-student__label--hidden');
-      meeraLabel.classList.remove('cp-l3l-student__label--hidden');
-
       aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l3l-bubble--expanded');
+      aaravBubble.classList.remove('cp-l3l-bubble--expanded', 'cp-l3l-bubble--guide-prompt');
       aaravBubble.classList.add('cp-l3l-bubble--faded');
       aaravBubble.appendChild(aaravBName);
       aaravBubble.appendChild(aaravBText);
 
       meeraBubble.innerHTML = '';
-      meeraBubble.classList.remove('cp-l3l-bubble--expanded');
+      meeraBubble.classList.remove('cp-l3l-bubble--expanded', 'cp-l3l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l3l-bubble--faded');
       meeraBubble.appendChild(meeraBName);
       meeraBubble.appendChild(meeraBText);
 
       function _showBubbles3() {
-        aaravLabel.classList.add('cp-l3l-student__label--hidden');
-        meeraLabel.classList.add('cp-l3l-student__label--hidden');
+        aaravBubble.classList.add('cp-l3l-bubble--guide-prompt');
+        meeraBubble.classList.add('cp-l3l-bubble--guide-prompt');
         aaravBubble.classList.remove('cp-l3l-bubble--faded');
         meeraBubble.classList.remove('cp-l3l-bubble--faded');
         aaravFadeTimer = setTimeout(function () {
           aaravBubble.classList.add('cp-l3l-bubble--faded');
-          aaravLabel.classList.remove('cp-l3l-student__label--hidden');
         }, 3000);
         meeraFadeTimer = setTimeout(function () {
           meeraBubble.classList.add('cp-l3l-bubble--faded');
-          meeraLabel.classList.remove('cp-l3l-student__label--hidden');
         }, 3000);
       }
 
@@ -15411,68 +16127,11 @@ var ContentRenderer = (function () {
   ══════════════════════════════════════════════════════ */
 
   function _renderL3Reveal(page, area) {
-    var wrap = _el('div', 'cp-l3r-wrap');
-    wrap.dataset.pageId = page.id;
-
-    var titleEl = _el('h2', 'cp-l3r-title');
-    titleEl.innerHTML = '🎉 ' + (page.title || 'You Found the Rule!') + ' 🎉';
-    wrap.appendChild(titleEl);
-
-    var ruleEl = _el('p', 'cp-l3r-rule');
-    ruleEl.innerHTML = (page.ruleText || '')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/\xf7/g, '<span class="cp-l3r-rule__div">\xf7</span>')
-      .replace(/\+/g,  '<span class="cp-l3r-rule__add">+</span>')
-      .replace(/−/g, '<span class="cp-l3r-rule__sub">−</span>');
-    wrap.appendChild(ruleEl);
-
-    var stepsBox = _el('div', 'cp-l3r-steps-box');
-    (page.workedSteps || []).forEach(function (step) {
-      var lineEl = _el('div', 'cp-l3r-step');
-      var toks   = step.expr.split(' ');
-      var hlSet  = {};
-      (step.hlTokens || []).forEach(function (t) { hlSet[t] = true; });
-
-      var i = 0;
-      while (i < toks.length) {
-        if (i > 0) lineEl.appendChild(document.createTextNode(' '));
-        if (hlSet[toks[i]]) {
-          var group = [];
-          while (i < toks.length && hlSet[toks[i]]) { group.push(toks[i]); i++; }
-          var pill = _el('span', 'cp-l3r-step__hl');
-          pill.textContent = group.join(' ');
-          lineEl.appendChild(pill);
-        } else {
-          lineEl.appendChild(document.createTextNode(toks[i]));
-          i++;
-        }
-      }
-      stepsBox.appendChild(lineEl);
-    });
-    wrap.appendChild(stepsBox);
-
-    var tagEl = _el('p', 'cp-l3r-bodmas-tag');
-    tagEl.textContent = page.bodmasTag || '';
-    wrap.appendChild(tagEl);
-
-    var btn = _el('button', 'cp-l3r-btn');
-    btn.textContent = page.buttonLabel || 'See the Detectives ►';
-    btn.addEventListener('click', function () {
-      if (typeof playStartWhoosh === 'function') playStartWhoosh();
-      _wipeLeftTo(page.next);
-    });
-    wrap.appendChild(btn);
-
-    area.appendChild(wrap);
-
-    if (typeof anime !== 'undefined') {
-      var els = [titleEl, ruleEl, stepsBox, tagEl, btn];
-      anime.set(els, { opacity: 0, translateY: 24 });
-      anime({ targets: els, opacity: 1, translateY: 0, duration: 500,
-              delay: anime.stagger(80), easing: 'easeOutQuad' });
-    }
-
-    setTimeout(function () { if (typeof launchConfetti === 'function') launchConfetti(); }, 400);
+    _renderLxReveal(page, area, 'cp-l3r', [
+      { char: '\xf7', cls: 'cp-l3r-rule__div' },
+      { char: '+',    cls: 'cp-l3r-rule__add' },
+      { char: '−',    cls: 'cp-l3r-rule__sub' }
+    ]);
   }
 
   /* ══════════════════════════════════════════════════════
@@ -15710,18 +16369,35 @@ var ContentRenderer = (function () {
   function _renderL4Intro(page, area) {
     var wrap = _el('div', 'cp-l4i-wrap');
     wrap.dataset.pageId = page.id;
+
     var scenarioEl = _el('p', 'cp-l4i-scenario');
-    scenarioEl.textContent = page.scenario || '';
+    if (page.scenarioHtml) {
+      scenarioEl.innerHTML = page.scenarioHtml;
+    } else {
+      scenarioEl.textContent = page.scenario || '';
+    }
     wrap.appendChild(scenarioEl);
+
     var exprBox = _el('div', 'cp-l4i-expr-box');
     var exprEl  = _el('div', 'cp-l4i-expr');
     exprEl.setAttribute('aria-label', page.expression || '');
-    exprEl.textContent = page.expression || '';
+    (page.expression || '').split(' ').forEach(function (tok) {
+      var span = _el('span', 'cp-l4i-token');
+      span.textContent = tok;
+      span.classList.add(/^\d+$/.test(tok) ? 'cp-l4i-token--num' : 'cp-l4i-token--op');
+      exprEl.appendChild(span);
+    });
     exprBox.appendChild(exprEl);
     wrap.appendChild(exprBox);
+
     var qEl = _el('p', 'cp-l4i-question');
-    qEl.textContent = page.question || '';
+    if (page.questionHtml) {
+      qEl.innerHTML = page.questionHtml;
+    } else {
+      qEl.textContent = page.question || '';
+    }
     wrap.appendChild(qEl);
+
     var btn = _el('button', 'cp-l4i-cta');
     btn.textContent = page.buttonLabel || "Let's Investigate!";
     btn.addEventListener('click', function () {
@@ -15730,15 +16406,49 @@ var ContentRenderer = (function () {
     });
     wrap.appendChild(btn);
     area.appendChild(wrap);
+
     if (typeof anime !== 'undefined') {
+      var tokenEls = exprEl.querySelectorAll('.cp-l4i-token');
+
       anime.set(scenarioEl, { opacity: 0, translateY: 24 });
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
+      anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
       anime.set(btn,        { opacity: 0, translateY: 14 });
+
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
-      anime({ targets: exprBox,    opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack' });
-      anime({ targets: qEl,        opacity: 1, duration: 400, delay: 460 });
-      anime({ targets: btn,        opacity: 1, translateY: 0, duration: 450, delay: 660, easing: 'easeOutBack' });
+
+      anime({
+        targets: exprBox, opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack',
+        complete: function () {
+          anime({
+            targets: tokenEls,
+            opacity: 1, translateY: 0, scale: 1,
+            duration: 380,
+            delay: anime.stagger(90, { easing: 'easeOutQuad' }),
+            easing: 'easeOutBack',
+            complete: function () {
+              anime({
+                targets: exprBox,
+                boxShadow: [
+                  '0 6px 24px rgba(24,214,160,0.22)',
+                  '0 8px 44px rgba(24,214,160,0.65)',
+                  '0 6px 24px rgba(24,214,160,0.22)'
+                ],
+                duration: 700,
+                easing: 'easeInOutSine'
+              });
+            }
+          });
+        }
+      });
+
+      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
+
+      anime({
+        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
+        complete: function () { btn.style.transform = ''; }
+      });
     }
   }
 
@@ -15825,6 +16535,8 @@ var ContentRenderer = (function () {
     wrap.dataset.pageId = page.id;
     var aaravFadeTimer = null;
     var meeraFadeTimer = null;
+    var roundBadge   = null;
+    var headerDotEls = [];
 
     var roundHeader = _el('div', 'cp-l4l-round-header');
     var roundLabel  = _el('span', 'cp-l4l-round-label');
@@ -15840,15 +16552,39 @@ var ContentRenderer = (function () {
     roundHeader.appendChild(roundLabel);
     roundHeader.appendChild(dotsEl);
     wrap.appendChild(roundHeader);
+    roundHeader.style.display = 'none';
 
-    var hintBox  = _el('div', 'cp-l4l-hint-box');
-    var hintText = _el('p',   'cp-l4l-hint-text');
-    hintBox.setAttribute('aria-live', 'polite');
-    hintBox.hidden = true;
-    hintBox.appendChild(hintText);
-    wrap.appendChild(hintBox);
+    (function () {
+      var _pt = document.querySelector('.progress-track');
+      var _pd = document.getElementById('progress-dots');
+      if (_pt && _pd) {
+        _pd.style.display = 'none';
+        roundBadge = document.createElement('div');
+        roundBadge.className = 'cp-lab-round-badge';
+        _pt.appendChild(roundBadge);
+      }
+      var _hr = document.querySelector('.header__right');
+      if (_hr) {
+        var _ld = document.createElement('div');
+        _ld.className = 'cp-lab-header-dots';
+        rounds.forEach(function () {
+          var d = document.createElement('span');
+          d.className = 'cp-lab-header-dot';
+          _ld.appendChild(d);
+          headerDotEls.push(d);
+        });
+        _hr.insertBefore(_ld, _hr.firstChild);
+      }
+    }());
 
     var classEl = _el('div', 'cp-l4l-classroom');
+    var classBg = document.createElement('img');
+    classBg.src = 'assets/images/class-bg.png';
+    classBg.alt = '';
+    classBg.setAttribute('aria-hidden', 'true');
+    classBg.setAttribute('draggable', 'false');
+    classBg.className = 'cp-l4l-class-bg';
+    classEl.appendChild(classBg);
 
     var aaravEl = _el('div', 'cp-l4l-student cp-l4l-student--left');
     aaravEl.setAttribute('aria-hidden', 'true');
@@ -15859,7 +16595,7 @@ var ContentRenderer = (function () {
     var aaravBText  = _el('p', 'cp-l4l-bubble__text'); aaravBText.textContent = 'I think the right side goes first...';
     aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
     aaravEl.appendChild(aaravBubble);
-    var aaravSvgWrap = _el('div', 'cp-l4l-student__svg-wrap'); aaravSvgWrap.innerHTML = _aaravSvg4();
+    var aaravSvgWrap = _el('div', 'cp-l4l-student__svg-wrap'); var _aImg = document.createElement('img'); _aImg.src = 'assets/images/aarav.webp'; _aImg.alt = 'Aarav'; aaravSvgWrap.appendChild(_aImg);
     aaravEl.appendChild(aaravSvgWrap);
     classEl.appendChild(aaravEl);
 
@@ -15884,7 +16620,7 @@ var ContentRenderer = (function () {
     var meeraBText  = _el('p', 'cp-l4l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
     meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
-    var meeraSvgWrap = _el('div', 'cp-l4l-student__svg-wrap'); meeraSvgWrap.innerHTML = _meeraSvg4();
+    var meeraSvgWrap = _el('div', 'cp-l4l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
     meeraEl.appendChild(meeraSvgWrap);
     classEl.appendChild(meeraEl);
     wrap.appendChild(classEl);
@@ -15892,7 +16628,7 @@ var ContentRenderer = (function () {
     var guideBar    = _el('div', 'cp-l4l-guide-bar');
     var guideAvatar = _el('div', 'cp-l4l-guide-avatar');
     var guideAvatarImg = document.createElement('img');
-    guideAvatarImg.src = 'assets/images/Swiftee01.png';
+    guideAvatarImg.src = 'assets/face-emotions/Happy.webp';
     guideAvatarImg.alt = '';
     guideAvatarImg.setAttribute('aria-hidden', 'true');
     guideAvatarImg.setAttribute('draggable', 'false');
@@ -15902,13 +16638,15 @@ var ContentRenderer = (function () {
     var comparePanel = _el('div', 'cp-l4l-compare');
     comparePanel.hidden = true;
     comparePanel.setAttribute('aria-live', 'polite');
-    var nextBtn = _el('button', 'cp-l4l-next-btn');
-    nextBtn.hidden = true;
+    var nextBtn    = _el('button', 'cp-l4l-next-btn');
+    var nextBtnRow = _el('div',    'cp-l4l-btn-row');
+    nextBtnRow.hidden = true;
+    nextBtnRow.appendChild(nextBtn);
     guideBar.appendChild(guideAvatar);
     guideBar.appendChild(guideText);
     wrap.appendChild(guideBar);
     wrap.appendChild(comparePanel);
-    wrap.appendChild(nextBtn);
+    wrap.appendChild(nextBtnRow);
     area.appendChild(wrap);
 
     function _tileClass4(tok, isLtr) {
@@ -15985,20 +16723,28 @@ var ContentRenderer = (function () {
       var corrStep1 = tokens[0] + ' ' + op1 + ' ' + tokens[2] + ' = ' + round.ltrResult;
       var corrStep2 = round.ltrResult + ' ' + op2 + ' ' + tokens[4] + ' = ' + round.finalResult;
 
-      function _makeCard4(cls, emoji, name, nameCls, method, steps, answerVal, ansCls) {
-        var card   = _el('div', 'cp-l4l-dc-card ' + cls);
-        var hdr    = _el('div', 'cp-l4l-dc-header');
-        var emEl   = _el('span', 'cp-l4l-dc-emoji');  emEl.textContent  = emoji;
-        var nmEl   = _el('span', 'cp-l4l-dc-name ' + nameCls); nmEl.textContent = name;
-        var mtEl   = _el('span', 'cp-l4l-dc-method'); mtEl.textContent  = method;
-        hdr.appendChild(emEl); hdr.appendChild(nmEl); hdr.appendChild(mtEl);
+      function _makeCard4(cls, avatarSrc, name, nameCls, method, steps, answerVal, ansCls) {
+        var card = _el('div', 'cp-l4l-dc-card ' + cls);
+        var hdr  = _el('div', 'cp-l4l-dc-header');
+        var av   = _el('span', 'cp-l4l-dc-avatar');
+        var avImg = document.createElement('img');
+        avImg.src = avatarSrc; avImg.alt = '';
+        avImg.className = 'cp-l4l-dc-avatar__img';
+        av.appendChild(avImg);
+        var hdrInfo = _el('div', 'cp-l4l-dc-header-info');
+        var nmEl = _el('span', 'cp-l4l-dc-name ' + nameCls); nmEl.textContent = name;
+        var mtEl = _el('span', 'cp-l4l-dc-method'); mtEl.textContent = method;
+        hdrInfo.appendChild(nmEl); hdrInfo.appendChild(mtEl);
+        hdr.appendChild(av); hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
+        card.appendChild(_el('div', 'cp-l4l-dc-divider cp-l4l-dc-divider--dashed'));
         var stepsEl = _el('div', 'cp-l4l-dc-steps');
         steps.forEach(function (s) {
           var st = _el('div', 'cp-l4l-dc-step'); st.textContent = s;
           stepsEl.appendChild(st);
         });
         card.appendChild(stepsEl);
+        card.appendChild(_el('div', 'cp-l4l-dc-divider'));
         var ansEl = _el('div', 'cp-l4l-dc-answer ' + ansCls);
         ansEl.textContent = String(answerVal);
         card.appendChild(ansEl);
@@ -16013,7 +16759,7 @@ var ContentRenderer = (function () {
       aaravBubble.classList.add('cp-l4l-bubble--expanded');
       aaravBubble.appendChild(_makeCard4(
         'cp-l4l-dc-card--wrong',
-        '🧒', 'Aarav', 'cp-l4l-dc-name--aarav',
+        'assets/images/aarav.webp', 'Aarav', 'cp-l4l-dc-name--aarav',
         '\xb7 right first',
         [wrongStep1, wrongStep2],
         round.compareWrong, 'cp-l4l-dc-answer--wrong'
@@ -16024,14 +16770,32 @@ var ContentRenderer = (function () {
       meeraBubble.classList.add('cp-l4l-bubble--expanded');
       meeraBubble.appendChild(_makeCard4(
         'cp-l4l-dc-card--right',
-        '🧒', 'Meera', 'cp-l4l-dc-name--meera',
+        'assets/images/meera.webp', 'Meera', 'cp-l4l-dc-name--meera',
         '\xb7 left → right',
         [corrStep1, corrStep2],
         round.compareRight, 'cp-l4l-dc-answer--right'
       ));
 
-      var caption = _el('p', 'cp-l4l-dc-caption');
-      caption.textContent = 'Two different answers for ' + tokens.join(' ') + ' 🤔';
+      var caption = _el('div', 'cp-l4l-dc-caption');
+      var capAv = document.createElement('img');
+      capAv.src = 'assets/face-emotions/Idea.webp'; capAv.alt = '';
+      capAv.setAttribute('aria-hidden', 'true');
+      capAv.className = 'cp-l4l-dc-caption__avatar';
+      var capBody = _el('div', 'cp-l4l-dc-caption__body');
+      var capLabel = _el('span', 'cp-l4l-dc-caption__label');
+      capLabel.textContent = 'Two different answers for';
+      var capExpr = _el('span', 'cp-l4l-dc-caption__expr');
+      tokens.forEach(function (tok, i) {
+        if (i > 0) capExpr.appendChild(document.createTextNode(' '));
+        var s = document.createElement('span');
+        s.textContent = tok;
+        if (tok === '+') s.className = 'cp-l4l-dc-caption__op--add';
+        else if (tok === '−') s.className = 'cp-l4l-dc-caption__op--sub';
+        else s.className = 'cp-l4l-dc-caption__num';
+        capExpr.appendChild(s);
+      });
+      capBody.appendChild(capLabel); capBody.appendChild(capExpr);
+      caption.appendChild(capAv); caption.appendChild(capBody);
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
@@ -16044,7 +16808,7 @@ var ContentRenderer = (function () {
     function _afterRoundComplete4(round) {
       if (round.hasCompare) _showCompare4(round);
       var isLast = (roundIdx === rounds.length - 1);
-      nextBtn.textContent = isLast ? 'See the Rule →' : 'Next Round ▶';
+      nextBtn.textContent = isLast ? 'See the Rule' : 'Next Round';
       nextBtn.className   = _sharedContentClasses('cp-l4l-next-btn' + (isLast ? ' cp-l4l-next-btn--final' : ''));
       nextBtn.onclick = function () {
         if (isLast) {
@@ -16055,7 +16819,7 @@ var ContentRenderer = (function () {
           _loadRound4(roundIdx);
         }
       };
-      nextBtn.hidden = false;
+      nextBtnRow.hidden = false;
       if (typeof anime !== 'undefined') {
         anime.set(nextBtn, { opacity: 0, translateY: 10 });
         anime({ targets: nextBtn, opacity: 1, translateY: 0, duration: 420, delay: round.hasCompare ? 700 : 250, easing: 'easeOutBack' });
@@ -16144,7 +16908,7 @@ var ContentRenderer = (function () {
                                       'cp-l4l-tile--num'
         );
         var t = _el('button', cls);
-        t.textContent = rt.text;
+        t.textContent = rt.text === '−' ? '-' : rt.text;
         if (rt.kind === 'add-op' || rt.kind === 'sub-op') {
           var opLabel = rt.kind === 'add-op' ? 'Tap + to add' : 'Tap − to subtract';
           t.setAttribute('aria-label', opLabel);
@@ -16186,23 +16950,25 @@ var ContentRenderer = (function () {
           var ltrOpTile = tilesRow.querySelector('.cp-l4l-tile--ltr-op');
           if (ltrOpTile) anime({ targets: ltrOpTile, scale: [1, 1.18, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
         }
-        hintText.textContent = '🔍 Which + or − appears FIRST from left to right?';
-        hintBox.hidden = false;
+        if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
+        meeraBubble.classList.remove('cp-l4l-bubble--faded', 'cp-l4l-bubble--guide-prompt');
+        meeraBText.textContent = '🔍 Which + or − appears FIRST from left to right?';
         if (typeof anime !== 'undefined') {
-          anime.set(hintBox, { opacity: 0, translateY: -6 });
-          anime({ targets: hintBox, opacity: 1, translateY: 0, duration: 320, easing: 'easeOutBack' });
+          anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
+          anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
+        if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
+        aaravBubble.classList.remove('cp-l4l-bubble--faded', 'cp-l4l-bubble--guide-prompt');
         aaravBText.textContent = 'Hmm, let me look again!';
         if (typeof anime !== 'undefined') {
-          anime.set(aaravBubble, { scale: 0.92 });
-          anime({ targets: aaravBubble, scale: 1, duration: 280, easing: 'easeOutBack' });
+          anime.set(aaravBubble, { scale: 0.92, opacity: 0.7 });
+          anime({ targets: aaravBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
         return;
       }
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
       guideText.textContent = 'Watch them come together!';
-      hintBox.hidden = true;
       meeraBText.textContent = 'Yes! Left to right! Brilliant! ⭐';
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
@@ -16245,7 +17011,7 @@ var ContentRenderer = (function () {
         var isLtr = round.ltrIndices.indexOf(ti) !== -1;
         var cls   = _tileClass4(tok, isLtr);
         var tile  = _el('button', cls);
-        tile.textContent = tok;
+        tile.textContent = tok === '−' ? '-' : tok;
         tile.dataset.idx = ti;
         tile.setAttribute('aria-label', 'Tile: ' + tok);
         (function (t, token, ltr) {
@@ -16269,40 +17035,51 @@ var ContentRenderer = (function () {
           (i < idx  ? ' cp-l4l-dot--done'   : '') +
           (i === idx ? ' cp-l4l-dot--active' : ''));
       });
-      nextBtn.hidden      = true;
+      if (roundBadge) {
+        roundBadge.innerHTML = '';
+        var _bi4 = document.createElement('span');
+        _bi4.className = 'cp-lab-round-badge__icon';
+        _bi4.setAttribute('aria-hidden', 'true');
+        _bi4.textContent = '🏆';
+        var _bt4 = document.createElement('span');
+        _bt4.className = 'cp-lab-round-badge__text';
+        _bt4.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+        roundBadge.appendChild(_bi4); roundBadge.appendChild(_bt4);
+      }
+      headerDotEls.forEach(function (d, i) {
+        d.className = 'cp-lab-header-dot' +
+          (i < idx ? ' cp-lab-header-dot--done' : '') +
+          (i === idx ? ' cp-lab-header-dot--active' : '');
+      });
+      nextBtnRow.hidden   = true;
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
-      hintBox.hidden = true;
       boardEl.classList.remove('cp-l4l-board--blurred');
       aaravBText.textContent = 'I think the right side goes first...';
       meeraBText.textContent = 'Tap what to solve first!';
       if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-      aaravLabel.classList.remove('cp-l4l-student__label--hidden');
-      meeraLabel.classList.remove('cp-l4l-student__label--hidden');
       aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l4l-bubble--expanded');
+      aaravBubble.classList.remove('cp-l4l-bubble--expanded', 'cp-l4l-bubble--guide-prompt');
       aaravBubble.classList.add('cp-l4l-bubble--faded');
       aaravBubble.appendChild(aaravBName);
       aaravBubble.appendChild(aaravBText);
       meeraBubble.innerHTML = '';
-      meeraBubble.classList.remove('cp-l4l-bubble--expanded');
+      meeraBubble.classList.remove('cp-l4l-bubble--expanded', 'cp-l4l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l4l-bubble--faded');
       meeraBubble.appendChild(meeraBName);
       meeraBubble.appendChild(meeraBText);
 
       function _showBubbles4() {
-        aaravLabel.classList.add('cp-l4l-student__label--hidden');
-        meeraLabel.classList.add('cp-l4l-student__label--hidden');
+        aaravBubble.classList.add('cp-l4l-bubble--guide-prompt');
+        meeraBubble.classList.add('cp-l4l-bubble--guide-prompt');
         aaravBubble.classList.remove('cp-l4l-bubble--faded');
         meeraBubble.classList.remove('cp-l4l-bubble--faded');
         aaravFadeTimer = setTimeout(function () {
           aaravBubble.classList.add('cp-l4l-bubble--faded');
-          aaravLabel.classList.remove('cp-l4l-student__label--hidden');
         }, 3000);
         meeraFadeTimer = setTimeout(function () {
           meeraBubble.classList.add('cp-l4l-bubble--faded');
-          meeraLabel.classList.remove('cp-l4l-student__label--hidden');
         }, 3000);
       }
 
@@ -16328,58 +17105,10 @@ var ContentRenderer = (function () {
   ══════════════════════════════════════════════════════ */
 
   function _renderL4Reveal(page, area) {
-    var wrap = _el('div', 'cp-l4r-wrap');
-    wrap.dataset.pageId = page.id;
-    var titleEl = _el('h2', 'cp-l4r-title');
-    titleEl.innerHTML = '🎉 ' + (page.ruleTitle || 'You Found the Rule!') + ' 🎉';
-    wrap.appendChild(titleEl);
-    var ruleEl = _el('p', 'cp-l4r-rule');
-    ruleEl.innerHTML = (page.ruleText || '')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/\+/g,  '<span class="cp-l4r-rule__add">+</span>')
-      .replace(/−/g, '<span class="cp-l4r-rule__sub">−</span>');
-    wrap.appendChild(ruleEl);
-    var stepsBox = _el('div', 'cp-l4r-steps-box');
-    (page.workedSteps || []).forEach(function (step) {
-      var lineEl = _el('div', 'cp-l4r-step');
-      var toks   = step.expr.split(' ');
-      var hlSet  = {};
-      (step.hlTokens || []).forEach(function (t) { hlSet[t] = true; });
-      var i = 0;
-      while (i < toks.length) {
-        if (i > 0) lineEl.appendChild(document.createTextNode(' '));
-        if (hlSet[toks[i]]) {
-          var group = [];
-          while (i < toks.length && hlSet[toks[i]]) { group.push(toks[i]); i++; }
-          var pill = _el('span', 'cp-l4r-step__hl');
-          pill.textContent = group.join(' ');
-          lineEl.appendChild(pill);
-        } else {
-          lineEl.appendChild(document.createTextNode(toks[i]));
-          i++;
-        }
-      }
-      stepsBox.appendChild(lineEl);
-    });
-    wrap.appendChild(stepsBox);
-    var tagEl = _el('p', 'cp-l4r-bodmas-tag');
-    tagEl.textContent = page.bodmasTag || '';
-    wrap.appendChild(tagEl);
-    var btn = _el('button', 'cp-l4r-btn');
-    btn.textContent = page.buttonLabel || 'See the Detectives ►';
-    btn.addEventListener('click', function () {
-      if (typeof playStartWhoosh === 'function') playStartWhoosh();
-      _wipeLeftTo(page.next);
-    });
-    wrap.appendChild(btn);
-    area.appendChild(wrap);
-    if (typeof anime !== 'undefined') {
-      var els = [titleEl, ruleEl, stepsBox, tagEl, btn];
-      anime.set(els, { opacity: 0, translateY: 24 });
-      anime({ targets: els, opacity: 1, translateY: 0, duration: 500,
-              delay: anime.stagger(80), easing: 'easeOutQuad' });
-    }
-    setTimeout(function () { if (typeof launchConfetti === 'function') launchConfetti(); }, 400);
+    _renderLxReveal(page, area, 'cp-l4r', [
+      { char: '+', cls: 'cp-l4r-rule__add' },
+      { char: '−', cls: 'cp-l4r-rule__sub' }
+    ]);
   }
 
   /* ══════════════════════════════════════════════════════
@@ -16618,18 +17347,35 @@ var ContentRenderer = (function () {
   function _renderL5Intro(page, area) {
     var wrap = _el('div', 'cp-l5i-wrap');
     wrap.dataset.pageId = page.id;
+
     var scenarioEl = _el('p', 'cp-l5i-scenario');
-    scenarioEl.textContent = page.scenario || '';
+    if (page.scenarioHtml) {
+      scenarioEl.innerHTML = page.scenarioHtml;
+    } else {
+      scenarioEl.textContent = page.scenario || '';
+    }
     wrap.appendChild(scenarioEl);
+
     var exprBox = _el('div', 'cp-l5i-expr-box');
     var exprEl  = _el('div', 'cp-l5i-expr');
     exprEl.setAttribute('aria-label', page.expression || '');
-    exprEl.textContent = page.expression || '';
+    (page.expression || '').split(' ').forEach(function (tok) {
+      var span = _el('span', 'cp-l5i-token');
+      span.textContent = tok;
+      span.classList.add(/^\d+$/.test(tok) ? 'cp-l5i-token--num' : 'cp-l5i-token--op');
+      exprEl.appendChild(span);
+    });
     exprBox.appendChild(exprEl);
     wrap.appendChild(exprBox);
+
     var qEl = _el('p', 'cp-l5i-question');
-    qEl.textContent = page.question || '';
+    if (page.questionHtml) {
+      qEl.innerHTML = page.questionHtml;
+    } else {
+      qEl.textContent = page.question || '';
+    }
     wrap.appendChild(qEl);
+
     var btn = _el('button', 'cp-l5i-cta');
     btn.textContent = page.buttonLabel || "Let's Investigate!";
     btn.addEventListener('click', function () {
@@ -16638,15 +17384,49 @@ var ContentRenderer = (function () {
     });
     wrap.appendChild(btn);
     area.appendChild(wrap);
+
     if (typeof anime !== 'undefined') {
+      var tokenEls = exprEl.querySelectorAll('.cp-l5i-token');
+
       anime.set(scenarioEl, { opacity: 0, translateY: 24 });
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
+      anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
       anime.set(btn,        { opacity: 0, translateY: 14 });
+
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
-      anime({ targets: exprBox,    opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack' });
-      anime({ targets: qEl,        opacity: 1, duration: 400, delay: 460 });
-      anime({ targets: btn,        opacity: 1, translateY: 0, duration: 450, delay: 660, easing: 'easeOutBack' });
+
+      anime({
+        targets: exprBox, opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack',
+        complete: function () {
+          anime({
+            targets: tokenEls,
+            opacity: 1, translateY: 0, scale: 1,
+            duration: 380,
+            delay: anime.stagger(90, { easing: 'easeOutQuad' }),
+            easing: 'easeOutBack',
+            complete: function () {
+              anime({
+                targets: exprBox,
+                boxShadow: [
+                  '0 6px 24px rgba(111,139,255,0.22)',
+                  '0 8px 44px rgba(111,139,255,0.65)',
+                  '0 6px 24px rgba(111,139,255,0.22)'
+                ],
+                duration: 700,
+                easing: 'easeInOutSine'
+              });
+            }
+          });
+        }
+      });
+
+      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
+
+      anime({
+        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
+        complete: function () { btn.style.transform = ''; }
+      });
     }
   }
 
@@ -16733,6 +17513,8 @@ var ContentRenderer = (function () {
     wrap.dataset.pageId = page.id;
     var aaravFadeTimer = null;
     var meeraFadeTimer = null;
+    var roundBadge   = null;
+    var headerDotEls = [];
 
     var roundHeader = _el('div', 'cp-l5l-round-header');
     var roundLabel  = _el('span', 'cp-l5l-round-label');
@@ -16748,15 +17530,39 @@ var ContentRenderer = (function () {
     roundHeader.appendChild(roundLabel);
     roundHeader.appendChild(dotsEl);
     wrap.appendChild(roundHeader);
+    roundHeader.style.display = 'none';
 
-    var hintBox  = _el('div', 'cp-l5l-hint-box');
-    var hintText = _el('p',   'cp-l5l-hint-text');
-    hintBox.setAttribute('aria-live', 'polite');
-    hintBox.hidden = true;
-    hintBox.appendChild(hintText);
-    wrap.appendChild(hintBox);
+    (function () {
+      var _pt = document.querySelector('.progress-track');
+      var _pd = document.getElementById('progress-dots');
+      if (_pt && _pd) {
+        _pd.style.display = 'none';
+        roundBadge = document.createElement('div');
+        roundBadge.className = 'cp-lab-round-badge';
+        _pt.appendChild(roundBadge);
+      }
+      var _hr = document.querySelector('.header__right');
+      if (_hr) {
+        var _ld = document.createElement('div');
+        _ld.className = 'cp-lab-header-dots';
+        rounds.forEach(function () {
+          var d = document.createElement('span');
+          d.className = 'cp-lab-header-dot';
+          _ld.appendChild(d);
+          headerDotEls.push(d);
+        });
+        _hr.insertBefore(_ld, _hr.firstChild);
+      }
+    }());
 
     var classEl = _el('div', 'cp-l5l-classroom');
+    var classBg = document.createElement('img');
+    classBg.src = 'assets/images/class-bg.png';
+    classBg.alt = '';
+    classBg.setAttribute('aria-hidden', 'true');
+    classBg.setAttribute('draggable', 'false');
+    classBg.className = 'cp-l5l-class-bg';
+    classEl.appendChild(classBg);
 
     var aaravEl = _el('div', 'cp-l5l-student cp-l5l-student--left');
     aaravEl.setAttribute('aria-hidden', 'true');
@@ -16767,7 +17573,7 @@ var ContentRenderer = (function () {
     var aaravBText  = _el('p', 'cp-l5l-bubble__text'); aaravBText.textContent = 'I think the right side goes first...';
     aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
     aaravEl.appendChild(aaravBubble);
-    var aaravSvgWrap = _el('div', 'cp-l5l-student__svg-wrap'); aaravSvgWrap.innerHTML = _aaravSvg5();
+    var aaravSvgWrap = _el('div', 'cp-l5l-student__svg-wrap'); var _aImg = document.createElement('img'); _aImg.src = 'assets/images/aarav.webp'; _aImg.alt = 'Aarav'; aaravSvgWrap.appendChild(_aImg);
     aaravEl.appendChild(aaravSvgWrap);
     classEl.appendChild(aaravEl);
 
@@ -16792,7 +17598,7 @@ var ContentRenderer = (function () {
     var meeraBText  = _el('p', 'cp-l5l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
     meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
-    var meeraSvgWrap = _el('div', 'cp-l5l-student__svg-wrap'); meeraSvgWrap.innerHTML = _meeraSvg5();
+    var meeraSvgWrap = _el('div', 'cp-l5l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
     meeraEl.appendChild(meeraSvgWrap);
     classEl.appendChild(meeraEl);
     wrap.appendChild(classEl);
@@ -16800,7 +17606,7 @@ var ContentRenderer = (function () {
     var guideBar    = _el('div', 'cp-l5l-guide-bar');
     var guideAvatar = _el('div', 'cp-l5l-guide-avatar');
     var guideAvatarImg = document.createElement('img');
-    guideAvatarImg.src = 'assets/images/Swiftee01.png';
+    guideAvatarImg.src = 'assets/face-emotions/Happy.webp';
     guideAvatarImg.alt = '';
     guideAvatarImg.setAttribute('aria-hidden', 'true');
     guideAvatarImg.setAttribute('draggable', 'false');
@@ -16810,13 +17616,15 @@ var ContentRenderer = (function () {
     var comparePanel = _el('div', 'cp-l5l-compare');
     comparePanel.hidden = true;
     comparePanel.setAttribute('aria-live', 'polite');
-    var nextBtn = _el('button', 'cp-l5l-next-btn');
-    nextBtn.hidden = true;
+    var nextBtn    = _el('button', 'cp-l5l-next-btn');
+    var nextBtnRow = _el('div',    'cp-l5l-btn-row');
+    nextBtnRow.hidden = true;
+    nextBtnRow.appendChild(nextBtn);
     guideBar.appendChild(guideAvatar);
     guideBar.appendChild(guideText);
     wrap.appendChild(guideBar);
     wrap.appendChild(comparePanel);
-    wrap.appendChild(nextBtn);
+    wrap.appendChild(nextBtnRow);
     area.appendChild(wrap);
 
     function _tileClass5(tok, isLtr) {
@@ -16894,20 +17702,28 @@ var ContentRenderer = (function () {
       var corrStep1 = tokens[0] + ' ' + op1 + ' ' + tokens[2] + ' = ' + round.ltrResult;
       var corrStep2 = round.ltrResult + ' ' + op2 + ' ' + tokens[4] + ' = ' + round.finalResult;
 
-      function _makeCard5(cls, emoji, name, nameCls, method, steps, answerVal, ansCls) {
-        var card   = _el('div', 'cp-l5l-dc-card ' + cls);
-        var hdr    = _el('div', 'cp-l5l-dc-header');
-        var emEl   = _el('span', 'cp-l5l-dc-emoji');  emEl.textContent  = emoji;
-        var nmEl   = _el('span', 'cp-l5l-dc-name ' + nameCls); nmEl.textContent = name;
-        var mtEl   = _el('span', 'cp-l5l-dc-method'); mtEl.textContent  = method;
-        hdr.appendChild(emEl); hdr.appendChild(nmEl); hdr.appendChild(mtEl);
+      function _makeCard5(cls, avatarSrc, name, nameCls, method, steps, answerVal, ansCls) {
+        var card = _el('div', 'cp-l5l-dc-card ' + cls);
+        var hdr  = _el('div', 'cp-l5l-dc-header');
+        var av   = _el('span', 'cp-l5l-dc-avatar');
+        var avImg = document.createElement('img');
+        avImg.src = avatarSrc; avImg.alt = '';
+        avImg.className = 'cp-l5l-dc-avatar__img';
+        av.appendChild(avImg);
+        var hdrInfo = _el('div', 'cp-l5l-dc-header-info');
+        var nmEl = _el('span', 'cp-l5l-dc-name ' + nameCls); nmEl.textContent = name;
+        var mtEl = _el('span', 'cp-l5l-dc-method'); mtEl.textContent = method;
+        hdrInfo.appendChild(nmEl); hdrInfo.appendChild(mtEl);
+        hdr.appendChild(av); hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
+        card.appendChild(_el('div', 'cp-l5l-dc-divider cp-l5l-dc-divider--dashed'));
         var stepsEl = _el('div', 'cp-l5l-dc-steps');
         steps.forEach(function (s) {
           var st = _el('div', 'cp-l5l-dc-step'); st.textContent = s;
           stepsEl.appendChild(st);
         });
         card.appendChild(stepsEl);
+        card.appendChild(_el('div', 'cp-l5l-dc-divider'));
         var ansEl = _el('div', 'cp-l5l-dc-answer ' + ansCls);
         ansEl.textContent = String(answerVal);
         card.appendChild(ansEl);
@@ -16922,7 +17738,7 @@ var ContentRenderer = (function () {
       aaravBubble.classList.add('cp-l5l-bubble--expanded');
       aaravBubble.appendChild(_makeCard5(
         'cp-l5l-dc-card--wrong',
-        '🧒', 'Aarav', 'cp-l5l-dc-name--aarav',
+        'assets/images/aarav.webp', 'Aarav', 'cp-l5l-dc-name--aarav',
         '\xb7 right first',
         [wrongStep1, wrongStep2],
         round.compareWrong, 'cp-l5l-dc-answer--wrong'
@@ -16933,14 +17749,32 @@ var ContentRenderer = (function () {
       meeraBubble.classList.add('cp-l5l-bubble--expanded');
       meeraBubble.appendChild(_makeCard5(
         'cp-l5l-dc-card--right',
-        '🧒', 'Meera', 'cp-l5l-dc-name--meera',
+        'assets/images/meera.webp', 'Meera', 'cp-l5l-dc-name--meera',
         '\xb7 left → right',
         [corrStep1, corrStep2],
         round.compareRight, 'cp-l5l-dc-answer--right'
       ));
 
-      var caption = _el('p', 'cp-l5l-dc-caption');
-      caption.textContent = 'Two different answers for ' + tokens.join(' ') + ' 🤔';
+      var caption = _el('div', 'cp-l5l-dc-caption');
+      var capAv = document.createElement('img');
+      capAv.src = 'assets/face-emotions/Idea.webp'; capAv.alt = '';
+      capAv.setAttribute('aria-hidden', 'true');
+      capAv.className = 'cp-l5l-dc-caption__avatar';
+      var capBody = _el('div', 'cp-l5l-dc-caption__body');
+      var capLabel = _el('span', 'cp-l5l-dc-caption__label');
+      capLabel.textContent = 'Two different answers for';
+      var capExpr = _el('span', 'cp-l5l-dc-caption__expr');
+      tokens.forEach(function (tok, i) {
+        if (i > 0) capExpr.appendChild(document.createTextNode(' '));
+        var s = document.createElement('span');
+        s.textContent = tok;
+        if (tok === '\xd7') s.className = 'cp-l5l-dc-caption__op--mul';
+        else if (tok === '\xf7') s.className = 'cp-l5l-dc-caption__op--div';
+        else s.className = 'cp-l5l-dc-caption__num';
+        capExpr.appendChild(s);
+      });
+      capBody.appendChild(capLabel); capBody.appendChild(capExpr);
+      caption.appendChild(capAv); caption.appendChild(capBody);
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
@@ -16953,7 +17787,7 @@ var ContentRenderer = (function () {
     function _afterRoundComplete5(round) {
       if (round.hasCompare) _showCompare5(round);
       var isLast = (roundIdx === rounds.length - 1);
-      nextBtn.textContent = isLast ? 'See the Rule →' : 'Next Round ▶';
+      nextBtn.textContent = isLast ? 'See the Rule' : 'Next Round';
       nextBtn.className   = _sharedContentClasses('cp-l5l-next-btn' + (isLast ? ' cp-l5l-next-btn--final' : ''));
       nextBtn.onclick = function () {
         if (isLast) {
@@ -16964,7 +17798,7 @@ var ContentRenderer = (function () {
           _loadRound5(roundIdx);
         }
       };
-      nextBtn.hidden = false;
+      nextBtnRow.hidden = false;
       if (typeof anime !== 'undefined') {
         anime.set(nextBtn, { opacity: 0, translateY: 10 });
         anime({ targets: nextBtn, opacity: 1, translateY: 0, duration: 420, delay: round.hasCompare ? 700 : 250, easing: 'easeOutBack' });
@@ -17053,7 +17887,8 @@ var ContentRenderer = (function () {
                                       'cp-l5l-tile--num'
         );
         var t = _el('button', cls);
-        t.textContent = rt.text;
+        t.textContent = rt.text === '−' ? '-' : rt.text;
+        if (rt.text === '\xf7') t.classList.add('cp-op-div');
         if (rt.kind === 'mul-op' || rt.kind === 'div-op') {
           var opLabel = rt.kind === 'mul-op' ? 'Tap \xd7 to multiply' : 'Tap \xf7 to divide';
           t.setAttribute('aria-label', opLabel);
@@ -17095,23 +17930,25 @@ var ContentRenderer = (function () {
           var ltrOpTile = tilesRow.querySelector('.cp-l5l-tile--ltr-op');
           if (ltrOpTile) anime({ targets: ltrOpTile, scale: [1, 1.18, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
         }
-        hintText.textContent = '🔍 Which \xd7 or \xf7 appears FIRST from left to right?';
-        hintBox.hidden = false;
+        if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
+        meeraBubble.classList.remove('cp-l5l-bubble--faded', 'cp-l5l-bubble--guide-prompt');
+        meeraBText.textContent = '🔍 Which \xd7 or \xf7 appears FIRST from left to right?';
         if (typeof anime !== 'undefined') {
-          anime.set(hintBox, { opacity: 0, translateY: -6 });
-          anime({ targets: hintBox, opacity: 1, translateY: 0, duration: 320, easing: 'easeOutBack' });
+          anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
+          anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
+        if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
+        aaravBubble.classList.remove('cp-l5l-bubble--faded', 'cp-l5l-bubble--guide-prompt');
         aaravBText.textContent = 'Hmm, let me look again!';
         if (typeof anime !== 'undefined') {
-          anime.set(aaravBubble, { scale: 0.92 });
-          anime({ targets: aaravBubble, scale: 1, duration: 280, easing: 'easeOutBack' });
+          anime.set(aaravBubble, { scale: 0.92, opacity: 0.7 });
+          anime({ targets: aaravBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
         return;
       }
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
       guideText.textContent = 'Watch them come together!';
-      hintBox.hidden = true;
       meeraBText.textContent = 'Yes! Left to right! Brilliant! ⭐';
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
@@ -17154,7 +17991,8 @@ var ContentRenderer = (function () {
         var isLtr = round.ltrIndices.indexOf(ti) !== -1;
         var cls   = _tileClass5(tok, isLtr);
         var tile  = _el('button', cls);
-        tile.textContent = tok;
+        tile.textContent = tok === '−' ? '-' : tok;
+        if (tok === '\xf7') tile.classList.add('cp-op-div');
         tile.dataset.idx = ti;
         tile.setAttribute('aria-label', 'Tile: ' + tok);
         (function (t, token, ltr) {
@@ -17178,40 +18016,51 @@ var ContentRenderer = (function () {
           (i < idx  ? ' cp-l5l-dot--done'   : '') +
           (i === idx ? ' cp-l5l-dot--active' : ''));
       });
-      nextBtn.hidden      = true;
+      if (roundBadge) {
+        roundBadge.innerHTML = '';
+        var _bi5 = document.createElement('span');
+        _bi5.className = 'cp-lab-round-badge__icon';
+        _bi5.setAttribute('aria-hidden', 'true');
+        _bi5.textContent = '🏆';
+        var _bt5 = document.createElement('span');
+        _bt5.className = 'cp-lab-round-badge__text';
+        _bt5.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+        roundBadge.appendChild(_bi5); roundBadge.appendChild(_bt5);
+      }
+      headerDotEls.forEach(function (d, i) {
+        d.className = 'cp-lab-header-dot' +
+          (i < idx ? ' cp-lab-header-dot--done' : '') +
+          (i === idx ? ' cp-lab-header-dot--active' : '');
+      });
+      nextBtnRow.hidden   = true;
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
-      hintBox.hidden = true;
       boardEl.classList.remove('cp-l5l-board--blurred');
       aaravBText.textContent = 'I think the right side goes first...';
       meeraBText.textContent = 'Tap what to solve first!';
       if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-      aaravLabel.classList.remove('cp-l5l-student__label--hidden');
-      meeraLabel.classList.remove('cp-l5l-student__label--hidden');
       aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l5l-bubble--expanded');
+      aaravBubble.classList.remove('cp-l5l-bubble--expanded', 'cp-l5l-bubble--guide-prompt');
       aaravBubble.classList.add('cp-l5l-bubble--faded');
       aaravBubble.appendChild(aaravBName);
       aaravBubble.appendChild(aaravBText);
       meeraBubble.innerHTML = '';
-      meeraBubble.classList.remove('cp-l5l-bubble--expanded');
+      meeraBubble.classList.remove('cp-l5l-bubble--expanded', 'cp-l5l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l5l-bubble--faded');
       meeraBubble.appendChild(meeraBName);
       meeraBubble.appendChild(meeraBText);
 
       function _showBubbles5() {
-        aaravLabel.classList.add('cp-l5l-student__label--hidden');
-        meeraLabel.classList.add('cp-l5l-student__label--hidden');
+        aaravBubble.classList.add('cp-l5l-bubble--guide-prompt');
+        meeraBubble.classList.add('cp-l5l-bubble--guide-prompt');
         aaravBubble.classList.remove('cp-l5l-bubble--faded');
         meeraBubble.classList.remove('cp-l5l-bubble--faded');
         aaravFadeTimer = setTimeout(function () {
           aaravBubble.classList.add('cp-l5l-bubble--faded');
-          aaravLabel.classList.remove('cp-l5l-student__label--hidden');
         }, 3000);
         meeraFadeTimer = setTimeout(function () {
           meeraBubble.classList.add('cp-l5l-bubble--faded');
-          meeraLabel.classList.remove('cp-l5l-student__label--hidden');
         }, 3000);
       }
 
@@ -17237,58 +18086,10 @@ var ContentRenderer = (function () {
   ══════════════════════════════════════════════════════ */
 
   function _renderL5Reveal(page, area) {
-    var wrap = _el('div', 'cp-l5r-wrap');
-    wrap.dataset.pageId = page.id;
-    var titleEl = _el('h2', 'cp-l5r-title');
-    titleEl.innerHTML = '🎉 ' + (page.ruleTitle || 'You Found the Rule!') + ' 🎉';
-    wrap.appendChild(titleEl);
-    var ruleEl = _el('p', 'cp-l5r-rule');
-    ruleEl.innerHTML = (page.ruleText || '')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/\xd7/g, '<span class="cp-l5r-rule__mul">\xd7</span>')
-      .replace(/\xf7/g, '<span class="cp-l5r-rule__div">\xf7</span>');
-    wrap.appendChild(ruleEl);
-    var stepsBox = _el('div', 'cp-l5r-steps-box');
-    (page.workedSteps || []).forEach(function (step) {
-      var lineEl = _el('div', 'cp-l5r-step');
-      var toks   = step.expr.split(' ');
-      var hlSet  = {};
-      (step.hlTokens || []).forEach(function (t) { hlSet[t] = true; });
-      var i = 0;
-      while (i < toks.length) {
-        if (i > 0) lineEl.appendChild(document.createTextNode(' '));
-        if (hlSet[toks[i]]) {
-          var group = [];
-          while (i < toks.length && hlSet[toks[i]]) { group.push(toks[i]); i++; }
-          var pill = _el('span', 'cp-l5r-step__hl');
-          pill.textContent = group.join(' ');
-          lineEl.appendChild(pill);
-        } else {
-          lineEl.appendChild(document.createTextNode(toks[i]));
-          i++;
-        }
-      }
-      stepsBox.appendChild(lineEl);
-    });
-    wrap.appendChild(stepsBox);
-    var tagEl = _el('p', 'cp-l5r-bodmas-tag');
-    tagEl.textContent = page.bodmasTag || '';
-    wrap.appendChild(tagEl);
-    var btn = _el('button', 'cp-l5r-btn');
-    btn.textContent = page.buttonLabel || 'See the Detectives ►';
-    btn.addEventListener('click', function () {
-      if (typeof playStartWhoosh === 'function') playStartWhoosh();
-      _wipeLeftTo(page.next);
-    });
-    wrap.appendChild(btn);
-    area.appendChild(wrap);
-    if (typeof anime !== 'undefined') {
-      var els = [titleEl, ruleEl, stepsBox, tagEl, btn];
-      anime.set(els, { opacity: 0, translateY: 24 });
-      anime({ targets: els, opacity: 1, translateY: 0, duration: 500,
-              delay: anime.stagger(80), easing: 'easeOutQuad' });
-    }
-    setTimeout(function () { if (typeof launchConfetti === 'function') launchConfetti(); }, 400);
+    _renderLxReveal(page, area, 'cp-l5r', [
+      { char: '\xd7', cls: 'cp-l5r-rule__mul' },
+      { char: '\xf7', cls: 'cp-l5r-rule__div' }
+    ]);
   }
 
   /* ══════════════════════════════════════════════════════
@@ -17521,18 +18322,35 @@ var ContentRenderer = (function () {
   function _renderL6Intro(page, area) {
     var wrap = _el('div', 'cp-l6i-wrap');
     wrap.dataset.pageId = page.id;
+
     var scenarioEl = _el('p', 'cp-l6i-scenario');
-    scenarioEl.textContent = page.scenario || '';
+    if (page.scenarioHtml) {
+      scenarioEl.innerHTML = page.scenarioHtml;
+    } else {
+      scenarioEl.textContent = page.scenario || '';
+    }
     wrap.appendChild(scenarioEl);
+
     var exprBox = _el('div', 'cp-l6i-expr-box');
     var exprEl  = _el('div', 'cp-l6i-expr');
     exprEl.setAttribute('aria-label', page.expression || '');
-    exprEl.textContent = page.expression || '';
+    (page.expression || '').split(' ').forEach(function (tok) {
+      var span = _el('span', 'cp-l6i-token');
+      span.textContent = tok;
+      span.classList.add(/^\d+$/.test(tok) ? 'cp-l6i-token--num' : 'cp-l6i-token--op');
+      exprEl.appendChild(span);
+    });
     exprBox.appendChild(exprEl);
     wrap.appendChild(exprBox);
+
     var qEl = _el('p', 'cp-l6i-question');
-    qEl.textContent = page.question || '';
+    if (page.questionHtml) {
+      qEl.innerHTML = page.questionHtml;
+    } else {
+      qEl.textContent = page.question || '';
+    }
     wrap.appendChild(qEl);
+
     var btn = _el('button', 'cp-l6i-cta');
     btn.textContent = page.buttonLabel || "Let's Investigate!";
     btn.addEventListener('click', function () {
@@ -17541,15 +18359,49 @@ var ContentRenderer = (function () {
     });
     wrap.appendChild(btn);
     area.appendChild(wrap);
+
     if (typeof anime !== 'undefined') {
+      var tokenEls = exprEl.querySelectorAll('.cp-l6i-token');
+
       anime.set(scenarioEl, { opacity: 0, translateY: 24 });
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
+      anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
       anime.set(btn,        { opacity: 0, translateY: 14 });
+
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
-      anime({ targets: exprBox,    opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack' });
-      anime({ targets: qEl,        opacity: 1, duration: 400, delay: 460 });
-      anime({ targets: btn,        opacity: 1, translateY: 0, duration: 450, delay: 660, easing: 'easeOutBack' });
+
+      anime({
+        targets: exprBox, opacity: 1, scale: 1, duration: 600, delay: 200, easing: 'easeOutBack',
+        complete: function () {
+          anime({
+            targets: tokenEls,
+            opacity: 1, translateY: 0, scale: 1,
+            duration: 380,
+            delay: anime.stagger(90, { easing: 'easeOutQuad' }),
+            easing: 'easeOutBack',
+            complete: function () {
+              anime({
+                targets: exprBox,
+                boxShadow: [
+                  '0 6px 24px rgba(255,111,168,0.22)',
+                  '0 8px 44px rgba(255,111,168,0.65)',
+                  '0 6px 24px rgba(255,111,168,0.22)'
+                ],
+                duration: 700,
+                easing: 'easeInOutSine'
+              });
+            }
+          });
+        }
+      });
+
+      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
+
+      anime({
+        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
+        complete: function () { btn.style.transform = ''; }
+      });
     }
   }
 
@@ -17636,6 +18488,8 @@ var ContentRenderer = (function () {
     wrap.dataset.pageId = page.id;
     var aaravFadeTimer = null;
     var meeraFadeTimer = null;
+    var roundBadge   = null;
+    var headerDotEls = [];
 
     var roundHeader = _el('div', 'cp-l6l-round-header');
     var roundLabel  = _el('span', 'cp-l6l-round-label');
@@ -17651,15 +18505,39 @@ var ContentRenderer = (function () {
     roundHeader.appendChild(roundLabel);
     roundHeader.appendChild(dotsEl);
     wrap.appendChild(roundHeader);
+    roundHeader.style.display = 'none';
 
-    var hintBox  = _el('div', 'cp-l6l-hint-box');
-    var hintText = _el('p',   'cp-l6l-hint-text');
-    hintBox.setAttribute('aria-live', 'polite');
-    hintBox.hidden = true;
-    hintBox.appendChild(hintText);
-    wrap.appendChild(hintBox);
+    (function () {
+      var _pt = document.querySelector('.progress-track');
+      var _pd = document.getElementById('progress-dots');
+      if (_pt && _pd) {
+        _pd.style.display = 'none';
+        roundBadge = document.createElement('div');
+        roundBadge.className = 'cp-lab-round-badge';
+        _pt.appendChild(roundBadge);
+      }
+      var _hr = document.querySelector('.header__right');
+      if (_hr) {
+        var _ld = document.createElement('div');
+        _ld.className = 'cp-lab-header-dots';
+        rounds.forEach(function () {
+          var d = document.createElement('span');
+          d.className = 'cp-lab-header-dot';
+          _ld.appendChild(d);
+          headerDotEls.push(d);
+        });
+        _hr.insertBefore(_ld, _hr.firstChild);
+      }
+    }());
 
     var classEl = _el('div', 'cp-l6l-classroom');
+    var classBg = document.createElement('img');
+    classBg.src = 'assets/images/class-bg.png';
+    classBg.alt = '';
+    classBg.setAttribute('aria-hidden', 'true');
+    classBg.setAttribute('draggable', 'false');
+    classBg.className = 'cp-l6l-class-bg';
+    classEl.appendChild(classBg);
 
     var aaravEl = _el('div', 'cp-l6l-student cp-l6l-student--left');
     aaravEl.setAttribute('aria-hidden', 'true');
@@ -17670,7 +18548,7 @@ var ContentRenderer = (function () {
     var aaravBText  = _el('p', 'cp-l6l-bubble__text'); aaravBText.textContent = 'I think \xd7 goes first!';
     aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
     aaravEl.appendChild(aaravBubble);
-    var aaravSvgWrap = _el('div', 'cp-l6l-student__svg-wrap'); aaravSvgWrap.innerHTML = _aaravSvg6();
+    var aaravSvgWrap = _el('div', 'cp-l6l-student__svg-wrap'); var _aImg = document.createElement('img'); _aImg.src = 'assets/images/aarav.webp'; _aImg.alt = 'Aarav'; aaravSvgWrap.appendChild(_aImg);
     aaravEl.appendChild(aaravSvgWrap);
     classEl.appendChild(aaravEl);
 
@@ -17695,7 +18573,7 @@ var ContentRenderer = (function () {
     var meeraBText  = _el('p', 'cp-l6l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
     meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
-    var meeraSvgWrap = _el('div', 'cp-l6l-student__svg-wrap'); meeraSvgWrap.innerHTML = _meeraSvg6();
+    var meeraSvgWrap = _el('div', 'cp-l6l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
     meeraEl.appendChild(meeraSvgWrap);
     classEl.appendChild(meeraEl);
     wrap.appendChild(classEl);
@@ -17703,7 +18581,7 @@ var ContentRenderer = (function () {
     var guideBar    = _el('div', 'cp-l6l-guide-bar');
     var guideAvatar = _el('div', 'cp-l6l-guide-avatar');
     var guideAvatarImg = document.createElement('img');
-    guideAvatarImg.src = 'assets/images/Swiftee01.png';
+    guideAvatarImg.src = 'assets/face-emotions/Happy.webp';
     guideAvatarImg.alt = '';
     guideAvatarImg.setAttribute('aria-hidden', 'true');
     guideAvatarImg.setAttribute('draggable', 'false');
@@ -17713,13 +18591,15 @@ var ContentRenderer = (function () {
     var comparePanel = _el('div', 'cp-l6l-compare');
     comparePanel.hidden = true;
     comparePanel.setAttribute('aria-live', 'polite');
-    var nextBtn = _el('button', 'cp-l6l-next-btn');
-    nextBtn.hidden = true;
+    var nextBtn    = _el('button', 'cp-l6l-next-btn');
+    var nextBtnRow = _el('div',    'cp-l6l-btn-row');
+    nextBtnRow.hidden = true;
+    nextBtnRow.appendChild(nextBtn);
     guideBar.appendChild(guideAvatar);
     guideBar.appendChild(guideText);
     wrap.appendChild(guideBar);
     wrap.appendChild(comparePanel);
-    wrap.appendChild(nextBtn);
+    wrap.appendChild(nextBtnRow);
     area.appendChild(wrap);
 
     /* Classify each token into a tile type */
@@ -17794,20 +18674,28 @@ var ContentRenderer = (function () {
         corrStep2 = tokens[0] + ' \xd7 ' + round.bracketResult + ' = ' + round.finalResult;
       }
 
-      function _makeCard6(cls, emoji, name, nameCls, method, steps, answerVal, ansCls) {
-        var card   = _el('div', 'cp-l6l-dc-card ' + cls);
-        var hdr    = _el('div', 'cp-l6l-dc-header');
-        var emEl   = _el('span', 'cp-l6l-dc-emoji');  emEl.textContent  = emoji;
-        var nmEl   = _el('span', 'cp-l6l-dc-name ' + nameCls); nmEl.textContent = name;
-        var mtEl   = _el('span', 'cp-l6l-dc-method'); mtEl.textContent  = method;
-        hdr.appendChild(emEl); hdr.appendChild(nmEl); hdr.appendChild(mtEl);
+      function _makeCard6(cls, avatarSrc, name, nameCls, method, steps, answerVal, ansCls) {
+        var card = _el('div', 'cp-l6l-dc-card ' + cls);
+        var hdr  = _el('div', 'cp-l6l-dc-header');
+        var av   = _el('span', 'cp-l6l-dc-avatar');
+        var avImg = document.createElement('img');
+        avImg.src = avatarSrc; avImg.alt = '';
+        avImg.className = 'cp-l6l-dc-avatar__img';
+        av.appendChild(avImg);
+        var hdrInfo = _el('div', 'cp-l6l-dc-header-info');
+        var nmEl = _el('span', 'cp-l6l-dc-name ' + nameCls); nmEl.textContent = name;
+        var mtEl = _el('span', 'cp-l6l-dc-method'); mtEl.textContent = method;
+        hdrInfo.appendChild(nmEl); hdrInfo.appendChild(mtEl);
+        hdr.appendChild(av); hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
+        card.appendChild(_el('div', 'cp-l6l-dc-divider cp-l6l-dc-divider--dashed'));
         var stepsEl = _el('div', 'cp-l6l-dc-steps');
         steps.forEach(function (s) {
           var st = _el('div', 'cp-l6l-dc-step'); st.textContent = s;
           stepsEl.appendChild(st);
         });
         card.appendChild(stepsEl);
+        card.appendChild(_el('div', 'cp-l6l-dc-divider'));
         var ansEl = _el('div', 'cp-l6l-dc-answer ' + ansCls);
         ansEl.textContent = String(answerVal);
         card.appendChild(ansEl);
@@ -17822,7 +18710,7 @@ var ContentRenderer = (function () {
       aaravBubble.classList.add('cp-l6l-bubble--expanded');
       aaravBubble.appendChild(_makeCard6(
         'cp-l6l-dc-card--wrong',
-        '\U0001F9D2', 'Aarav', 'cp-l6l-dc-name--aarav',
+        'assets/images/aarav.webp', 'Aarav', 'cp-l6l-dc-name--aarav',
         '\xb7 \xd7 first',
         round.wrongSteps || [],
         round.compareWrong, 'cp-l6l-dc-answer--wrong'
@@ -17833,14 +18721,33 @@ var ContentRenderer = (function () {
       meeraBubble.classList.add('cp-l6l-bubble--expanded');
       meeraBubble.appendChild(_makeCard6(
         'cp-l6l-dc-card--right',
-        '\U0001F9D2', 'Meera', 'cp-l6l-dc-name--meera',
+        'assets/images/meera.webp', 'Meera', 'cp-l6l-dc-name--meera',
         '\xb7 ( ) first',
         [corrStep1, corrStep2],
         round.compareRight, 'cp-l6l-dc-answer--right'
       ));
 
-      var caption = _el('p', 'cp-l6l-dc-caption');
-      caption.textContent = 'Brackets change the answer! \U0001F914';
+      var caption = _el('div', 'cp-l6l-dc-caption');
+      var capAv = document.createElement('img');
+      capAv.src = 'assets/face-emotions/Idea.webp'; capAv.alt = '';
+      capAv.setAttribute('aria-hidden', 'true');
+      capAv.className = 'cp-l6l-dc-caption__avatar';
+      var capBody = _el('div', 'cp-l6l-dc-caption__body');
+      var capLabel = _el('span', 'cp-l6l-dc-caption__label');
+      capLabel.textContent = 'Brackets change the answer!';
+      var capExpr = _el('span', 'cp-l6l-dc-caption__expr');
+      tokens.forEach(function (tok, i) {
+        if (i > 0) capExpr.appendChild(document.createTextNode(' '));
+        var s = document.createElement('span');
+        s.textContent = tok;
+        if (tok === '\xd7') s.className = 'cp-l6l-dc-caption__op--mul';
+        else if (tok === '(' || tok === ')') s.className = 'cp-l6l-dc-caption__op--brkt';
+        else if (tok === '+') s.className = 'cp-l6l-dc-caption__op--add';
+        else s.className = 'cp-l6l-dc-caption__num';
+        capExpr.appendChild(s);
+      });
+      capBody.appendChild(capLabel); capBody.appendChild(capExpr);
+      caption.appendChild(capAv); caption.appendChild(capBody);
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
@@ -17853,7 +18760,7 @@ var ContentRenderer = (function () {
     function _afterRoundComplete6(round) {
       if (round.hasCompare) _showCompare6(round);
       var isLast = (roundIdx === rounds.length - 1);
-      nextBtn.textContent = isLast ? 'See the Rule →' : 'Next Round ►';
+      nextBtn.textContent = isLast ? 'See the Rule' : 'Next Round ►';
       nextBtn.className   = _sharedContentClasses('cp-l6l-next-btn' + (isLast ? ' cp-l6l-next-btn--final' : ''));
       nextBtn.onclick = function () {
         if (isLast) {
@@ -17958,7 +18865,7 @@ var ContentRenderer = (function () {
       reduced.forEach(function (rt) {
         var cls = 'cp-l6l-tile cp-l6l-tile--' + rt.kind;
         var t = _el('button', cls);
-        t.textContent = rt.text;
+        t.textContent = rt.text === '−' ? '-' : rt.text;
         if (rt.kind === 'mul-op') {
           t.setAttribute('aria-label', 'Tap \xd7 to multiply');
           (function (tile, r) {
@@ -17991,7 +18898,6 @@ var ContentRenderer = (function () {
       phase = 'bracket-merge';
       if (typeof playCorrect === 'function') playCorrect();
       guideText.textContent = 'Watch the brackets collapse!';
-      hintBox.hidden = true;
       meeraBText.textContent = 'Yes! Brackets first! Amazing! ⭐';
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
@@ -18038,16 +18944,19 @@ var ContentRenderer = (function () {
         var brktOpTile = tilesRow.querySelector('.cp-l6l-tile--brkt-op');
         if (brktOpTile) anime({ targets: brktOpTile, scale: [1, 1.2, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
       }
-      hintText.textContent = '\U0001F50D Solve inside the ( ) first — tap the operator inside the brackets!';
-      hintBox.hidden = false;
+      if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
+      meeraBubble.classList.remove('cp-l6l-bubble--faded', 'cp-l6l-bubble--guide-prompt');
+      meeraBText.textContent = '\U0001F50D Solve inside the ( ) first — tap the operator inside the brackets!';
       if (typeof anime !== 'undefined') {
-        anime.set(hintBox, { opacity: 0, translateY: -6 });
-        anime({ targets: hintBox, opacity: 1, translateY: 0, duration: 320, easing: 'easeOutBack' });
+        anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
+        anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
       }
+      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
+      aaravBubble.classList.remove('cp-l6l-bubble--faded', 'cp-l6l-bubble--guide-prompt');
       aaravBText.textContent = 'Hmm, let me look again!';
       if (typeof anime !== 'undefined') {
-        anime.set(aaravBubble, { scale: 0.92 });
-        anime({ targets: aaravBubble, scale: 1, duration: 280, easing: 'easeOutBack' });
+        anime.set(aaravBubble, { scale: 0.92, opacity: 0.7 });
+        anime({ targets: aaravBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
       }
     }
 
@@ -18056,7 +18965,8 @@ var ContentRenderer = (function () {
       round.tokens.forEach(function (tok, ti) {
         var cls  = _tileClass6(tok, ti, round);
         var tile = _el('button', cls);
-        tile.textContent = tok;
+        tile.textContent = tok === '−' ? '-' : tok;
+        if (tok === '\xf7') tile.classList.add('cp-op-div');
         tile.dataset.idx = ti;
         tile.setAttribute('aria-label', 'Tile: ' + tok);
         if (ti === round.bracketOpIdx) {
@@ -18102,40 +19012,51 @@ var ContentRenderer = (function () {
           (i < idx  ? ' cp-l6l-dot--done'   : '') +
           (i === idx ? ' cp-l6l-dot--active' : ''));
       });
+      if (roundBadge) {
+        roundBadge.innerHTML = '';
+        var _bi6 = document.createElement('span');
+        _bi6.className = 'cp-lab-round-badge__icon';
+        _bi6.setAttribute('aria-hidden', 'true');
+        _bi6.textContent = '🏆';
+        var _bt6 = document.createElement('span');
+        _bt6.className = 'cp-lab-round-badge__text';
+        _bt6.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+        roundBadge.appendChild(_bi6); roundBadge.appendChild(_bt6);
+      }
+      headerDotEls.forEach(function (d, i) {
+        d.className = 'cp-lab-header-dot' +
+          (i < idx ? ' cp-lab-header-dot--done' : '') +
+          (i === idx ? ' cp-lab-header-dot--active' : '');
+      });
       nextBtn.hidden      = true;
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
-      hintBox.hidden = true;
       boardEl.classList.remove('cp-l6l-board--blurred');
       aaravBText.textContent = 'I think \xd7 goes first!';
       meeraBText.textContent = 'Tap what to solve first!';
       if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-      aaravLabel.classList.remove('cp-l6l-student__label--hidden');
-      meeraLabel.classList.remove('cp-l6l-student__label--hidden');
       aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l6l-bubble--expanded');
+      aaravBubble.classList.remove('cp-l6l-bubble--expanded', 'cp-l6l-bubble--guide-prompt');
       aaravBubble.classList.add('cp-l6l-bubble--faded');
       aaravBubble.appendChild(aaravBName);
       aaravBubble.appendChild(aaravBText);
       meeraBubble.innerHTML = '';
-      meeraBubble.classList.remove('cp-l6l-bubble--expanded');
+      meeraBubble.classList.remove('cp-l6l-bubble--expanded', 'cp-l6l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l6l-bubble--faded');
       meeraBubble.appendChild(meeraBName);
       meeraBubble.appendChild(meeraBText);
 
       function _showBubbles6() {
-        aaravLabel.classList.add('cp-l6l-student__label--hidden');
-        meeraLabel.classList.add('cp-l6l-student__label--hidden');
+        aaravBubble.classList.add('cp-l6l-bubble--guide-prompt');
+        meeraBubble.classList.add('cp-l6l-bubble--guide-prompt');
         aaravBubble.classList.remove('cp-l6l-bubble--faded');
         meeraBubble.classList.remove('cp-l6l-bubble--faded');
         aaravFadeTimer = setTimeout(function () {
           aaravBubble.classList.add('cp-l6l-bubble--faded');
-          aaravLabel.classList.remove('cp-l6l-student__label--hidden');
         }, 3000);
         meeraFadeTimer = setTimeout(function () {
           meeraBubble.classList.add('cp-l6l-bubble--faded');
-          meeraLabel.classList.remove('cp-l6l-student__label--hidden');
         }, 3000);
       }
 
@@ -18161,58 +19082,11 @@ var ContentRenderer = (function () {
   ══════════════════════════════════════════════════════ */
 
   function _renderL6Reveal(page, area) {
-    var wrap = _el('div', 'cp-l6r-wrap');
-    wrap.dataset.pageId = page.id;
-    var titleEl = _el('h2', 'cp-l6r-title');
-    titleEl.innerHTML = '\U0001F389 ' + (page.ruleTitle || 'You Found the Rule!') + ' \U0001F389';
-    wrap.appendChild(titleEl);
-    var ruleEl = _el('p', 'cp-l6r-rule');
-    ruleEl.innerHTML = (page.ruleText || '')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/\(/g, '<span class="cp-l6r-rule__brkt">(</span>')
-      .replace(/\)/g, '<span class="cp-l6r-rule__brkt">)</span>')
-      .replace(/\xd7/g, '<span class="cp-l6r-rule__mul">\xd7</span>');
-    wrap.appendChild(ruleEl);
-    var stepsBox = _el('div', 'cp-l6r-steps-box');
-    (page.workedSteps || []).forEach(function (step) {
-      var lineEl = _el('div', 'cp-l6r-step');
-      var toks   = step.expr.split(' ');
-      var hlSet  = {};
-      (step.hlTokens || []).forEach(function (t) { hlSet[t] = true; });
-      var i = 0;
-      while (i < toks.length) {
-        if (i > 0) lineEl.appendChild(document.createTextNode(' '));
-        if (hlSet[toks[i]]) {
-          var group = [];
-          while (i < toks.length && hlSet[toks[i]]) { group.push(toks[i]); i++; }
-          var pill = _el('span', 'cp-l6r-step__hl');
-          pill.textContent = group.join(' ');
-          lineEl.appendChild(pill);
-        } else {
-          lineEl.appendChild(document.createTextNode(toks[i]));
-          i++;
-        }
-      }
-      stepsBox.appendChild(lineEl);
-    });
-    wrap.appendChild(stepsBox);
-    var tagEl = _el('p', 'cp-l6r-bodmas-tag');
-    tagEl.textContent = page.bodmasTag || '';
-    wrap.appendChild(tagEl);
-    var btn = _el('button', 'cp-l6r-btn');
-    btn.textContent = page.buttonLabel || 'See the Detectives ►';
-    btn.addEventListener('click', function () {
-      if (typeof playStartWhoosh === 'function') playStartWhoosh();
-      _wipeLeftTo(page.next);
-    });
-    wrap.appendChild(btn);
-    area.appendChild(wrap);
-    if (typeof anime !== 'undefined') {
-      var els = [titleEl, ruleEl, stepsBox, tagEl, btn];
-      anime.set(els, { opacity: 0, translateY: 24 });
-      anime({ targets: els, opacity: 1, translateY: 0, duration: 500, delay: anime.stagger(80), easing: 'easeOutQuad' });
-    }
-    setTimeout(function () { if (typeof launchConfetti === 'function') launchConfetti(); }, 400);
+    _renderLxReveal(page, area, 'cp-l6r', [
+      { char: '(', cls: 'cp-l6r-rule__brkt' },
+      { char: ')', cls: 'cp-l6r-rule__brkt' },
+      { char: '\xd7', cls: 'cp-l6r-rule__mul' }
+    ]);
   }
 
   /* ══════════════════════════════════════════════════════
@@ -18458,11 +19332,27 @@ var ContentRenderer = (function () {
 
     var wrap   = _el('div', 'cp-l7gc-wrap');
     wrap.dataset.pageId = page.id;
+    area.appendChild(wrap);
 
+    // ── Welcome screen ────────────────────────────────────────
+    var welcomeEl  = _el('div', 'cp-l7gc-welcome');
+    var wTitleEl   = _el('p',   'cp-l7gc-welcome__title');
+    wTitleEl.textContent = page.title || '🏆 Welcome to the Grand Challenge!';
+    var wDescBoxEl = _el('div', 'cp-l7gc-welcome__desc-box');
+    var wDescEl    = _el('p',   'cp-l7gc-welcome__desc');
+    wDescEl.style.opacity = '0';
+    wDescBoxEl.appendChild(wDescEl);
+    var wCtaEl     = _el('button', 'cp-l7gc-welcome__cta');
+    wCtaEl.textContent = page.buttonLabel || '🚀 Start Challenge!';
+    welcomeEl.appendChild(wTitleEl);
+    welcomeEl.appendChild(wDescBoxEl);
+    welcomeEl.appendChild(wCtaEl);
+    wrap.appendChild(welcomeEl);
+
+    // ── Challenge UI (built now, appended when welcome dismissed) ─
     var barEl  = _el('div', 'cp-l7gc-progress-bar');
     var fillEl = _el('div', 'cp-l7gc-progress-bar__fill');
     barEl.appendChild(fillEl);
-    wrap.appendChild(barEl);
 
     var cardEl     = _el('div', 'cp-l7gc-card');
     var labelEl    = _el('p',   'cp-l7gc-card__label');  labelEl.setAttribute('aria-live', 'polite');
@@ -18475,8 +19365,6 @@ var ContentRenderer = (function () {
     cardEl.appendChild(promptEl);
     cardEl.appendChild(bodyEl);
     cardEl.appendChild(feedbackEl);
-    wrap.appendChild(cardEl);
-    area.appendChild(wrap);
 
     function _updateProgress7() {
       var pct = (stepsCompleted / totalSteps) * 100;
@@ -18606,7 +19494,74 @@ var ContentRenderer = (function () {
       }
     }
 
-    _loadPhase7(0);
+    // ── Welcome animation — reveal-page sequence ──────────────
+    wCtaEl.disabled = true;
+    wDescEl.textContent = '';
+
+    if (typeof anime === 'undefined') {
+      /* Fallback: show everything immediately */
+      wDescEl.textContent = page.description || '';
+      wCtaEl.disabled = false;
+    } else {
+      anime.set([wTitleEl, wDescBoxEl, wCtaEl], { opacity: 0, translateY: 28 });
+
+      /* 1. Title fades in */
+      anime({
+        targets: wTitleEl, opacity: [0, 1], translateY: [18, 0],
+        duration: 600, delay: 120, easing: 'easeOutCubic'
+      });
+
+      /* 2. Box slides in, then description typewriters, then button pops */
+      setTimeout(function () {
+        anime({
+          targets: wDescBoxEl, opacity: [0, 1], translateY: [28, 0],
+          duration: 420, easing: 'easeOutQuad',
+          complete: function () {
+            var text = page.description || '';
+            wDescEl.style.opacity = '1';
+            var i = 0;
+            (function tick() {
+              if (i < text.length) {
+                wDescEl.textContent += text[i++];
+                setTimeout(tick, 28);
+              } else {
+                setTimeout(function () {
+                  wCtaEl.disabled = false;
+                  anime({
+                    targets: wCtaEl, opacity: [0, 1],
+                    scale: [0.75, 1], translateY: [10, 0],
+                    duration: 420, easing: 'easeOutBack',
+                    complete: function () { wCtaEl.style.transform = ''; }
+                  });
+                }, 300);
+              }
+            })();
+          }
+        });
+      }, 820);
+
+      /* Confetti fires as the box appears */
+      setTimeout(function () { if (typeof launchConfetti === 'function') launchConfetti(); }, 400);
+    }
+
+    wCtaEl.addEventListener('click', function () {
+      if (typeof playStartWhoosh === 'function') playStartWhoosh();
+      function _startChallenge() {
+        wrap.removeChild(welcomeEl);
+        wrap.appendChild(barEl);
+        wrap.appendChild(cardEl);
+        _loadPhase7(0);
+      }
+      if (typeof anime !== 'undefined') {
+        anime({
+          targets: welcomeEl, opacity: 0, translateY: -20,
+          duration: 350, easing: 'easeInQuad',
+          complete: _startChallenge
+        });
+      } else {
+        _startChallenge();
+      }
+    });
   }
 
   /* ══════════════════════════════════════════════════════
@@ -18964,35 +19919,17 @@ var ContentRenderer = (function () {
     var wrap = _el('div', 'cp-l9nb-wrap');
     wrap.dataset.pageId = page.id;
 
+    /* Section heading */
+    var heading = _el('h2', 'cp-l9nb-heading');
+    heading.textContent = 'Nested Brackets';
+    wrap.appendChild(heading);
+
     /* Header row */
     var headerRow = _el('div', 'cp-l9nb-header');
-    var badge     = _el('span', 'cp-l9nb-badge');
-    badge.textContent = page.title || 'NESTED BRACKETS';
     var qLabel    = _el('span', 'cp-l9nb-qlabel');
-    headerRow.appendChild(badge);
     headerRow.appendChild(qLabel);
     wrap.appendChild(headerRow);
 
-    /* Dot progress */
-    var dotsRow = _el('div', 'cp-l9nb-dots');
-    questions.forEach(function (_, i) {
-      var d = _el('span', 'cp-l9nb-dot' + (i === 0 ? ' cp-l9nb-dot--active' : ''));
-      dotsRow.appendChild(d);
-    });
-    wrap.appendChild(dotsRow);
-
-    /* Legend */
-    var legend = _el('div', 'cp-l9nb-legend');
-    legend.innerHTML =
-      '<span class="cp-l9nb-legend-outer">( )</span> Outer brackets' +
-      '<span class="cp-l9nb-legend-inner">( )</span> Inner brackets' +
-      '<span class="cp-l9nb-legend-dot"></span> Tap an operator first';
-    wrap.appendChild(legend);
-
-    /* Prompt */
-    var prompt = _el('p', 'cp-l9nb-prompt');
-    prompt.innerHTML = '<span class="cp-l9nb-prompt-icon">👆</span> Tap which operator to solve <strong>FIRST!</strong>';
-    wrap.appendChild(prompt);
 
     /* Expression strip */
     var exprBox   = _el('div', 'cp-l9nb-expr-box');
@@ -19152,7 +20089,6 @@ var ContentRenderer = (function () {
       exprBox.innerHTML = '';
       exprBox.appendChild(ansWrap);
       hintEl.textContent = '';
-      prompt.innerHTML = '⭐ <strong>Brilliant!</strong>';
       if (typeof playCorrect === 'function') playCorrect();
       if (typeof anime !== 'undefined') {
         anime.set(ansWrap, { opacity: 0, scale: 0.9 });
@@ -19167,17 +20103,11 @@ var ContentRenderer = (function () {
           stepIdx = 0;
           /* restore expression to original */
           var q2 = questions[qIdx];
-          /* reset dot progress */
-          var dots = dotsRow.querySelectorAll('.cp-l9nb-dot');
-          dots.forEach(function (d, i) {
-            d.className = _sharedContentClasses('cp-l9nb-dot' + (i === qIdx ? ' cp-l9nb-dot--active' : i < qIdx ? ' cp-l9nb-dot--done' : ''));
-          });
           /* restore strip */
           exprBox.innerHTML = '';
           var newStrip = _el('div', 'cp-l9nb-strip');
           stripWrap = newStrip;
           exprBox.appendChild(newStrip);
-          prompt.innerHTML = '<span class="cp-l9nb-prompt-icon">👆</span> Tap which operator to solve <strong>FIRST!</strong>';
           _loadStep();
         });
       } else {
@@ -19255,26 +20185,24 @@ var ContentRenderer = (function () {
     headerRow.appendChild(puzzleLabel);
     wrap.appendChild(headerRow);
 
-    /* Dot progress */
+    /* Dot progress — injected into progress-track, not the main card */
     var dotsRow = _el('div', 'cp-l9ib-dots');
     puzzles.forEach(function () {
       dotsRow.appendChild(_el('span', 'cp-l9ib-dot'));
     });
-    wrap.appendChild(dotsRow);
+    var _pt = document.querySelector('.progress-track');
+    if (_pt) {
+      _pt.appendChild(dotsRow);
+    } else {
+      wrap.appendChild(dotsRow); /* fallback if shell element absent */
+    }
 
-    /* Instruction */
+    /* Instruction — built here, mounted at bottom inside instructor overlay */
     var instrEl = _el('p', 'cp-l9ib-instruction');
     instrEl.textContent = page.instruction || 'Place the brackets to make it true!';
-    wrap.appendChild(instrEl);
 
-    /* Sub-instruction banner */
-    var subBanner = _el('div', 'cp-l9ib-sub-banner');
-    subBanner.textContent = page.subInstruction || 'Tap where ( goes, then where ) goes.';
-    wrap.appendChild(subBanner);
-
-    /* Phase indicator */
+    /* Phase indicator — detached, not rendered; kept so _updatePhaseEl() calls are safe */
     var phaseEl = _el('p', 'cp-l9ib-phase');
-    wrap.appendChild(phaseEl);
 
     /* Expression row container */
     var exprBox = _el('div', 'cp-l9ib-expr-box');
@@ -19289,6 +20217,17 @@ var ContentRenderer = (function () {
     clearBtn.textContent = '↺ Clear';
     clearBtn.addEventListener('click', function () { _resetPuzzle(); });
     wrap.appendChild(clearBtn);
+
+    /* Instructor overlay — instruction text above Swiftee character at bottom */
+    var instructorEl = _el('div', 'cp-l9ib-instructor');
+    instructorEl.appendChild(instrEl);
+    var swifteeImg = document.createElement('img');
+    swifteeImg.src = 'assets/images/Swiftee06.png';
+    swifteeImg.alt = '';
+    swifteeImg.setAttribute('aria-hidden', 'true');
+    swifteeImg.className = 'cp-l9ib-instructor__img';
+    instructorEl.appendChild(swifteeImg);
+    wrap.appendChild(instructorEl);
 
     area.appendChild(wrap);
 
