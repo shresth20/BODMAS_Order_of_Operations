@@ -389,3 +389,87 @@
   .cp-l1l-guide-bar, .cp-l2l-guide-bar, .cp-l3l-guide-bar,
   .cp-l4l-guide-bar, .cp-l5l-guide-bar, .cp-l6l-guide-bar { width: clamp(240px, 78%, 580px); }
 }
+
+/* ═══════════════════════════════════════════════════════
+   Small portrait phones — ≤ 480px wide
+   Compress fixed-pixel values in newer content sections
+   so nothing overflows the board on the smallest screens.
+═══════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  /* Concept-intro wrap: tighter padding & gaps */
+  .cp-ci-wrap {
+    padding: clamp(8px, 2vh, 16px) clamp(10px, 4vw, 18px);
+    gap: clamp(6px, 1.5vh, 12px);
+  }
+
+  .cp-ci-headline-card {
+    padding: 0.75rem 1rem;
+  }
+
+  .cp-ci-headline {
+    font-size: clamp(18px, 5vw, 28px);
+  }
+
+  .cp-ci-ex-row {
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  /* Drag-and-rank: tighter layout */
+  .cp-dar {
+    padding: clamp(6px, 1.5vh, 12px) clamp(8px, 3vw, 14px);
+    gap: 0.35rem;
+  }
+
+  .cp-dar-slot {
+    min-width: clamp(60px, 20vw, 80px);
+    min-height: clamp(48px, 9vh, 62px);
+  }
+
+  /* Practice screens: stack more compactly */
+  .practice-screen,
+  .cp-l1p-wrap, .cp-l2p-wrap, .cp-l3p-wrap,
+  .cp-l4p-wrap, .cp-l5p-wrap, .cp-l6p-wrap,
+  .cp-l9nb-wrap, .cp-l9ib-wrap {
+    gap: clamp(6px, 1.5vh, 12px);
+    padding: clamp(8px, 2vh, 14px) clamp(10px, 3vw, 18px);
+  }
+
+  /* Algebra layout board: scale down grid cells */
+  .cp-al-wrap {
+    padding: clamp(6px, 1.5vh, 12px) clamp(8px, 2vw, 16px);
+    gap: clamp(4px, 1vh, 8px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Portrait phones 481–767px (mid-size phones, small tablets)
+═══════════════════════════════════════════════════════ */
+@media (min-width: 481px) and (max-width: 767px) and (orientation: portrait) {
+  .cp-dar-slot {
+    min-width: clamp(72px, 18vw, 90px);
+    min-height: clamp(52px, 10vh, 66px);
+  }
+
+  .cp-ci-wrap {
+    padding: clamp(10px, 2vh, 20px) clamp(14px, 4vw, 28px);
+    gap: clamp(8px, 1.8vh, 14px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   All portrait orientations — ensure content doesn't
+   overflow the board horizontally.
+═══════════════════════════════════════════════════════ */
+@media (orientation: portrait) {
+  /* Grand-challenge wrap: fluid font sizes */
+  .cp-l7gc-wrap,
+  .cp-l7gc-card {
+    padding: clamp(10px, 2vh, 24px) clamp(12px, 3vw, 24px);
+  }
+
+  /* Summary / results screens with hard-coded rem sizes */
+  .cp-l9rs-trophy  { font-size: clamp(2.5rem, 10vw, 4.5rem); }
+  .cp-l9rs-heading { font-size: clamp(1.2rem, 5vw, 2rem); }
+  .cp-l9rs-sub     { font-size: clamp(0.75rem, 3vw, 0.95rem); }
+}

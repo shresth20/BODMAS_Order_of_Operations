@@ -3445,6 +3445,107 @@ var ContentAnimations = (function () {
         anime.set(card, { opacity: 0, scale: 0.88 });
         anime({ targets: card, opacity: 1, scale: 1, duration: 520, delay: 110, easing: 'easeOutBack' });
       }
+    },
+
+    /* ── Page 9.0 — l9-nested-brackets entrance ─────────── */
+    l9nbEntrance: function () {
+      var card  = document.querySelector('.cp-l9nb-card');
+      var inner = card ? [
+        card.querySelector('.cp-l9nb-card__label'),
+        card.querySelector('.cp-l9nb-card__prompt'),
+        card.querySelector('.cp-l9nb-card__body')
+      ].filter(Boolean) : [];
+
+      if (typeof anime === 'undefined') {
+        if (card) card.style.opacity = '1';
+        inner.forEach(function (el) { el.style.opacity = '1'; });
+        return;
+      }
+
+      if (card) {
+        anime.set(card, { opacity: 0, scale: 0.88, translateY: 16 });
+        anime({ targets: card, opacity: 1, scale: 1, translateY: 0, duration: 520, delay: 110, easing: 'easeOutBack' });
+      }
+      if (inner.length) {
+        anime.set(inner, { opacity: 0, translateY: 10 });
+        anime({
+          targets: inner,
+          opacity: 1, translateY: 0,
+          duration: 320,
+          delay: anime.stagger(80, { start: 380 }),
+          easing: 'easeOutQuad'
+        });
+      }
+    },
+
+    /* ── Page 9.1 — l9-insert-brackets entrance ─────────── */
+    l9ibEntrance: function () {
+      var bar   = document.querySelector('.cp-l9ib-progress-bar');
+      var card  = document.querySelector('.cp-l9ib-card');
+      var inner = card ? [
+        card.querySelector('.cp-l9ib-card__label'),
+        card.querySelector('.cp-l9ib-card__title'),
+        card.querySelector('.cp-l9ib-card__prompt'),
+        card.querySelector('.cp-l9ib-card__body')
+      ].filter(Boolean) : [];
+
+      if (typeof anime === 'undefined') {
+        if (bar)  bar.style.opacity  = '1';
+        if (card) card.style.opacity = '1';
+        inner.forEach(function (el) { el.style.opacity = '1'; });
+        return;
+      }
+
+      if (bar) {
+        anime.set(bar, { opacity: 0, translateY: -8 });
+        anime({ targets: bar, opacity: 1, translateY: 0, duration: 340, easing: 'easeOutQuad' });
+      }
+      if (card) {
+        anime.set(card, { opacity: 0, scale: 0.88, translateY: 16 });
+        anime({ targets: card, opacity: 1, scale: 1, translateY: 0, duration: 520, delay: 110, easing: 'easeOutBack' });
+      }
+      if (inner.length) {
+        anime.set(inner, { opacity: 0, translateY: 10 });
+        anime({
+          targets: inner,
+          opacity: 1, translateY: 0,
+          duration: 320,
+          delay: anime.stagger(80, { start: 380 }),
+          easing: 'easeOutQuad'
+        });
+      }
+    },
+
+    /* ── Page 9.2 — l9-bodmas-review entrance ───────────── */
+    l9brEntrance: function () {
+      var card  = document.querySelector('.cp-l9br-card');
+      var inner = card ? [
+        card.querySelector('.cp-l9br-dots'),
+        card.querySelector('.cp-l9br-counter'),
+        card.querySelector('.cp-l9br-rule-banner'),
+        card.querySelector('.cp-l9br-body')
+      ].filter(Boolean) : [];
+
+      if (typeof anime === 'undefined') {
+        if (card) card.style.opacity = '1';
+        inner.forEach(function (el) { el.style.opacity = '1'; });
+        return;
+      }
+
+      if (card) {
+        anime.set(card, { opacity: 0, scale: 0.88, translateY: 16 });
+        anime({ targets: card, opacity: 1, scale: 1, translateY: 0, duration: 520, delay: 110, easing: 'easeOutBack' });
+      }
+      if (inner.length) {
+        anime.set(inner, { opacity: 0, translateY: 10 });
+        anime({
+          targets: inner,
+          opacity: 1, translateY: 0,
+          duration: 320,
+          delay: anime.stagger(80, { start: 380 }),
+          easing: 'easeOutQuad'
+        });
+      }
     }
 
   };
