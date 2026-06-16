@@ -134,7 +134,8 @@ var CONTENT_PAGES = [
     scenario: 'A shopkeeper has 20 bananas. He sells 3 baskets with 4 bananas each.',
     scenarioHtml: 'A shopkeeper has <span class="cp-l2i-hl">20 bananas</span>. He sells <span class="cp-l2i-hl">3 baskets</span> with <span class="cp-l2i-hl">4 bananas</span> each.',
     expression: '20 − 3 × 4',
-    question: '🤔 How many bananas are left? Which part do you solve first?',
+    question: 'How many bananas are left? Which part do you solve first?',
+    questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many bananas are left? Which part do you solve first?',
     buttonLabel: '🔍 Let\'s Investigate!',
     next: '2.1'
   },
@@ -250,9 +251,10 @@ var CONTENT_PAGES = [
   {
     id: '3.0',
     type: 'l3-intro',
-    scenario: '12 laddoos are shared equally among 3 children, and 5 more laddoos are added.',
+    scenarioHtml: '<span style="color:#3BC6FF;font-weight:800">12 laddoos</span> are shared equally among <span style="color:#3BC6FF;font-weight:800">3 children</span>, and <span style="color:#3BC6FF;font-weight:800">5 more laddoos</span> are added.',
     expression: '12 ÷ 3 + 5',
-    question: '🤔 How many laddoos in total? Which part do you solve first?',
+    question: 'How many laddoos in total? Which part do you solve first?',
+    questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many laddoos in total? Which part do you solve first?',
     buttonLabel: '🔍 Let\'s Investigate!',
     next: '3.1'
   },
@@ -367,9 +369,10 @@ var CONTENT_PAGES = [
   {
     id: '4.0',
     type: 'l4-intro',
-    scenario: 'Riya has 10 stickers, gives away 4, then gets 3 more.',
+    scenarioHtml: 'Riya has <span style="color:#18D6A0;font-weight:800">10 stickers</span>, gives away <span style="color:#18D6A0;font-weight:800">4</span>, then gets <span style="color:#18D6A0;font-weight:800">3 more</span>.',
     expression: '10 − 4 + 3',
-    question: '🤔 How many stickers does Riya have now? Which part do you solve first?',
+    question: 'How many stickers does Riya have now? Which part do you solve first?',
+    questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many stickers does Riya have now? Which part do you solve first?',
     buttonLabel: '🔍 Let\'s Investigate!',
     next: '4.1'
   },
@@ -483,9 +486,10 @@ var CONTENT_PAGES = [
   {
     id: '5.0',
     type: 'l5-intro',
-    scenario: '12 chocolates are divided into 2 groups, then each group is tripled.',
+    scenarioHtml: '<span style="color:#6F8BFF;font-weight:800">12 chocolates</span> are divided into <span style="color:#6F8BFF;font-weight:800">2 groups</span>, then each group is tripled.',
     expression: '12 ÷ 2 × 3',
-    question: '🤔 How many chocolates in total? Which part do you solve first?',
+    question: 'How many chocolates in total? Which part do you solve first?',
+    questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many chocolates in total? Which part do you solve first?',
     buttonLabel: '🔍 Let\'s Investigate!',
     next: '5.1'
   },
@@ -599,9 +603,10 @@ var CONTENT_PAGES = [
   {
     id: '6.0',
     type: 'l6-intro',
-    scenario: 'A teacher makes 3 groups. Each group has 4 boys and 2 girls.',
+    scenarioHtml: 'A teacher makes <span style="color:#FF6FA8;font-weight:800">3 groups</span>. Each group has <span style="color:#FF6FA8;font-weight:800">4 boys</span> and <span style="color:#FF6FA8;font-weight:800">2 girls</span>.',
     expression: '3 \xd7 (4 + 2)',
-    question: '🤔 How many students in all? Which part do you solve first?',
+    question: 'How many students in all? Which part do you solve first?',
+    questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many students in all? Which part do you solve first?',
     buttonLabel: '🔍 Let\'s Investigate!',
     next: '6.1'
   },
@@ -803,19 +808,18 @@ var CONTENT_PAGES = [
   {
     id: '8.0',
     type: 'l8-bodmas-ladder',
-    instruction: 'ARRANGE THE BODMAS LADDER',
-    dragLabel: 'DRAG FROM HERE',
+    instruction: 'Arrange The Boxes in Corrent Sequence',
     tiles: [
-      { id: 'O', label: 'O — Of', sub: 'means multiply', colorKey: 'yellow' },
-      { id: 'B', label: 'B — Brackets', sub: '', colorKey: 'purple' },
-      { id: 'AS', label: 'A/S — Addition & Subtraction', sub: '', colorKey: 'green' },
-      { id: 'DM', label: 'D/M — Division & Multiplication', sub: '', colorKey: 'teal' }
+      { id: 'O', letter: 'O', word: 'Orders',         label: 'O — Orders',         colorKey: 'blue'   },
+      { id: 'B', letter: 'B', word: 'Brackets',       label: 'B — Brackets',       colorKey: 'orange' },
+      { id: 'S', letter: 'S', word: 'Subtraction',    label: 'S — Subtraction',    colorKey: 'teal'   },
+      { id: 'A', letter: 'A', word: 'Addition',       label: 'A — Addition',       colorKey: 'green'  },
+      { id: 'D', letter: 'D', word: 'Division',       label: 'D — Division',       colorKey: 'pink'   },
+      { id: 'M', letter: 'M', word: 'Multiplication', label: 'M — Multiplication', colorKey: 'purple' }
     ],
-    correctOrder: ['B', 'O', 'DM', 'AS'],
-    checkLabel: 'Check Order',
+    correctOrder: ['B', 'O', 'D', 'M', 'A', 'S'],
     wrongHint: 'Not quite! Think about which operation comes first in BODMAS.',
     completionMsg: '🎉 You discovered the order rule. Mathematicians call it BODMAS!',
-    bodmasHint: 'O is for "Of" — it means multiply · e.g. half of 10 = 5',
     next: '9.0'
   },
 
@@ -873,7 +877,8 @@ var CONTENT_PAGES = [
         fullExpression: '3 × (2 + (8 ÷ 4)) = 12'
       }
     ],
-    next: '9.1'
+    next: '9.1',
+    animation: 'l9nbEntrance'
   },
 
   // ═══════════════════════════════════════════════════════════
@@ -904,6 +909,7 @@ var CONTENT_PAGES = [
         solution: { open: 2, close: 5 }, working: '10 − (2 + 3) = 10 − 5 = 5'
       }
     ],
+    animation: 'l9ibEntrance',
     next: '9.2'
   },
 
@@ -955,6 +961,7 @@ var CONTENT_PAGES = [
       wrongHint: 'Not quite — remember: brackets first, then × and ÷, then + and −.',
       successMsg: '🎉 Perfect BODMAS order! You got it!'
     },
+    animation: 'l9brEntrance',
     next: '9.3'
   },
 

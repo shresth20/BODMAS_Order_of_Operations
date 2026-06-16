@@ -178,3 +178,11 @@ function playWhooshSoft() {
   setTimeout(function () { _playTone(300, 'sine', 0.06, 0.14); }, 220);
   setTimeout(function () { _playTone(200, 'sine', 0.04, 0.12); }, 360);
 }
+
+/* ── Page 8.0 — tile slide-in ─────────────────────── */
+function playTileSlide() {
+  if (!_audioCtx) initAudio();
+  _playTone(380, 'sine',     0.07, 0.14);
+  setTimeout(function () { _playTone(540, 'sine',     0.06, 0.10); }, 80);
+  setTimeout(function () { _playTone(720, 'triangle', 0.04, 0.08); }, 160);
+}

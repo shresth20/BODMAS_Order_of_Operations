@@ -191,6 +191,47 @@
 
 
 /* ────────────────────────────────────────────────────────────────
+   PORTRAIT PHONES — width ≤ 600px in portrait
+   Compact chrome so the board uses as much vertical space as
+   possible. All content pages set height:100% so they fill the
+   available board height automatically.
+   ──────────────────────────────────────────────────────────────── */
+@media (max-width: 600px) and (orientation: portrait) {
+  :root {
+    --header-h: clamp(52px, 7vh, 64px);
+    --footer-h: clamp(58px, 8vh, 72px);
+  }
+
+  /* Wider board — 96% uses side margins only as a safety buffer */
+  .board-container {
+    width: 96%;
+  }
+
+  /* Shrink icon buttons to keep header compact */
+  .icon-btn {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  /* Progress dots scale down */
+  .dot {
+    width: clamp(10px, 2.5vw, 16px);
+    height: clamp(10px, 2.5vw, 16px);
+  }
+
+  /* Submit button: slightly shorter on portrait phones */
+  .btn-submit {
+    padding: var(--space-xs) clamp(24px, 6vw, 40px);
+    font-size: var(--font-md);
+    min-height: clamp(40px, 6vh, 52px);
+  }
+
+  /* All decorations off on narrow portrait — reclaim side space */
+  .deco { display: none; }
+}
+
+
+/* ────────────────────────────────────────────────────────────────
    SAFE ZONE — ensure modal stays within central 80% on all targets
    ──────────────────────────────────────────────────────────────── */
 .modal-overlay { padding: clamp(12px, 3vw, 40px); }
