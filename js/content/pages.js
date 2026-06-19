@@ -63,7 +63,7 @@ var CONTENT_PAGES = [
     id: '1.2',
     type: 'l1-reveal',
     title: 'You Found the Rule!',
-    ruleText: 'When a sum has × and +, solve × first, then +.',
+    ruleText: 'When a sum has × and +, solve Multiplication first, then +.',
     workedSteps: [
       { expr: '3 + 4 × 2', hlTokens: ['4', '×', '2'] },
       { expr: '= 3 + 8', hlTokens: ['8'] },
@@ -98,22 +98,11 @@ var CONTENT_PAGES = [
         okMsg: 'Right! Multiply comes before Add.'
       },
       {
-        kind: 'step-by-step',
-        prompt: 'Solve step by step.',
-        expression: '5 + 3 × 4',
-        steps: [
-          { instruction: 'Do × first', subExpr: '3 × 4 = ?', choices: [12, 7, 20], correct: 12 },
-          { instruction: 'Now add', subExpr: '5 + 12 = ?', choices: [17, 9, 20], correct: 17 }
-        ],
-        wrongHint: 'Try again!',
-        okMsg: 'Perfect! 5 + 3 × 4 = 17.'
-      },
-      {
         kind: 'which-method',
         prompt: 'Which method is correct?',
         expression: '6 + 2 × 3',
         methods: [
-          { label: '× first', steps: ['6 + 2 × 3', '6 + 6 = 12'], answer: 12, correct: true },
+          { label: 'Multiplication first', steps: ['6 + 2 × 3', '6 + 6 = 12'], answer: 12, correct: true },
           { label: 'Left → right', steps: ['6 + 2 × 3', '8 × 3 = 24'], answer: 24, correct: false }
         ],
         okMsg: 'Correct! Always do × before +.',
@@ -219,21 +208,11 @@ var CONTENT_PAGES = [
         okMsg: 'Right! Multiply comes before Subtract.'
       },
       {
-        kind: 'step-by-step',
-        prompt: 'Solve step by step.',
-        expression: '9 − 2 × 4',
-        steps: [
-          { instruction: 'Do × first', subExpr: '2 × 4 = ?', choices: [8, 6, 12], correct: 8 },
-          { instruction: 'Now subtract', subExpr: '9 − 8 = ?', choices: [1, 17, 2], correct: 1 }
-        ],
-        okMsg: 'Perfect! 9 − 2 × 4 = 1.'
-      },
-      {
         kind: 'which-method',
         prompt: 'Which method is correct?',
         expression: '15 − 3 × 4',
         methods: [
-          { label: '× first', steps: ['15 − 3 × 4', '3 × 4 = 12', '15 − 12 = 3'], answer: 3, correct: true },
+          { label: 'Multiplication first', steps: ['15 − 3 × 4', '3 × 4 = 12', '15 − 12 = 3'], answer: 3, correct: true },
           { label: 'Left → right', steps: ['15 − 3 × 4', '15 − 3 = 12', '12 × 4 = 48'], answer: 48, correct: false }
         ],
         okMsg: 'Correct! Always do × before −.',
@@ -336,16 +315,6 @@ var CONTENT_PAGES = [
         correctIndex: 0,
         wrongHint: 'There\'s a ÷ here — does it go first?',
         okMsg: 'Right! Division comes before Addition.'
-      },
-      {
-        kind: 'step-by-step',
-        prompt: 'Solve step by step.',
-        expression: '4 + 10 ÷ 2',
-        steps: [
-          { instruction: 'Do ÷ first', subExpr: '10 ÷ 2 = ?', choices: [5, 12, 3], correct: 5 },
-          { instruction: 'Now add', subExpr: '4 + 5 = ?', choices: [9, 14, 7], correct: 9 }
-        ],
-        okMsg: 'Perfect! 4 + 10 ÷ 2 = 9.'
       },
       {
         kind: 'which-method',
@@ -455,22 +424,12 @@ var CONTENT_PAGES = [
         wrongHint: 'When + and − appear together, no one has higher priority.'
       },
       {
-        kind: 'step-by-step',
-        prompt: 'Solve step by step.',
-        expression: '9 − 2 + 4',
-        steps: [
-          { label: 'Do − first', subExpr: '9 − 2 = ?', choices: [7, 11, 6], correct: 7 },
-          { label: 'Now add', subExpr: '7 + 4 = ?', choices: [11, 3, 10], correct: 11 }
-        ],
-        okMsg: 'Perfect! 9 − 2 + 4 = 11.'
-      },
-      {
         kind: 'which-method',
         prompt: 'Which method is correct?',
         expression: '10 − 3 + 5',
         methods: [
           { label: 'Left → right', steps: ['10 − 3 + 5', '10 − 3 = 7', '7 + 5 = 12'], answer: 12, correct: true },
-          { label: '+ first', steps: ['10 − 3 + 5', '3 + 5 = 8', '10 − 8 = 2'], answer: 2, correct: false }
+          { label: 'Addition first', steps: ['10 − 3 + 5', '3 + 5 = 8', '10 − 8 = 2'], answer: 2, correct: false }
         ],
         okMsg: 'Correct! Always solve + and − left to right.',
         wrongHint: '+ and − have equal priority — go left to right!'
@@ -572,22 +531,12 @@ var CONTENT_PAGES = [
         wrongHint: 'When × and ÷ appear together, no one has higher priority.'
       },
       {
-        kind: 'step-by-step',
-        prompt: 'Solve step by step.',
-        expression: '20 ÷ 4 × 3',
-        steps: [
-          { label: 'Do ÷ first', subExpr: '20 ÷ 4 = ?', choices: [5, 15, 80], correct: 5 },
-          { label: 'Now multiply', subExpr: '5 × 3 = ?', choices: [15, 8, 60], correct: 15 }
-        ],
-        okMsg: 'Perfect! 20 ÷ 4 × 3 = 15.'
-      },
-      {
         kind: 'which-method',
         prompt: 'Which method is correct?',
         expression: '24 ÷ 4 × 2',
         methods: [
           { label: 'Left → right', steps: ['24 ÷ 4 × 2', '24 ÷ 4 = 6', '6 × 2 = 12'], answer: 12, correct: true },
-          { label: '× first', steps: ['24 ÷ 4 × 2', '4 × 2 = 8', '24 ÷ 8 = 3'], answer: 3, correct: false }
+          { label: 'Multiplication first', steps: ['24 ÷ 4 × 2', '4 × 2 = 8', '24 ÷ 8 = 3'], answer: 3, correct: false }
         ],
         okMsg: 'Correct! Always solve × and ÷ left to right.',
         wrongHint: '× and ÷ have equal priority — go left to right!'
@@ -700,104 +649,18 @@ var CONTENT_PAGES = [
         okMsg: 'Right! Brackets come before multiplication.'
       },
       {
-        kind: 'step-by-step',
-        prompt: 'Solve step by step.',
-        expression: '(2 + 5) \xd7 4',
-        steps: [
-          { instruction: 'Solve inside ( ) first', subExpr: '2 + 5 = ?', choices: [7, 9, 3], correct: 7 },
-          { instruction: 'Now multiply', subExpr: '7 \xd7 4 = ?', choices: [28, 11, 24], correct: 28 }
-        ],
-        okMsg: 'Perfect! (2 + 5) \xd7 4 = 28.'
-      },
-      {
         kind: 'which-method',
         prompt: 'Which method is correct?',
         expression: '(4 + 2) \xd7 3',
         methods: [
-          { label: '( ) first', steps: ['(4 + 2) \xd7 3', '4 + 2 = 6', '6 \xd7 3 = 18'], answer: 18, correct: true },
-          { label: '\xd7 first', steps: ['(4 + 2) \xd7 3', '2 \xd7 3 = 6', '4 + 6 = 10'], answer: 10, correct: false }
+          { label: 'Brackets first', steps: ['(4 + 2) \xd7 3', '4 + 2 = 6', '6 \xd7 3 = 18'], answer: 18, correct: true },
+          { label: 'Multiplication first', steps: ['(4 + 2) \xd7 3', '2 \xd7 3 = 6', '4 + 6 = 10'], answer: 10, correct: false }
         ],
         okMsg: 'Correct! Always solve inside brackets first.',
         wrongHint: 'Look for the brackets — they change what goes first!'
       }
     ],
     completionMsg: 'Excellent! You\'ve mastered Brackets First!',
-    next: '7.0'
-  },
-
-  // ═══════════════════════════════════════════════════════════
-  // SECTION 07 — Grand Challenge
-  // ═══════════════════════════════════════════════════════════
-
-  {
-    id: '7.0',
-    type: 'l7-grand-challenge',
-    animation: 'l7GrandChallengeEntrance',
-    title: '🏆 Welcome to the Grand Challenge!',
-    description: 'Solve 2 phases packed with 3 questions each.',
-    buttonLabel: '🚀 Start Challenge!',
-    phases: [
-      {
-        label: 'Phase 1 — No Brackets',
-        expression: '5 + 2 \xd7 3 − 4',
-        intro: 'Solve this step by step using BODMAS.',
-        steps: [
-          {
-            instruction: 'Which operation goes FIRST?',
-            subExpr: '2 \xd7 3 = ?',
-            choices: [6, 10, 5],
-            correct: 6,
-            okMsg: 'Yes! \xd7 comes before + and −.'
-          },
-          {
-            instruction: 'Now add',
-            subExpr: '5 + 6 = ?',
-            choices: [11, 7, 13],
-            correct: 11,
-            okMsg: 'Correct!'
-          },
-          {
-            instruction: 'Now subtract',
-            subExpr: '11 − 4 = ?',
-            choices: [7, 15, 3],
-            correct: 7,
-            okMsg: 'Phase 1 done! The answer is 7.'
-          }
-        ],
-        answer: 7
-      },
-      {
-        label: 'Phase 2 — With Brackets',
-        expression: '(5 + 2) \xd7 3 − 4',
-        intro: 'Same numbers, same operators — but brackets added!',
-        steps: [
-          {
-            instruction: 'Brackets first! Solve (5 + 2)',
-            subExpr: '5 + 2 = ?',
-            choices: [7, 3, 10],
-            correct: 7,
-            okMsg: 'Correct! Brackets go first.'
-          },
-          {
-            instruction: 'Now multiply',
-            subExpr: '7 \xd7 3 = ?',
-            choices: [21, 15, 18],
-            correct: 21,
-            okMsg: 'Correct!'
-          },
-          {
-            instruction: 'Now subtract',
-            subExpr: '21 − 4 = ?',
-            choices: [17, 25, 7],
-            correct: 17,
-            okMsg: 'Phase 2 done! The answer is 17.'
-          }
-        ],
-        answer: 17
-      }
-    ],
-    comparisonCaption: 'Brackets changed which operation came first — and changed the answer!',
-    completionMsg: 'Grand Challenge Complete! Brackets changed 7 into 17!',
     next: '8.0'
   },
 

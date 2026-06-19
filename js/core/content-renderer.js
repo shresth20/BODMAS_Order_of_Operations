@@ -26,8 +26,7 @@ var ContentRenderer = (function () {
     /* Restore header if a lab page customized it */
     var _labBadge = document.querySelector('.cp-lab-round-badge');
     if (_labBadge) _labBadge.remove();
-    var _labHdrDots = document.querySelector('.cp-lab-header-dots');
-    if (_labHdrDots) _labHdrDots.remove();
+
     var _ibDots = document.querySelector('.cp-l9ib-dots');
     if (_ibDots) _ibDots.remove();
     var _pDotsEl = document.getElementById('progress-dots');
@@ -7430,7 +7429,7 @@ var ContentRenderer = (function () {
       compareEl.innerHTML = '';
       var cards = [
         { label: 'Left → right', value: ex.compareLeft,  verdict: '✗', cls: 'cp-bt-compare__card--wrong' },
-        { label: '× first',      value: ex.compareRight, verdict: '✓', cls: 'cp-bt-compare__card--right' }
+        { label: 'Multiplication first',      value: ex.compareRight, verdict: '✓', cls: 'cp-bt-compare__card--right' }
       ];
       cards.forEach(function (c) {
         var card = _el('div', 'cp-bt-compare__card ' + c.cls);
@@ -8145,7 +8144,7 @@ var ContentRenderer = (function () {
       compareEl.innerHTML = '';
       var cards = [
         { label: 'Left → right', value: ex.compareLeft,  verdict: '✗', cls: 'cp-bt-compare__card--wrong' },
-        { label: '× first',      value: ex.compareRight, verdict: '✓', cls: 'cp-bt-compare__card--right' }
+        { label: 'Multiplication first',      value: ex.compareRight, verdict: '✓', cls: 'cp-bt-compare__card--right' }
       ];
       cards.forEach(function (c) {
         var card = _el('div', 'cp-bt-compare__card ' + c.cls);
@@ -8729,7 +8728,6 @@ var ContentRenderer = (function () {
       if (/^cp-l[1-6]l-student__label--pink$/.test(token)) addClass('student-avatar__label--pink');
       if (/^cp-l[1-6]l-student__svg-wrap$/.test(token)) addClass('student-avatar__svg-wrap');
       if (/^cp-l[1-6]l-bubble$/.test(token)) addClass('speech-bubble');
-      if (/^cp-l[1-6]l-bubble--aarav$/.test(token)) addClass('speech-bubble--left');
       if (/^cp-l[1-6]l-bubble--meera$/.test(token)) addClass('speech-bubble--right');
       if (/^cp-l[1-6]l-bubble--faded$/.test(token)) addClass('speech-bubble--faded');
       if (/^cp-l[1-6]l-bubble--expanded$/.test(token)) addClass('speech-bubble--expanded');
@@ -8753,7 +8751,6 @@ var ContentRenderer = (function () {
       if (/^cp-l[1-6]l-dc-header$/.test(token)) addClass('comparison-card__header');
       if (/^cp-l[1-6]l-dc-emoji$/.test(token)) addClass('comparison-card__emoji');
       if (/^cp-l[1-6]l-dc-name$/.test(token)) addClass('comparison-card__name');
-      if (/^cp-l[1-6]l-dc-name--aarav$/.test(token)) addClass('comparison-card__name--blue');
       if (/^cp-l[1-6]l-dc-name--meera$/.test(token)) addClass('comparison-card__name--pink');
       if (/^cp-l[1-6]l-dc-method$/.test(token)) addClass('comparison-card__method');
       if (/^cp-l[1-6]l-dc-steps$/.test(token)) addClass('comparison-card__steps');
@@ -12835,52 +12832,6 @@ var ContentRenderer = (function () {
     var headerDotEls = [];    /* dots injected into .header__right   */
 
     /* ── SVG characters ── */
-    function _aaravSvg() {
-      return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-        '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
-        /* pants */
-        '<rect x="23" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
-        '<rect x="50" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
-        /* shoes */
-        '<ellipse cx="31" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
-        '<ellipse cx="58" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
-        /* body */
-        '<rect x="17" y="62" width="56" height="48" rx="14" fill="#5B9BD5"/>' +
-        '<path d="M33 62 L45 78 L57 62" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
-        /* neck */
-        '<rect x="37" y="54" width="16" height="14" fill="#FDDCB5"/>' +
-        /* arms */
-        '<rect x="3" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
-        '<rect x="70" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
-        /* hands */
-        '<ellipse cx="11.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
-        '<ellipse cx="78.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
-        /* head */
-        '<circle cx="45" cy="32" r="28" fill="#FDDCB5"/>' +
-        '<path d="M17 32 Q17 4 45 4 Q73 4 73 32 Q72 14 59 9 Q45 5 31 9 Q18 14 17 32Z" fill="#3D2510"/>' +
-        /* ears */
-        '<ellipse cx="17" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
-        '<ellipse cx="73" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
-        /* eyebrows */
-        '<path d="M32 20 Q37 17 42 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
-        '<path d="M48 20 Q53 17 58 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
-        /* eyes */
-        '<ellipse cx="37" cy="29" rx="5.5" ry="6" fill="white"/>' +
-        '<ellipse cx="53" cy="29" rx="5.5" ry="6" fill="white"/>' +
-        '<circle cx="37" cy="30" r="3.5" fill="#1E0D00"/>' +
-        '<circle cx="53" cy="30" r="3.5" fill="#1E0D00"/>' +
-        '<circle cx="38.5" cy="28.5" r="1.5" fill="white"/>' +
-        '<circle cx="54.5" cy="28.5" r="1.5" fill="white"/>' +
-        /* nose */
-        '<ellipse cx="45" cy="37" rx="3" ry="2.5" fill="#E8B897"/>' +
-        /* smile */
-        '<path d="M36 45 Q45 53 54 45" stroke="#C07858" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
-        /* cheeks */
-        '<circle cx="28" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
-        '<circle cx="62" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
-        '</svg>';
-    }
-
     function _meeraSvg() {
       return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
         '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
@@ -12941,7 +12892,6 @@ var ContentRenderer = (function () {
     /* ── Build DOM ── */
     var wrap = _el('div', 'cp-l1l-wrap');
     wrap.dataset.pageId = page.id;
-    var aaravFadeTimer = null;
     var meeraFadeTimer = null;
 
     /* Round header */
@@ -12971,18 +12921,7 @@ var ContentRenderer = (function () {
         roundBadge.className = 'cp-lab-round-badge';
         _pt.appendChild(roundBadge);
       }
-      var _hr = document.querySelector('.header__right');
-      if (_hr) {
-        var _ld = document.createElement('div');
-        _ld.className = 'cp-lab-header-dots';
-        rounds.forEach(function () {
-          var d = document.createElement('span');
-          d.className = 'cp-lab-header-dot';
-          _ld.appendChild(d);
-          headerDotEls.push(d);
-        });
-        _hr.insertBefore(_ld, _hr.firstChild);
-      }
+
     }());
 
     /* Classroom row: student-left | board | student-right */
@@ -12995,19 +12934,6 @@ var ContentRenderer = (function () {
     classBg.setAttribute('draggable', 'false');
     classBg.className = 'cp-l1l-class-bg';
     classEl.appendChild(classBg);
-
-    var aaravEl = _el('div', 'cp-l1l-student cp-l1l-student--left');
-    aaravEl.setAttribute('aria-hidden', 'true');
-    var aaravLabel = _el('span', 'cp-l1l-student__label cp-l1l-student__label--blue'); aaravLabel.textContent = 'Aarav';
-    aaravEl.appendChild(aaravLabel);
-    var aaravBubble = _el('div', 'cp-l1l-bubble cp-l1l-bubble--aarav cp-l1l-bubble--faded');
-    var aaravBName  = _el('span', 'cp-l1l-bubble__name cp-l1l-bubble__name--blue'); aaravBName.textContent = 'Aarav';
-    var aaravBText  = _el('p', 'cp-l1l-bubble__text'); aaravBText.textContent = 'I usually go left to right...';
-    aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
-    aaravEl.appendChild(aaravBubble);
-    var aaravSvgWrap = _el('div', 'cp-l1l-student__svg-wrap'); var _aImg = document.createElement('img'); _aImg.src = 'assets/images/aarav.webp'; _aImg.alt = 'Aarav'; aaravSvgWrap.appendChild(_aImg);
-    aaravEl.appendChild(aaravSvgWrap);
-    classEl.appendChild(aaravEl);
 
     var boardEl = _el('div', 'cp-l1l-board');
     var boardTitle = _el('div', 'cp-l1l-board__title');
@@ -13025,11 +12951,10 @@ var ContentRenderer = (function () {
     var meeraEl = _el('div', 'cp-l1l-student cp-l1l-student--right');
     meeraEl.setAttribute('aria-hidden', 'true');
     var meeraLabel = _el('span', 'cp-l1l-student__label cp-l1l-student__label--pink'); meeraLabel.textContent = 'Meera';
-    meeraEl.appendChild(meeraLabel);
     var meeraBubble = _el('div', 'cp-l1l-bubble cp-l1l-bubble--meera cp-l1l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l1l-bubble__name cp-l1l-bubble__name--pink'); meeraBName.textContent = 'Meera';
     var meeraBText  = _el('p', 'cp-l1l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
-    meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
+    meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
     var meeraSvgWrap = _el('div', 'cp-l1l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
     meeraEl.appendChild(meeraSvgWrap);
@@ -13137,32 +13062,28 @@ var ContentRenderer = (function () {
       var wrongStep1 = tokens[0] + ' ' + op1 + ' ' + tokens[2] + ' = ' + r1;
       var wrongStep2 = r1 + ' ' + op2 + ' ' + tokens[4] + ' = ' + round.compareWrong;
 
-      /* ── Compute correct-method (× first) steps ── */
+      /* ── Compute correct-method (Multiplication first) steps ── */
       var mulLeft  = tokens[tI[0]];
       var mulRight = tokens[tI[2]];
-      var corrStep1 = mulLeft + ' \xd7 ' + mulRight + ' = ' + round.mulResult;
-      var corrStep2 = tI[0] === 0
-        ? round.mulResult + ' ' + tokens[3] + ' ' + tokens[4] + ' = ' + round.finalResult
-        : tokens[0] + ' ' + tokens[1] + ' ' + round.mulResult + ' = ' + round.finalResult;
+      var mulExpr  = mulLeft + ' \xd7 ' + mulRight;
+      var corrStep1, corrStep2;
+      if (tI[0] === 0) {
+        corrStep1 = { highlight: mulExpr,                   suffix: tokens[3] + ' ' + tokens[4], isExpr: true };
+        corrStep2 = { highlight: String(round.mulResult),   suffix: tokens[3] + ' ' + tokens[4], isExpr: false };
+      } else {
+        corrStep1 = { prefix: tokens[0] + ' ' + tokens[1], highlight: mulExpr,                 isExpr: true };
+        corrStep2 = { prefix: tokens[0] + ' ' + tokens[1], highlight: String(round.mulResult), isExpr: false };
+      }
 
       /* ── Helper: build one card ── */
       function _makeCard(cls, avatarSrc, name, nameCls, method, steps, answerVal, ansCls) {
         var card = _el('div', 'cp-l1l-dc-card ' + cls);
 
         var hdr = _el('div', 'cp-l1l-dc-header');
-        var av = _el('span', 'cp-l1l-dc-avatar');
-        var avImg = document.createElement('img');
-        avImg.src = avatarSrc;
-        avImg.alt = '';
-        avImg.setAttribute('aria-hidden', 'true');
-        avImg.setAttribute('draggable', 'false');
-        avImg.className = 'cp-l1l-dc-avatar__img';
-        av.appendChild(avImg);
         var hdrInfo = _el('div', 'cp-l1l-dc-header-info');
-        var nmEl = _el('span', 'cp-l1l-dc-name ' + nameCls); nmEl.textContent = name;
-        var mtEl = _el('span', 'cp-l1l-dc-method'); mtEl.textContent = method;
-        hdrInfo.appendChild(nmEl); hdrInfo.appendChild(mtEl);
-        hdr.appendChild(av);
+        var multLabel = _el('span', 'cp-l1l-dc-mult-label');
+        multLabel.textContent = 'Multiplication first';
+        hdrInfo.appendChild(multLabel);
         hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
 
@@ -13170,7 +13091,16 @@ var ContentRenderer = (function () {
 
         var stepsEl = _el('div', 'cp-l1l-dc-steps');
         steps.forEach(function (s) {
-          var st = _el('div', 'cp-l1l-dc-step'); st.textContent = s;
+          var st = _el('div', 'cp-l1l-dc-step');
+          if (s && typeof s === 'object') {
+            if (s.prefix) { st.appendChild(document.createTextNode(s.prefix + ' ')); }
+            var chip = _el('span', 'cp-l1l-dc-step__chip' + (s.isExpr ? ' cp-l1l-dc-step__chip--expr' : ''));
+            chip.textContent = s.highlight;
+            st.appendChild(chip);
+            if (s.suffix) { st.appendChild(document.createTextNode(' ' + s.suffix)); }
+          } else {
+            st.textContent = s;
+          }
           stepsEl.appendChild(st);
         });
         card.appendChild(stepsEl);
@@ -13185,20 +13115,7 @@ var ContentRenderer = (function () {
       }
 
       /* Cancel any pending speech-bubble fade timers */
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-
-      /* ── Place wrong card in Aarav's bubble ── */
-      aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l1l-bubble--faded', 'cp-l1l-bubble--guide-prompt');
-      aaravBubble.classList.add('cp-l1l-bubble--expanded');
-      aaravBubble.appendChild(_makeCard(
-        'cp-l1l-dc-card--wrong',
-        'assets/images/aarav.webp', 'Aarav', 'cp-l1l-dc-name--aarav',
-        '· left → right',
-        [wrongStep1, wrongStep2],
-        round.compareWrong, 'cp-l1l-dc-answer--wrong'
-      ));
 
       /* ── Place right card in Meera's bubble ── */
       meeraBubble.innerHTML = '';
@@ -13238,8 +13155,8 @@ var ContentRenderer = (function () {
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
-        anime.set([aaravBubble, meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
-        anime({ targets: [aaravBubble, meeraBubble], opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
+        anime.set([meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
+        anime({ targets: meeraBubble, opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
         anime({ targets: comparePanel, opacity: 1, translateY: 0, duration: 380, delay: 200, easing: 'easeOutCubic' });
       }
     }
@@ -13330,23 +13247,17 @@ var ContentRenderer = (function () {
       var leftDx  = opCX - (numLeft.getBoundingClientRect().left  + numLeft.getBoundingClientRect().width  / 2);
       var rightDx = opCX - (numRight.getBoundingClientRect().left + numRight.getBoundingClientRect().width / 2);
 
-      // + fades while 3 and 8 slide toward each other
+      // + fades while 3 and 8 slide toward each other (numbers fade out during slide)
       anime({ targets: opTile, opacity: 0, scale: 0.3, duration: 360, easing: 'easeInQuad' });
       anime({
         targets:    [numLeft, numRight],
         translateX: function (el, i) { return i === 0 ? leftDx : rightDx; },
+        opacity:    0,
         duration:   400,
         easing:     'easeInCubic',
         complete:   function () {
           if (_currentPageId !== page.id) return;
-          anime({
-            targets:  [numLeft, numRight],
-            scale:    0,
-            opacity:  0,
-            duration: 130,
-            easing:   'easeInBack',
-            complete: function () { _showFinalAnswer(round); }
-          });
+          _showFinalAnswer(round);
         }
       });
     }
@@ -13416,14 +13327,6 @@ var ContentRenderer = (function () {
           anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
           anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
-        /* Aarav reacts in his speech bubble */
-        if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
-        aaravBubble.classList.remove('cp-l1l-bubble--faded', 'cp-l1l-bubble--guide-prompt');
-        aaravBText.textContent = 'Oops — let me look again!';
-        if (typeof anime !== 'undefined') {
-          anime.set(aaravBubble, { scale: 0.92 });
-          anime({ targets: aaravBubble, scale: 1, duration: 280, easing: 'easeOutBack' });
-        }
         return;
       }
 
@@ -13458,24 +13361,17 @@ var ContentRenderer = (function () {
       var leftDx  = opCX - (numLeft.getBoundingClientRect().left  + numLeft.getBoundingClientRect().width  / 2);
       var rightDx = opCX - (numRight.getBoundingClientRect().left + numRight.getBoundingClientRect().width / 2);
 
-      // Operator fades out while numbers slide toward each other (simultaneous)
+      // Operator fades out while numbers slide and fade simultaneously
       anime({ targets: opTile, opacity: 0, scale: 0.3, duration: 360, easing: 'easeInQuad' });
       anime({
         targets:    [numLeft, numRight],
         translateX: function (el, i) { return i === 0 ? leftDx : rightDx; },
+        opacity:    0,
         duration:   400,
         easing:     'easeInCubic',
         complete:   function () {
           if (_currentPageId !== page.id) return;
-          // Numbers have met — quick collapse into nothing, then 8 pops up
-          anime({
-            targets:  [numLeft, numRight],
-            scale:    0,
-            opacity:  0,
-            duration: 130,
-            easing:   'easeInBack',
-            complete: function () { _showReducedExpression(round); }
-          });
+          _showReducedExpression(round);
         }
       });
     }
@@ -13521,22 +13417,11 @@ var ContentRenderer = (function () {
       /* Sync progress-track badge */
       if (roundBadge) {
         roundBadge.innerHTML = '';
-        var _bi = document.createElement('span');
-        _bi.className = 'cp-lab-round-badge__icon';
-        _bi.setAttribute('aria-hidden', 'true');
-        _bi.textContent = '🏆'; /* 🏆 */
         var _bt = document.createElement('span');
         _bt.className = 'cp-lab-round-badge__text';
-        _bt.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
-        roundBadge.appendChild(_bi);
+        _bt.textContent = 'Example ' + (idx + 1) + ' of ' + rounds.length;
         roundBadge.appendChild(_bt);
       }
-      /* Sync header-right dots */
-      headerDotEls.forEach(function (d, i) {
-        d.className = 'cp-lab-header-dot' +
-          (i < idx  ? ' cp-lab-header-dot--done'   : '') +
-          (i === idx ? ' cp-lab-header-dot--active' : '');
-      });
 
       nextBtnRow.hidden   = true;
       comparePanel.hidden = true;
@@ -13544,32 +13429,19 @@ var ContentRenderer = (function () {
       boardEl.classList.remove('cp-l1l-board--blurred');
 
       /* Reset bubble text before re-appending */
-      aaravBText.textContent = 'I usually go left to right...';
       meeraBText.textContent = 'Tap what to solve first!';
 
       /* Reset bubbles to speech-bubble state, hidden until guide text fires */
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-      aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l1l-bubble--expanded', 'cp-l1l-bubble--guide-prompt');
-      aaravBubble.classList.add('cp-l1l-bubble--faded');
-      aaravBubble.appendChild(aaravBName);
-      aaravBubble.appendChild(aaravBText);
 
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l1l-bubble--expanded', 'cp-l1l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l1l-bubble--faded');
-      meeraBubble.appendChild(meeraBName);
       meeraBubble.appendChild(meeraBText);
 
       function _showBubbles() {
-        aaravBubble.classList.add('cp-l1l-bubble--guide-prompt');
         meeraBubble.classList.add('cp-l1l-bubble--guide-prompt');
-        aaravBubble.classList.remove('cp-l1l-bubble--faded');
         meeraBubble.classList.remove('cp-l1l-bubble--faded');
-        aaravFadeTimer = setTimeout(function () {
-          aaravBubble.classList.add('cp-l1l-bubble--faded');
-        }, 3000);
         meeraFadeTimer = setTimeout(function () {
           meeraBubble.classList.add('cp-l1l-bubble--faded');
         }, 3000);
@@ -13577,7 +13449,7 @@ var ContentRenderer = (function () {
 
       /* Guide-bar intro: round 0 holds 1s before showing the tap prompt + bubbles */
       if (idx === 0) {
-        guideText.textContent = 'Aarav and Meera are solving the equation with + and ×. Watch carefully.';
+        guideText.textContent = 'Solving the equation with + and ×. Watch carefully.';
         setTimeout(function () {
           if (_currentPageId !== page.id || phase !== 'idle') return;
           guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
@@ -13623,7 +13495,7 @@ var ContentRenderer = (function () {
         echo -> id of element to pulse when this token pops in
     */
     var rowDefs = [
-      /* Row 0: "When an equation has × and +, solve × first." */
+      /* Row 0: "When an equation has × and +, solve Multiplication first." */
       [
         { kind: 'tw',  text: 'When an equation has ' },
         { kind: 'mul', text: '\xd7' },
@@ -14199,39 +14071,6 @@ var ContentRenderer = (function () {
     var phase    = 'idle'; /* idle | merging | sub-wait | final-merge | complete */
 
     /* ── SVG characters (shared with l1) ── */
-    function _aaravSvg() {
-      return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-        '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
-        '<rect x="23" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
-        '<rect x="50" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
-        '<ellipse cx="31" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
-        '<ellipse cx="58" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
-        '<rect x="17" y="62" width="56" height="48" rx="14" fill="#5B9BD5"/>' +
-        '<path d="M33 62 L45 78 L57 62" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<rect x="37" y="54" width="16" height="14" fill="#FDDCB5"/>' +
-        '<rect x="3" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
-        '<rect x="70" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
-        '<ellipse cx="11.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
-        '<ellipse cx="78.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
-        '<circle cx="45" cy="32" r="28" fill="#FDDCB5"/>' +
-        '<path d="M17 32 Q17 4 45 4 Q73 4 73 32 Q72 14 59 9 Q45 5 31 9 Q18 14 17 32Z" fill="#3D2510"/>' +
-        '<ellipse cx="17" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
-        '<ellipse cx="73" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
-        '<path d="M32 20 Q37 17 42 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
-        '<path d="M48 20 Q53 17 58 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
-        '<ellipse cx="37" cy="29" rx="5.5" ry="6" fill="white"/>' +
-        '<ellipse cx="53" cy="29" rx="5.5" ry="6" fill="white"/>' +
-        '<circle cx="37" cy="30" r="3.5" fill="#1E0D00"/>' +
-        '<circle cx="53" cy="30" r="3.5" fill="#1E0D00"/>' +
-        '<circle cx="38.5" cy="28.5" r="1.5" fill="white"/>' +
-        '<circle cx="54.5" cy="28.5" r="1.5" fill="white"/>' +
-        '<ellipse cx="45" cy="37" rx="3" ry="2.5" fill="#E8B897"/>' +
-        '<path d="M36 45 Q45 53 54 45" stroke="#C07858" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
-        '<circle cx="28" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
-        '<circle cx="62" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
-        '</svg>';
-    }
-
     function _meeraSvg() {
       return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
         '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
@@ -14278,7 +14117,6 @@ var ContentRenderer = (function () {
     /* ── Build DOM ── */
     var wrap = _el('div', 'cp-l2l-wrap');
     wrap.dataset.pageId = page.id;
-    var aaravFadeTimer = null;
     var meeraFadeTimer = null;
     var roundBadge   = null;
     var headerDotEls = [];
@@ -14309,18 +14147,7 @@ var ContentRenderer = (function () {
         roundBadge.className = 'cp-lab-round-badge';
         _pt.appendChild(roundBadge);
       }
-      var _hr = document.querySelector('.header__right');
-      if (_hr) {
-        var _ld = document.createElement('div');
-        _ld.className = 'cp-lab-header-dots';
-        rounds.forEach(function () {
-          var d = document.createElement('span');
-          d.className = 'cp-lab-header-dot';
-          _ld.appendChild(d);
-          headerDotEls.push(d);
-        });
-        _hr.insertBefore(_ld, _hr.firstChild);
-      }
+
     }());
 
     /* Classroom row: student-left | board | student-right */
@@ -14332,19 +14159,6 @@ var ContentRenderer = (function () {
     classBg.setAttribute('draggable', 'false');
     classBg.className = 'cp-l2l-class-bg';
     classEl.appendChild(classBg);
-
-    var aaravEl = _el('div', 'cp-l2l-student cp-l2l-student--left');
-    aaravEl.setAttribute('aria-hidden', 'true');
-    var aaravLabel = _el('span', 'cp-l2l-student__label cp-l2l-student__label--blue'); aaravLabel.textContent = 'Aarav';
-    aaravEl.appendChild(aaravLabel);
-    var aaravBubble = _el('div', 'cp-l2l-bubble cp-l2l-bubble--aarav cp-l2l-bubble--faded');
-    var aaravBName  = _el('span', 'cp-l2l-bubble__name cp-l2l-bubble__name--blue'); aaravBName.textContent = 'Aarav';
-    var aaravBText  = _el('p', 'cp-l2l-bubble__text'); aaravBText.textContent = 'I usually go left to right...';
-    aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
-    aaravEl.appendChild(aaravBubble);
-    var aaravSvgWrap = _el('div', 'cp-l2l-student__svg-wrap'); var _aImg = document.createElement('img'); _aImg.src = 'assets/images/aarav.webp'; _aImg.alt = 'Aarav'; aaravSvgWrap.appendChild(_aImg);
-    aaravEl.appendChild(aaravSvgWrap);
-    classEl.appendChild(aaravEl);
 
     var boardEl = _el('div', 'cp-l2l-board');
     var boardTitle = _el('div', 'cp-l2l-board__title');
@@ -14362,11 +14176,10 @@ var ContentRenderer = (function () {
     var meeraEl = _el('div', 'cp-l2l-student cp-l2l-student--right');
     meeraEl.setAttribute('aria-hidden', 'true');
     var meeraLabel = _el('span', 'cp-l2l-student__label cp-l2l-student__label--pink'); meeraLabel.textContent = 'Meera';
-    meeraEl.appendChild(meeraLabel);
     var meeraBubble = _el('div', 'cp-l2l-bubble cp-l2l-bubble--meera cp-l2l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l2l-bubble__name cp-l2l-bubble__name--pink'); meeraBName.textContent = 'Meera';
     var meeraBText  = _el('p', 'cp-l2l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
-    meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
+    meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
     var meeraSvgWrap = _el('div', 'cp-l2l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
     meeraEl.appendChild(meeraSvgWrap);
@@ -14474,32 +14287,41 @@ var ContentRenderer = (function () {
       var wrongStep1 = tokens[0] + ' ' + op1 + ' ' + tokens[2] + ' = ' + r1;
       var wrongStep2 = r1 + ' ' + op2 + ' ' + tokens[4] + ' = ' + round.compareWrong;
 
-      /* ── Compute correct-method (× first) steps ── */
+      /* ── Compute correct-method (Multiplication first) steps ── */
       var mulLeft  = tokens[tI[0]];
       var mulRight = tokens[tI[2]];
-      var corrStep1 = mulLeft + ' \xd7 ' + mulRight + ' = ' + round.mulResult;
-      var corrStep2 = tI[0] === 0
-        ? round.mulResult + ' ' + tokens[3] + ' ' + tokens[4] + ' = ' + round.finalResult
-        : tokens[0] + ' ' + tokens[1] + ' ' + round.mulResult + ' = ' + round.finalResult;
+      var mulExpr2 = mulLeft + ' \xd7 ' + mulRight;
+      var corrStep1, corrStep2;
+      if (tI[0] === 0) {
+        corrStep1 = { highlight: mulExpr2, suffix: tokens[3] + ' ' + tokens[4], isExpr: true };
+        corrStep2 = { highlight: String(round.mulResult), suffix: tokens[3] + ' ' + tokens[4], isExpr: false };
+      } else {
+        corrStep1 = { prefix: tokens[0] + ' ' + tokens[1], highlight: mulExpr2, isExpr: true };
+        corrStep2 = { prefix: tokens[0] + ' ' + tokens[1], highlight: String(round.mulResult), isExpr: false };
+      }
 
-      function _makeCard2(cls, avatarSrc, name, nameCls, method, steps, answerVal, ansCls) {
+      function _makeCard2(cls, steps, answerVal, ansCls) {
         var card = _el('div', 'cp-l2l-dc-card ' + cls);
-        var hdr  = _el('div', 'cp-l2l-dc-header');
-        var av   = _el('span', 'cp-l2l-dc-avatar');
-        var avImg = document.createElement('img');
-        avImg.src = avatarSrc; avImg.alt = '';
-        avImg.className = 'cp-l2l-dc-avatar__img';
-        av.appendChild(avImg);
+        var hdr = _el('div', 'cp-l2l-dc-header');
         var hdrInfo = _el('div', 'cp-l2l-dc-header-info');
-        var nmEl = _el('span', 'cp-l2l-dc-name ' + nameCls); nmEl.textContent = name;
-        var mtEl = _el('span', 'cp-l2l-dc-method'); mtEl.textContent = method;
-        hdrInfo.appendChild(nmEl); hdrInfo.appendChild(mtEl);
-        hdr.appendChild(av); hdr.appendChild(hdrInfo);
+        var multLabel = _el('span', 'cp-l2l-dc-mult-label');
+        multLabel.textContent = 'Multiplication first';
+        hdrInfo.appendChild(multLabel);
+        hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
         card.appendChild(_el('div', 'cp-l2l-dc-divider cp-l2l-dc-divider--dashed'));
         var stepsEl = _el('div', 'cp-l2l-dc-steps');
         steps.forEach(function (s) {
-          var st = _el('div', 'cp-l2l-dc-step'); st.textContent = s;
+          var st = _el('div', 'cp-l2l-dc-step');
+          if (s && typeof s === 'object') {
+            if (s.prefix) { st.appendChild(document.createTextNode(s.prefix + ' ')); }
+            var chip = _el('span', 'cp-l2l-dc-step__chip' + (s.isExpr ? ' cp-l2l-dc-step__chip--expr' : ''));
+            chip.textContent = s.highlight;
+            st.appendChild(chip);
+            if (s.suffix) { st.appendChild(document.createTextNode(' ' + s.suffix)); }
+          } else {
+            st.textContent = s;
+          }
           stepsEl.appendChild(st);
         });
         card.appendChild(stepsEl);
@@ -14510,27 +14332,13 @@ var ContentRenderer = (function () {
         return card;
       }
 
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-
-      aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l2l-bubble--faded');
-      aaravBubble.classList.add('cp-l2l-bubble--expanded');
-      aaravBubble.appendChild(_makeCard2(
-        'cp-l2l-dc-card--wrong',
-        'assets/images/aarav.webp', 'Aarav', 'cp-l2l-dc-name--aarav',
-        '· left → right',
-        [wrongStep1, wrongStep2],
-        round.compareWrong, 'cp-l2l-dc-answer--wrong'
-      ));
 
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l2l-bubble--faded');
       meeraBubble.classList.add('cp-l2l-bubble--expanded');
       meeraBubble.appendChild(_makeCard2(
         'cp-l2l-dc-card--right',
-        'assets/images/meera.webp', 'Meera', 'cp-l2l-dc-name--meera',
-        '· \xd7 first',
         [corrStep1, corrStep2],
         round.compareRight, 'cp-l2l-dc-answer--right'
       ));
@@ -14558,8 +14366,8 @@ var ContentRenderer = (function () {
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
-        anime.set([aaravBubble, meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
-        anime({ targets: [aaravBubble, meeraBubble], opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
+        anime.set([meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
+        anime({ targets: meeraBubble, opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
         anime({ targets: comparePanel, opacity: 1, translateY: 0, duration: 380, delay: 200, easing: 'easeOutCubic' });
       }
     }
@@ -14651,18 +14459,12 @@ var ContentRenderer = (function () {
       anime({
         targets:    [numLeft, numRight],
         translateX: function (el, i) { return i === 0 ? leftDx : rightDx; },
+        opacity:    0,
         duration:   400,
         easing:     'easeInCubic',
         complete:   function () {
           if (_currentPageId !== page.id) return;
-          anime({
-            targets:  [numLeft, numRight],
-            scale:    0,
-            opacity:  0,
-            duration: 130,
-            easing:   'easeInBack',
-            complete: function () { _showFinalAnswer2(round); }
-          });
+          _showFinalAnswer2(round);
         }
       });
     }
@@ -14730,13 +14532,6 @@ var ContentRenderer = (function () {
           anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
           anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
-        if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
-        aaravBubble.classList.remove('cp-l2l-bubble--faded', 'cp-l2l-bubble--guide-prompt');
-        aaravBText.textContent = 'Oops — let me look again!';
-        if (typeof anime !== 'undefined') {
-          anime.set(aaravBubble, { scale: 0.92, opacity: 0.7 });
-          anime({ targets: aaravBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
-        }
         return;
       }
 
@@ -14768,18 +14563,12 @@ var ContentRenderer = (function () {
       anime({
         targets:    [numLeft, numRight],
         translateX: function (el, i) { return i === 0 ? leftDx : rightDx; },
+        opacity:    0,
         duration:   400,
         easing:     'easeInCubic',
         complete:   function () {
           if (_currentPageId !== page.id) return;
-          anime({
-            targets:  [numLeft, numRight],
-            scale:    0,
-            opacity:  0,
-            duration: 130,
-            easing:   'easeInBack',
-            complete: function () { _showReducedExpression2(round); }
-          });
+          _showReducedExpression2(round);
         }
       });
     }
@@ -14818,58 +14607,37 @@ var ContentRenderer = (function () {
       });
       if (roundBadge) {
         roundBadge.innerHTML = '';
-        var _bi2 = document.createElement('span');
-        _bi2.className = 'cp-lab-round-badge__icon';
-        _bi2.setAttribute('aria-hidden', 'true');
-        _bi2.textContent = '🏆';
         var _bt2 = document.createElement('span');
         _bt2.className = 'cp-lab-round-badge__text';
-        _bt2.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
-        roundBadge.appendChild(_bi2); roundBadge.appendChild(_bt2);
+        _bt2.textContent = 'Example ' + (idx + 1) + ' of ' + rounds.length;
+        roundBadge.appendChild(_bt2);
       }
-      headerDotEls.forEach(function (d, i) {
-        d.className = 'cp-lab-header-dot' +
-          (i < idx ? ' cp-lab-header-dot--done' : '') +
-          (i === idx ? ' cp-lab-header-dot--active' : '');
-      });
+
 
       nextBtnRow.hidden   = true;
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
       boardEl.classList.remove('cp-l2l-board--blurred');
 
-      aaravBText.textContent = 'I usually go left to right...';
       meeraBText.textContent = 'Tap what to solve first!';
 
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-      aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l2l-bubble--expanded', 'cp-l2l-bubble--guide-prompt');
-      aaravBubble.classList.add('cp-l2l-bubble--faded');
-      aaravBubble.appendChild(aaravBName);
-      aaravBubble.appendChild(aaravBText);
 
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l2l-bubble--expanded', 'cp-l2l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l2l-bubble--faded');
-      meeraBubble.appendChild(meeraBName);
       meeraBubble.appendChild(meeraBText);
 
       function _showBubbles2() {
-        aaravBubble.classList.add('cp-l2l-bubble--guide-prompt');
         meeraBubble.classList.add('cp-l2l-bubble--guide-prompt');
-        aaravBubble.classList.remove('cp-l2l-bubble--faded');
         meeraBubble.classList.remove('cp-l2l-bubble--faded');
-        aaravFadeTimer = setTimeout(function () {
-          aaravBubble.classList.add('cp-l2l-bubble--faded');
-        }, 3000);
         meeraFadeTimer = setTimeout(function () {
           meeraBubble.classList.add('cp-l2l-bubble--faded');
         }, 3000);
       }
 
       if (idx === 0) {
-        guideText.textContent = 'Aarav and Meera are solving the equation with − and \xd7. Watch carefully.';
+        guideText.textContent = 'Solving the equation with − and \xd7. Watch carefully.';
         setTimeout(function () {
           if (_currentPageId !== page.id || phase !== 'idle') return;
           guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
@@ -15440,39 +15208,6 @@ var ContentRenderer = (function () {
     var phase    = 'idle'; /* idle | merging | second-wait | final-merge | complete */
 
     /* ── SVG characters (identical to L1/L2) ── */
-    function _aaravSvg() {
-      return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-        '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
-        '<rect x="23" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
-        '<rect x="50" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
-        '<ellipse cx="31" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
-        '<ellipse cx="58" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
-        '<rect x="17" y="62" width="56" height="48" rx="14" fill="#5B9BD5"/>' +
-        '<path d="M33 62 L45 78 L57 62" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<rect x="37" y="54" width="16" height="14" fill="#FDDCB5"/>' +
-        '<rect x="3" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
-        '<rect x="70" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
-        '<ellipse cx="11.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
-        '<ellipse cx="78.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
-        '<circle cx="45" cy="32" r="28" fill="#FDDCB5"/>' +
-        '<path d="M17 32 Q17 4 45 4 Q73 4 73 32 Q72 14 59 9 Q45 5 31 9 Q18 14 17 32Z" fill="#3D2510"/>' +
-        '<ellipse cx="17" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
-        '<ellipse cx="73" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
-        '<path d="M32 20 Q37 17 42 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
-        '<path d="M48 20 Q53 17 58 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
-        '<ellipse cx="37" cy="29" rx="5.5" ry="6" fill="white"/>' +
-        '<ellipse cx="53" cy="29" rx="5.5" ry="6" fill="white"/>' +
-        '<circle cx="37" cy="30" r="3.5" fill="#1E0D00"/>' +
-        '<circle cx="53" cy="30" r="3.5" fill="#1E0D00"/>' +
-        '<circle cx="38.5" cy="28.5" r="1.5" fill="white"/>' +
-        '<circle cx="54.5" cy="28.5" r="1.5" fill="white"/>' +
-        '<ellipse cx="45" cy="37" rx="3" ry="2.5" fill="#E8B897"/>' +
-        '<path d="M36 45 Q45 53 54 45" stroke="#C07858" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
-        '<circle cx="28" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
-        '<circle cx="62" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
-        '</svg>';
-    }
-
     function _meeraSvg() {
       return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
         '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
@@ -15519,7 +15254,6 @@ var ContentRenderer = (function () {
     /* ── Build DOM ── */
     var wrap = _el('div', 'cp-l3l-wrap');
     wrap.dataset.pageId = page.id;
-    var aaravFadeTimer = null;
     var meeraFadeTimer = null;
     var roundBadge   = null;
     var headerDotEls = [];
@@ -15549,18 +15283,7 @@ var ContentRenderer = (function () {
         roundBadge.className = 'cp-lab-round-badge';
         _pt.appendChild(roundBadge);
       }
-      var _hr = document.querySelector('.header__right');
-      if (_hr) {
-        var _ld = document.createElement('div');
-        _ld.className = 'cp-lab-header-dots';
-        rounds.forEach(function () {
-          var d = document.createElement('span');
-          d.className = 'cp-lab-header-dot';
-          _ld.appendChild(d);
-          headerDotEls.push(d);
-        });
-        _hr.insertBefore(_ld, _hr.firstChild);
-      }
+
     }());
 
     var classEl = _el('div', 'cp-l3l-classroom');
@@ -15571,19 +15294,6 @@ var ContentRenderer = (function () {
     classBg.setAttribute('draggable', 'false');
     classBg.className = 'cp-l3l-class-bg';
     classEl.appendChild(classBg);
-
-    var aaravEl = _el('div', 'cp-l3l-student cp-l3l-student--left');
-    aaravEl.setAttribute('aria-hidden', 'true');
-    var aaravLabel = _el('span', 'cp-l3l-student__label cp-l3l-student__label--blue'); aaravLabel.textContent = 'Aarav';
-    aaravEl.appendChild(aaravLabel);
-    var aaravBubble = _el('div', 'cp-l3l-bubble cp-l3l-bubble--aarav cp-l3l-bubble--faded');
-    var aaravBName  = _el('span', 'cp-l3l-bubble__name cp-l3l-bubble__name--blue'); aaravBName.textContent = 'Aarav';
-    var aaravBText  = _el('p', 'cp-l3l-bubble__text'); aaravBText.textContent = 'I usually go left to right...';
-    aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
-    aaravEl.appendChild(aaravBubble);
-    var aaravSvgWrap = _el('div', 'cp-l3l-student__svg-wrap'); var _aImg = document.createElement('img'); _aImg.src = 'assets/images/aarav.webp'; _aImg.alt = 'Aarav'; aaravSvgWrap.appendChild(_aImg);
-    aaravEl.appendChild(aaravSvgWrap);
-    classEl.appendChild(aaravEl);
 
     var boardEl = _el('div', 'cp-l3l-board');
     var boardTitle = _el('div', 'cp-l3l-board__title');
@@ -15601,11 +15311,10 @@ var ContentRenderer = (function () {
     var meeraEl = _el('div', 'cp-l3l-student cp-l3l-student--right');
     meeraEl.setAttribute('aria-hidden', 'true');
     var meeraLabel = _el('span', 'cp-l3l-student__label cp-l3l-student__label--pink'); meeraLabel.textContent = 'Meera';
-    meeraEl.appendChild(meeraLabel);
     var meeraBubble = _el('div', 'cp-l3l-bubble cp-l3l-bubble--meera cp-l3l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l3l-bubble__name cp-l3l-bubble__name--pink'); meeraBName.textContent = 'Meera';
     var meeraBText  = _el('p', 'cp-l3l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
-    meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
+    meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
     var meeraSvgWrap = _el('div', 'cp-l3l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
     meeraEl.appendChild(meeraSvgWrap);
@@ -15720,29 +15429,38 @@ var ContentRenderer = (function () {
       /* Right method: ÷ first */
       var divLeft  = tokens[tI[0]];
       var divRight = tokens[tI[2]];
-      var corrStep1 = divLeft + ' \xf7 ' + divRight + ' = ' + round.divResult;
-      var corrStep2 = tI[0] === 0
-        ? round.divResult + ' ' + tokens[3] + ' ' + tokens[4] + ' = ' + round.finalResult
-        : tokens[0] + ' ' + tokens[1] + ' ' + round.divResult + ' = ' + round.finalResult;
+      var divExpr3 = divLeft + ' \xf7 ' + divRight;
+      var corrStep1, corrStep2;
+      if (tI[0] === 0) {
+        corrStep1 = { highlight: divExpr3, suffix: tokens[3] + ' ' + tokens[4], isExpr: true };
+        corrStep2 = { highlight: String(round.divResult), suffix: tokens[3] + ' ' + tokens[4], isExpr: false };
+      } else {
+        corrStep1 = { prefix: tokens[0] + ' ' + tokens[1], highlight: divExpr3, isExpr: true };
+        corrStep2 = { prefix: tokens[0] + ' ' + tokens[1], highlight: String(round.divResult), isExpr: false };
+      }
 
-      function _makeCard3(cls, avatarSrc, name, nameCls, method, steps, answerVal, ansCls) {
+      function _makeCard3(cls, steps, answerVal, ansCls) {
         var card = _el('div', 'cp-l3l-dc-card ' + cls);
-        var hdr  = _el('div', 'cp-l3l-dc-header');
-        var av   = _el('span', 'cp-l3l-dc-avatar');
-        var avImg = document.createElement('img');
-        avImg.src = avatarSrc; avImg.alt = '';
-        avImg.className = 'cp-l3l-dc-avatar__img';
-        av.appendChild(avImg);
+        var hdr = _el('div', 'cp-l3l-dc-header');
         var hdrInfo = _el('div', 'cp-l3l-dc-header-info');
-        var nmEl = _el('span', 'cp-l3l-dc-name ' + nameCls); nmEl.textContent = name;
-        var mtEl = _el('span', 'cp-l3l-dc-method'); mtEl.textContent = method;
-        hdrInfo.appendChild(nmEl); hdrInfo.appendChild(mtEl);
-        hdr.appendChild(av); hdr.appendChild(hdrInfo);
+        var multLabel = _el('span', 'cp-l3l-dc-mult-label');
+        multLabel.textContent = 'Division first';
+        hdrInfo.appendChild(multLabel);
+        hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
         card.appendChild(_el('div', 'cp-l3l-dc-divider cp-l3l-dc-divider--dashed'));
         var stepsEl = _el('div', 'cp-l3l-dc-steps');
         steps.forEach(function (s) {
-          var st = _el('div', 'cp-l3l-dc-step'); st.textContent = s;
+          var st = _el('div', 'cp-l3l-dc-step');
+          if (s && typeof s === 'object') {
+            if (s.prefix) { st.appendChild(document.createTextNode(s.prefix + ' ')); }
+            var chip = _el('span', 'cp-l3l-dc-step__chip' + (s.isExpr ? ' cp-l3l-dc-step__chip--expr' : ''));
+            chip.textContent = s.highlight;
+            st.appendChild(chip);
+            if (s.suffix) { st.appendChild(document.createTextNode(' ' + s.suffix)); }
+          } else {
+            st.textContent = s;
+          }
           stepsEl.appendChild(st);
         });
         card.appendChild(stepsEl);
@@ -15753,27 +15471,13 @@ var ContentRenderer = (function () {
         return card;
       }
 
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-
-      aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l3l-bubble--faded');
-      aaravBubble.classList.add('cp-l3l-bubble--expanded');
-      aaravBubble.appendChild(_makeCard3(
-        'cp-l3l-dc-card--wrong',
-        'assets/images/aarav.webp', 'Aarav', 'cp-l3l-dc-name--aarav',
-        '\xb7 left → right',
-        [wrongStep1, wrongStep2],
-        round.compareWrong, 'cp-l3l-dc-answer--wrong'
-      ));
 
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l3l-bubble--faded');
       meeraBubble.classList.add('cp-l3l-bubble--expanded');
       meeraBubble.appendChild(_makeCard3(
         'cp-l3l-dc-card--right',
-        'assets/images/meera.webp', 'Meera', 'cp-l3l-dc-name--meera',
-        '\xb7 \xf7 first',
         [corrStep1, corrStep2],
         round.compareRight, 'cp-l3l-dc-answer--right'
       ));
@@ -15802,8 +15506,8 @@ var ContentRenderer = (function () {
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
-        anime.set([aaravBubble, meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
-        anime({ targets: [aaravBubble, meeraBubble], opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
+        anime.set([meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
+        anime({ targets: meeraBubble, opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
         anime({ targets: comparePanel, opacity: 1, translateY: 0, duration: 380, delay: 200, easing: 'easeOutCubic' });
       }
     }
@@ -15895,18 +15599,12 @@ var ContentRenderer = (function () {
       anime({
         targets:    [numLeft, numRight],
         translateX: function (el, i) { return i === 0 ? leftDx : rightDx; },
+        opacity:    0,
         duration:   400,
         easing:     'easeInCubic',
         complete:   function () {
           if (_currentPageId !== page.id) return;
-          anime({
-            targets:  [numLeft, numRight],
-            scale:    0,
-            opacity:  0,
-            duration: 130,
-            easing:   'easeInBack',
-            complete: function () { _showFinalAnswer3(round); }
-          });
+          _showFinalAnswer3(round);
         }
       });
     }
@@ -15977,13 +15675,6 @@ var ContentRenderer = (function () {
           anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
           anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
-        if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
-        aaravBubble.classList.remove('cp-l3l-bubble--faded', 'cp-l3l-bubble--guide-prompt');
-        aaravBText.textContent = 'Oops — let me look again!';
-        if (typeof anime !== 'undefined') {
-          anime.set(aaravBubble, { scale: 0.92, opacity: 0.7 });
-          anime({ targets: aaravBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
-        }
         return;
       }
 
@@ -16015,18 +15706,12 @@ var ContentRenderer = (function () {
       anime({
         targets:    [numLeft, numRight],
         translateX: function (el, i) { return i === 0 ? leftDx : rightDx; },
+        opacity:    0,
         duration:   400,
         easing:     'easeInCubic',
         complete:   function () {
           if (_currentPageId !== page.id) return;
-          anime({
-            targets:  [numLeft, numRight],
-            scale:    0,
-            opacity:  0,
-            duration: 130,
-            easing:   'easeInBack',
-            complete: function () { _showReducedExpression3(round); }
-          });
+          _showReducedExpression3(round);
         }
       });
     }
@@ -16066,58 +15751,37 @@ var ContentRenderer = (function () {
       });
       if (roundBadge) {
         roundBadge.innerHTML = '';
-        var _bi3 = document.createElement('span');
-        _bi3.className = 'cp-lab-round-badge__icon';
-        _bi3.setAttribute('aria-hidden', 'true');
-        _bi3.textContent = '🏆';
         var _bt3 = document.createElement('span');
         _bt3.className = 'cp-lab-round-badge__text';
-        _bt3.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
-        roundBadge.appendChild(_bi3); roundBadge.appendChild(_bt3);
+        _bt3.textContent = 'Example ' + (idx + 1) + ' of ' + rounds.length;
+        roundBadge.appendChild(_bt3);
       }
-      headerDotEls.forEach(function (d, i) {
-        d.className = 'cp-lab-header-dot' +
-          (i < idx ? ' cp-lab-header-dot--done' : '') +
-          (i === idx ? ' cp-lab-header-dot--active' : '');
-      });
+
 
       nextBtnRow.hidden   = true;
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
       boardEl.classList.remove('cp-l3l-board--blurred');
 
-      aaravBText.textContent = 'I usually go left to right...';
       meeraBText.textContent = 'Tap what to solve first!';
 
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-      aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l3l-bubble--expanded', 'cp-l3l-bubble--guide-prompt');
-      aaravBubble.classList.add('cp-l3l-bubble--faded');
-      aaravBubble.appendChild(aaravBName);
-      aaravBubble.appendChild(aaravBText);
 
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l3l-bubble--expanded', 'cp-l3l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l3l-bubble--faded');
-      meeraBubble.appendChild(meeraBName);
       meeraBubble.appendChild(meeraBText);
 
       function _showBubbles3() {
-        aaravBubble.classList.add('cp-l3l-bubble--guide-prompt');
         meeraBubble.classList.add('cp-l3l-bubble--guide-prompt');
-        aaravBubble.classList.remove('cp-l3l-bubble--faded');
         meeraBubble.classList.remove('cp-l3l-bubble--faded');
-        aaravFadeTimer = setTimeout(function () {
-          aaravBubble.classList.add('cp-l3l-bubble--faded');
-        }, 3000);
         meeraFadeTimer = setTimeout(function () {
           meeraBubble.classList.add('cp-l3l-bubble--faded');
         }, 3000);
       }
 
       if (idx === 0) {
-        guideText.textContent = 'Aarav and Meera are solving the equation with + and \xf7. Watch carefully.';
+        guideText.textContent = 'Solving the equation with + and \xf7. Watch carefully.';
         setTimeout(function () {
           if (_currentPageId !== page.id || phase !== 'idle') return;
           guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
@@ -16479,39 +16143,6 @@ var ContentRenderer = (function () {
     var roundIdx = 0;
     var phase    = 'idle';
 
-    function _aaravSvg4() {
-      return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-        '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
-        '<rect x="23" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
-        '<rect x="50" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
-        '<ellipse cx="31" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
-        '<ellipse cx="58" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
-        '<rect x="17" y="62" width="56" height="48" rx="14" fill="#5B9BD5"/>' +
-        '<path d="M33 62 L45 78 L57 62" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<rect x="37" y="54" width="16" height="14" fill="#FDDCB5"/>' +
-        '<rect x="3" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
-        '<rect x="70" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
-        '<ellipse cx="11.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
-        '<ellipse cx="78.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
-        '<circle cx="45" cy="32" r="28" fill="#FDDCB5"/>' +
-        '<path d="M17 32 Q17 4 45 4 Q73 4 73 32 Q72 14 59 9 Q45 5 31 9 Q18 14 17 32Z" fill="#3D2510"/>' +
-        '<ellipse cx="17" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
-        '<ellipse cx="73" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
-        '<path d="M32 20 Q37 17 42 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
-        '<path d="M48 20 Q53 17 58 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
-        '<ellipse cx="37" cy="29" rx="5.5" ry="6" fill="white"/>' +
-        '<ellipse cx="53" cy="29" rx="5.5" ry="6" fill="white"/>' +
-        '<circle cx="37" cy="30" r="3.5" fill="#1E0D00"/>' +
-        '<circle cx="53" cy="30" r="3.5" fill="#1E0D00"/>' +
-        '<circle cx="38.5" cy="28.5" r="1.5" fill="white"/>' +
-        '<circle cx="54.5" cy="28.5" r="1.5" fill="white"/>' +
-        '<ellipse cx="45" cy="37" rx="3" ry="2.5" fill="#E8B897"/>' +
-        '<path d="M36 45 Q45 53 54 45" stroke="#C07858" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
-        '<circle cx="28" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
-        '<circle cx="62" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
-        '</svg>';
-    }
-
     function _meeraSvg4() {
       return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
         '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
@@ -16551,7 +16182,6 @@ var ContentRenderer = (function () {
 
     var wrap = _el('div', 'cp-l4l-wrap');
     wrap.dataset.pageId = page.id;
-    var aaravFadeTimer = null;
     var meeraFadeTimer = null;
     var roundBadge   = null;
     var headerDotEls = [];
@@ -16581,18 +16211,7 @@ var ContentRenderer = (function () {
         roundBadge.className = 'cp-lab-round-badge';
         _pt.appendChild(roundBadge);
       }
-      var _hr = document.querySelector('.header__right');
-      if (_hr) {
-        var _ld = document.createElement('div');
-        _ld.className = 'cp-lab-header-dots';
-        rounds.forEach(function () {
-          var d = document.createElement('span');
-          d.className = 'cp-lab-header-dot';
-          _ld.appendChild(d);
-          headerDotEls.push(d);
-        });
-        _hr.insertBefore(_ld, _hr.firstChild);
-      }
+
     }());
 
     var classEl = _el('div', 'cp-l4l-classroom');
@@ -16603,19 +16222,6 @@ var ContentRenderer = (function () {
     classBg.setAttribute('draggable', 'false');
     classBg.className = 'cp-l4l-class-bg';
     classEl.appendChild(classBg);
-
-    var aaravEl = _el('div', 'cp-l4l-student cp-l4l-student--left');
-    aaravEl.setAttribute('aria-hidden', 'true');
-    var aaravLabel = _el('span', 'cp-l4l-student__label cp-l4l-student__label--blue'); aaravLabel.textContent = 'Aarav';
-    aaravEl.appendChild(aaravLabel);
-    var aaravBubble = _el('div', 'cp-l4l-bubble cp-l4l-bubble--aarav cp-l4l-bubble--faded');
-    var aaravBName  = _el('span', 'cp-l4l-bubble__name cp-l4l-bubble__name--blue'); aaravBName.textContent = 'Aarav';
-    var aaravBText  = _el('p', 'cp-l4l-bubble__text'); aaravBText.textContent = 'I think the right side goes first...';
-    aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
-    aaravEl.appendChild(aaravBubble);
-    var aaravSvgWrap = _el('div', 'cp-l4l-student__svg-wrap'); var _aImg = document.createElement('img'); _aImg.src = 'assets/images/aarav.webp'; _aImg.alt = 'Aarav'; aaravSvgWrap.appendChild(_aImg);
-    aaravEl.appendChild(aaravSvgWrap);
-    classEl.appendChild(aaravEl);
 
     var boardEl = _el('div', 'cp-l4l-board');
     var boardTitle = _el('div', 'cp-l4l-board__title');
@@ -16632,11 +16238,10 @@ var ContentRenderer = (function () {
     var meeraEl = _el('div', 'cp-l4l-student cp-l4l-student--right');
     meeraEl.setAttribute('aria-hidden', 'true');
     var meeraLabel = _el('span', 'cp-l4l-student__label cp-l4l-student__label--pink'); meeraLabel.textContent = 'Meera';
-    meeraEl.appendChild(meeraLabel);
     var meeraBubble = _el('div', 'cp-l4l-bubble cp-l4l-bubble--meera cp-l4l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l4l-bubble__name cp-l4l-bubble__name--pink'); meeraBName.textContent = 'Meera';
     var meeraBText  = _el('p', 'cp-l4l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
-    meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
+    meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
     var meeraSvgWrap = _el('div', 'cp-l4l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
     meeraEl.appendChild(meeraSvgWrap);
@@ -16738,27 +16343,31 @@ var ContentRenderer = (function () {
       var wrongStep1 = tokens[2] + ' ' + op2 + ' ' + tokens[4] + ' = ' + r1;
       var wrongStep2 = tokens[0] + ' ' + op1 + ' ' + r1 + ' = ' + round.compareWrong;
 
-      var corrStep1 = tokens[0] + ' ' + op1 + ' ' + tokens[2] + ' = ' + round.ltrResult;
-      var corrStep2 = round.ltrResult + ' ' + op2 + ' ' + tokens[4] + ' = ' + round.finalResult;
+      var corrStep1 = { highlight: tokens[0] + ' ' + op1 + ' ' + tokens[2], suffix: op2 + ' ' + tokens[4], isExpr: true };
+      var corrStep2 = { highlight: String(round.ltrResult), suffix: op2 + ' ' + tokens[4], isExpr: false };
 
-      function _makeCard4(cls, avatarSrc, name, nameCls, method, steps, answerVal, ansCls) {
+      function _makeCard4(cls, steps, answerVal, ansCls) {
         var card = _el('div', 'cp-l4l-dc-card ' + cls);
-        var hdr  = _el('div', 'cp-l4l-dc-header');
-        var av   = _el('span', 'cp-l4l-dc-avatar');
-        var avImg = document.createElement('img');
-        avImg.src = avatarSrc; avImg.alt = '';
-        avImg.className = 'cp-l4l-dc-avatar__img';
-        av.appendChild(avImg);
+        var hdr = _el('div', 'cp-l4l-dc-header');
         var hdrInfo = _el('div', 'cp-l4l-dc-header-info');
-        var nmEl = _el('span', 'cp-l4l-dc-name ' + nameCls); nmEl.textContent = name;
-        var mtEl = _el('span', 'cp-l4l-dc-method'); mtEl.textContent = method;
-        hdrInfo.appendChild(nmEl); hdrInfo.appendChild(mtEl);
-        hdr.appendChild(av); hdr.appendChild(hdrInfo);
+        var multLabel = _el('span', 'cp-l4l-dc-mult-label');
+        multLabel.textContent = 'Left to Right';
+        hdrInfo.appendChild(multLabel);
+        hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
         card.appendChild(_el('div', 'cp-l4l-dc-divider cp-l4l-dc-divider--dashed'));
         var stepsEl = _el('div', 'cp-l4l-dc-steps');
         steps.forEach(function (s) {
-          var st = _el('div', 'cp-l4l-dc-step'); st.textContent = s;
+          var st = _el('div', 'cp-l4l-dc-step');
+          if (s && typeof s === 'object') {
+            if (s.prefix) { st.appendChild(document.createTextNode(s.prefix + ' ')); }
+            var chip = _el('span', 'cp-l4l-dc-step__chip' + (s.isExpr ? ' cp-l4l-dc-step__chip--expr' : ''));
+            chip.textContent = s.highlight;
+            st.appendChild(chip);
+            if (s.suffix) { st.appendChild(document.createTextNode(' ' + s.suffix)); }
+          } else {
+            st.textContent = s;
+          }
           stepsEl.appendChild(st);
         });
         card.appendChild(stepsEl);
@@ -16769,27 +16378,13 @@ var ContentRenderer = (function () {
         return card;
       }
 
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-
-      aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l4l-bubble--faded');
-      aaravBubble.classList.add('cp-l4l-bubble--expanded');
-      aaravBubble.appendChild(_makeCard4(
-        'cp-l4l-dc-card--wrong',
-        'assets/images/aarav.webp', 'Aarav', 'cp-l4l-dc-name--aarav',
-        '\xb7 right first',
-        [wrongStep1, wrongStep2],
-        round.compareWrong, 'cp-l4l-dc-answer--wrong'
-      ));
 
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l4l-bubble--faded');
       meeraBubble.classList.add('cp-l4l-bubble--expanded');
       meeraBubble.appendChild(_makeCard4(
         'cp-l4l-dc-card--right',
-        'assets/images/meera.webp', 'Meera', 'cp-l4l-dc-name--meera',
-        '\xb7 left → right',
         [corrStep1, corrStep2],
         round.compareRight, 'cp-l4l-dc-answer--right'
       ));
@@ -16817,8 +16412,8 @@ var ContentRenderer = (function () {
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
-        anime.set([aaravBubble, meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
-        anime({ targets: [aaravBubble, meeraBubble], opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
+        anime.set([meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
+        anime({ targets: meeraBubble, opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
         anime({ targets: comparePanel, opacity: 1, translateY: 0, duration: 380, delay: 200, easing: 'easeOutCubic' });
       }
     }
@@ -16899,18 +16494,12 @@ var ContentRenderer = (function () {
       anime({
         targets:    [numLeft, numRight],
         translateX: function (el, i) { return i === 0 ? leftDx : rightDx; },
+        opacity:    0,
         duration:   400,
         easing:     'easeInCubic',
         complete:   function () {
           if (_currentPageId !== page.id) return;
-          anime({
-            targets:  [numLeft, numRight],
-            scale:    0,
-            opacity:  0,
-            duration: 130,
-            easing:   'easeInBack',
-            complete: function () { _showFinalAnswer4(round); }
-          });
+          _showFinalAnswer4(round);
         }
       });
     }
@@ -16975,13 +16564,6 @@ var ContentRenderer = (function () {
           anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
           anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
-        if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
-        aaravBubble.classList.remove('cp-l4l-bubble--faded', 'cp-l4l-bubble--guide-prompt');
-        aaravBText.textContent = 'Hmm, let me look again!';
-        if (typeof anime !== 'undefined') {
-          anime.set(aaravBubble, { scale: 0.92, opacity: 0.7 });
-          anime({ targets: aaravBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
-        }
         return;
       }
       phase = 'merging';
@@ -17007,18 +16589,12 @@ var ContentRenderer = (function () {
       anime({
         targets:    [numLeft, numRight],
         translateX: function (el, i) { return i === 0 ? leftDx : rightDx; },
+        opacity:    0,
         duration:   400,
         easing:     'easeInCubic',
         complete:   function () {
           if (_currentPageId !== page.id) return;
-          anime({
-            targets:  [numLeft, numRight],
-            scale:    0,
-            opacity:  0,
-            duration: 130,
-            easing:   'easeInBack',
-            complete: function () { _showReducedExpression4(round); }
-          });
+          _showReducedExpression4(round);
         }
       });
     }
@@ -17055,54 +16631,33 @@ var ContentRenderer = (function () {
       });
       if (roundBadge) {
         roundBadge.innerHTML = '';
-        var _bi4 = document.createElement('span');
-        _bi4.className = 'cp-lab-round-badge__icon';
-        _bi4.setAttribute('aria-hidden', 'true');
-        _bi4.textContent = '🏆';
         var _bt4 = document.createElement('span');
         _bt4.className = 'cp-lab-round-badge__text';
-        _bt4.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
-        roundBadge.appendChild(_bi4); roundBadge.appendChild(_bt4);
+        _bt4.textContent = 'Example ' + (idx + 1) + ' of ' + rounds.length;
+        roundBadge.appendChild(_bt4);
       }
-      headerDotEls.forEach(function (d, i) {
-        d.className = 'cp-lab-header-dot' +
-          (i < idx ? ' cp-lab-header-dot--done' : '') +
-          (i === idx ? ' cp-lab-header-dot--active' : '');
-      });
+
       nextBtnRow.hidden   = true;
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
       boardEl.classList.remove('cp-l4l-board--blurred');
-      aaravBText.textContent = 'I think the right side goes first...';
       meeraBText.textContent = 'Tap what to solve first!';
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-      aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l4l-bubble--expanded', 'cp-l4l-bubble--guide-prompt');
-      aaravBubble.classList.add('cp-l4l-bubble--faded');
-      aaravBubble.appendChild(aaravBName);
-      aaravBubble.appendChild(aaravBText);
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l4l-bubble--expanded', 'cp-l4l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l4l-bubble--faded');
-      meeraBubble.appendChild(meeraBName);
       meeraBubble.appendChild(meeraBText);
 
       function _showBubbles4() {
-        aaravBubble.classList.add('cp-l4l-bubble--guide-prompt');
         meeraBubble.classList.add('cp-l4l-bubble--guide-prompt');
-        aaravBubble.classList.remove('cp-l4l-bubble--faded');
         meeraBubble.classList.remove('cp-l4l-bubble--faded');
-        aaravFadeTimer = setTimeout(function () {
-          aaravBubble.classList.add('cp-l4l-bubble--faded');
-        }, 3000);
         meeraFadeTimer = setTimeout(function () {
           meeraBubble.classList.add('cp-l4l-bubble--faded');
         }, 3000);
       }
 
       if (idx === 0) {
-        guideText.textContent = 'Aarav and Meera are solving + and −. Solve left to right!';
+        guideText.textContent = 'Solving + and −. Solve left to right!';
         setTimeout(function () {
           if (_currentPageId !== page.id || phase !== 'idle') return;
           guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
@@ -17457,39 +17012,6 @@ var ContentRenderer = (function () {
     var roundIdx = 0;
     var phase    = 'idle';
 
-    function _aaravSvg5() {
-      return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-        '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
-        '<rect x="23" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
-        '<rect x="50" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
-        '<ellipse cx="31" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
-        '<ellipse cx="58" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
-        '<rect x="17" y="62" width="56" height="48" rx="14" fill="#5B9BD5"/>' +
-        '<path d="M33 62 L45 78 L57 62" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<rect x="37" y="54" width="16" height="14" fill="#FDDCB5"/>' +
-        '<rect x="3" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
-        '<rect x="70" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
-        '<ellipse cx="11.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
-        '<ellipse cx="78.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
-        '<circle cx="45" cy="32" r="28" fill="#FDDCB5"/>' +
-        '<path d="M17 32 Q17 4 45 4 Q73 4 73 32 Q72 14 59 9 Q45 5 31 9 Q18 14 17 32Z" fill="#3D2510"/>' +
-        '<ellipse cx="17" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
-        '<ellipse cx="73" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
-        '<path d="M32 20 Q37 17 42 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
-        '<path d="M48 20 Q53 17 58 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
-        '<ellipse cx="37" cy="29" rx="5.5" ry="6" fill="white"/>' +
-        '<ellipse cx="53" cy="29" rx="5.5" ry="6" fill="white"/>' +
-        '<circle cx="37" cy="30" r="3.5" fill="#1E0D00"/>' +
-        '<circle cx="53" cy="30" r="3.5" fill="#1E0D00"/>' +
-        '<circle cx="38.5" cy="28.5" r="1.5" fill="white"/>' +
-        '<circle cx="54.5" cy="28.5" r="1.5" fill="white"/>' +
-        '<ellipse cx="45" cy="37" rx="3" ry="2.5" fill="#E8B897"/>' +
-        '<path d="M36 45 Q45 53 54 45" stroke="#C07858" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
-        '<circle cx="28" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
-        '<circle cx="62" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
-        '</svg>';
-    }
-
     function _meeraSvg5() {
       return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
         '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
@@ -17529,7 +17051,6 @@ var ContentRenderer = (function () {
 
     var wrap = _el('div', 'cp-l5l-wrap');
     wrap.dataset.pageId = page.id;
-    var aaravFadeTimer = null;
     var meeraFadeTimer = null;
     var roundBadge   = null;
     var headerDotEls = [];
@@ -17559,18 +17080,7 @@ var ContentRenderer = (function () {
         roundBadge.className = 'cp-lab-round-badge';
         _pt.appendChild(roundBadge);
       }
-      var _hr = document.querySelector('.header__right');
-      if (_hr) {
-        var _ld = document.createElement('div');
-        _ld.className = 'cp-lab-header-dots';
-        rounds.forEach(function () {
-          var d = document.createElement('span');
-          d.className = 'cp-lab-header-dot';
-          _ld.appendChild(d);
-          headerDotEls.push(d);
-        });
-        _hr.insertBefore(_ld, _hr.firstChild);
-      }
+
     }());
 
     var classEl = _el('div', 'cp-l5l-classroom');
@@ -17581,19 +17091,6 @@ var ContentRenderer = (function () {
     classBg.setAttribute('draggable', 'false');
     classBg.className = 'cp-l5l-class-bg';
     classEl.appendChild(classBg);
-
-    var aaravEl = _el('div', 'cp-l5l-student cp-l5l-student--left');
-    aaravEl.setAttribute('aria-hidden', 'true');
-    var aaravLabel = _el('span', 'cp-l5l-student__label cp-l5l-student__label--blue'); aaravLabel.textContent = 'Aarav';
-    aaravEl.appendChild(aaravLabel);
-    var aaravBubble = _el('div', 'cp-l5l-bubble cp-l5l-bubble--aarav cp-l5l-bubble--faded');
-    var aaravBName  = _el('span', 'cp-l5l-bubble__name cp-l5l-bubble__name--blue'); aaravBName.textContent = 'Aarav';
-    var aaravBText  = _el('p', 'cp-l5l-bubble__text'); aaravBText.textContent = 'I think the right side goes first...';
-    aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
-    aaravEl.appendChild(aaravBubble);
-    var aaravSvgWrap = _el('div', 'cp-l5l-student__svg-wrap'); var _aImg = document.createElement('img'); _aImg.src = 'assets/images/aarav.webp'; _aImg.alt = 'Aarav'; aaravSvgWrap.appendChild(_aImg);
-    aaravEl.appendChild(aaravSvgWrap);
-    classEl.appendChild(aaravEl);
 
     var boardEl = _el('div', 'cp-l5l-board');
     var boardTitle = _el('div', 'cp-l5l-board__title');
@@ -17610,11 +17107,10 @@ var ContentRenderer = (function () {
     var meeraEl = _el('div', 'cp-l5l-student cp-l5l-student--right');
     meeraEl.setAttribute('aria-hidden', 'true');
     var meeraLabel = _el('span', 'cp-l5l-student__label cp-l5l-student__label--pink'); meeraLabel.textContent = 'Meera';
-    meeraEl.appendChild(meeraLabel);
     var meeraBubble = _el('div', 'cp-l5l-bubble cp-l5l-bubble--meera cp-l5l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l5l-bubble__name cp-l5l-bubble__name--pink'); meeraBName.textContent = 'Meera';
     var meeraBText  = _el('p', 'cp-l5l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
-    meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
+    meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
     var meeraSvgWrap = _el('div', 'cp-l5l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
     meeraEl.appendChild(meeraSvgWrap);
@@ -17717,27 +17213,31 @@ var ContentRenderer = (function () {
       var wrongStep1 = tokens[2] + ' ' + op2 + ' ' + tokens[4] + ' = ' + r1;
       var wrongStep2 = tokens[0] + ' ' + op1 + ' ' + r1 + ' = ' + round.compareWrong;
 
-      var corrStep1 = tokens[0] + ' ' + op1 + ' ' + tokens[2] + ' = ' + round.ltrResult;
-      var corrStep2 = round.ltrResult + ' ' + op2 + ' ' + tokens[4] + ' = ' + round.finalResult;
+      var corrStep1 = { highlight: tokens[0] + ' ' + op1 + ' ' + tokens[2], suffix: op2 + ' ' + tokens[4], isExpr: true };
+      var corrStep2 = { highlight: String(round.ltrResult), suffix: op2 + ' ' + tokens[4], isExpr: false };
 
-      function _makeCard5(cls, avatarSrc, name, nameCls, method, steps, answerVal, ansCls) {
+      function _makeCard5(cls, steps, answerVal, ansCls) {
         var card = _el('div', 'cp-l5l-dc-card ' + cls);
-        var hdr  = _el('div', 'cp-l5l-dc-header');
-        var av   = _el('span', 'cp-l5l-dc-avatar');
-        var avImg = document.createElement('img');
-        avImg.src = avatarSrc; avImg.alt = '';
-        avImg.className = 'cp-l5l-dc-avatar__img';
-        av.appendChild(avImg);
+        var hdr = _el('div', 'cp-l5l-dc-header');
         var hdrInfo = _el('div', 'cp-l5l-dc-header-info');
-        var nmEl = _el('span', 'cp-l5l-dc-name ' + nameCls); nmEl.textContent = name;
-        var mtEl = _el('span', 'cp-l5l-dc-method'); mtEl.textContent = method;
-        hdrInfo.appendChild(nmEl); hdrInfo.appendChild(mtEl);
-        hdr.appendChild(av); hdr.appendChild(hdrInfo);
+        var multLabel = _el('span', 'cp-l5l-dc-mult-label');
+        multLabel.textContent = 'Left to Right';
+        hdrInfo.appendChild(multLabel);
+        hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
         card.appendChild(_el('div', 'cp-l5l-dc-divider cp-l5l-dc-divider--dashed'));
         var stepsEl = _el('div', 'cp-l5l-dc-steps');
         steps.forEach(function (s) {
-          var st = _el('div', 'cp-l5l-dc-step'); st.textContent = s;
+          var st = _el('div', 'cp-l5l-dc-step');
+          if (s && typeof s === 'object') {
+            if (s.prefix) { st.appendChild(document.createTextNode(s.prefix + ' ')); }
+            var chip = _el('span', 'cp-l5l-dc-step__chip' + (s.isExpr ? ' cp-l5l-dc-step__chip--expr' : ''));
+            chip.textContent = s.highlight;
+            st.appendChild(chip);
+            if (s.suffix) { st.appendChild(document.createTextNode(' ' + s.suffix)); }
+          } else {
+            st.textContent = s;
+          }
           stepsEl.appendChild(st);
         });
         card.appendChild(stepsEl);
@@ -17748,27 +17248,13 @@ var ContentRenderer = (function () {
         return card;
       }
 
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-
-      aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l5l-bubble--faded');
-      aaravBubble.classList.add('cp-l5l-bubble--expanded');
-      aaravBubble.appendChild(_makeCard5(
-        'cp-l5l-dc-card--wrong',
-        'assets/images/aarav.webp', 'Aarav', 'cp-l5l-dc-name--aarav',
-        '\xb7 right first',
-        [wrongStep1, wrongStep2],
-        round.compareWrong, 'cp-l5l-dc-answer--wrong'
-      ));
 
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l5l-bubble--faded');
       meeraBubble.classList.add('cp-l5l-bubble--expanded');
       meeraBubble.appendChild(_makeCard5(
         'cp-l5l-dc-card--right',
-        'assets/images/meera.webp', 'Meera', 'cp-l5l-dc-name--meera',
-        '\xb7 left → right',
         [corrStep1, corrStep2],
         round.compareRight, 'cp-l5l-dc-answer--right'
       ));
@@ -17796,8 +17282,8 @@ var ContentRenderer = (function () {
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
-        anime.set([aaravBubble, meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
-        anime({ targets: [aaravBubble, meeraBubble], opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
+        anime.set([meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
+        anime({ targets: meeraBubble, opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
         anime({ targets: comparePanel, opacity: 1, translateY: 0, duration: 380, delay: 200, easing: 'easeOutCubic' });
       }
     }
@@ -17878,18 +17364,12 @@ var ContentRenderer = (function () {
       anime({
         targets:    [numLeft, numRight],
         translateX: function (el, i) { return i === 0 ? leftDx : rightDx; },
+        opacity:    0,
         duration:   400,
         easing:     'easeInCubic',
         complete:   function () {
           if (_currentPageId !== page.id) return;
-          anime({
-            targets:  [numLeft, numRight],
-            scale:    0,
-            opacity:  0,
-            duration: 130,
-            easing:   'easeInBack',
-            complete: function () { _showFinalAnswer5(round); }
-          });
+          _showFinalAnswer5(round);
         }
       });
     }
@@ -17954,13 +17434,6 @@ var ContentRenderer = (function () {
           anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
           anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
         }
-        if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
-        aaravBubble.classList.remove('cp-l5l-bubble--faded', 'cp-l5l-bubble--guide-prompt');
-        aaravBText.textContent = 'Hmm, let me look again!';
-        if (typeof anime !== 'undefined') {
-          anime.set(aaravBubble, { scale: 0.92, opacity: 0.7 });
-          anime({ targets: aaravBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
-        }
         return;
       }
       phase = 'merging';
@@ -17986,18 +17459,12 @@ var ContentRenderer = (function () {
       anime({
         targets:    [numLeft, numRight],
         translateX: function (el, i) { return i === 0 ? leftDx : rightDx; },
+        opacity:    0,
         duration:   400,
         easing:     'easeInCubic',
         complete:   function () {
           if (_currentPageId !== page.id) return;
-          anime({
-            targets:  [numLeft, numRight],
-            scale:    0,
-            opacity:  0,
-            duration: 130,
-            easing:   'easeInBack',
-            complete: function () { _showReducedExpression5(round); }
-          });
+          _showReducedExpression5(round);
         }
       });
     }
@@ -18034,54 +17501,33 @@ var ContentRenderer = (function () {
       });
       if (roundBadge) {
         roundBadge.innerHTML = '';
-        var _bi5 = document.createElement('span');
-        _bi5.className = 'cp-lab-round-badge__icon';
-        _bi5.setAttribute('aria-hidden', 'true');
-        _bi5.textContent = '🏆';
         var _bt5 = document.createElement('span');
         _bt5.className = 'cp-lab-round-badge__text';
-        _bt5.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
-        roundBadge.appendChild(_bi5); roundBadge.appendChild(_bt5);
+        _bt5.textContent = 'Example ' + (idx + 1) + ' of ' + rounds.length;
+        roundBadge.appendChild(_bt5);
       }
-      headerDotEls.forEach(function (d, i) {
-        d.className = 'cp-lab-header-dot' +
-          (i < idx ? ' cp-lab-header-dot--done' : '') +
-          (i === idx ? ' cp-lab-header-dot--active' : '');
-      });
+
       nextBtnRow.hidden   = true;
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
       boardEl.classList.remove('cp-l5l-board--blurred');
-      aaravBText.textContent = 'I think the right side goes first...';
       meeraBText.textContent = 'Tap what to solve first!';
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-      aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l5l-bubble--expanded', 'cp-l5l-bubble--guide-prompt');
-      aaravBubble.classList.add('cp-l5l-bubble--faded');
-      aaravBubble.appendChild(aaravBName);
-      aaravBubble.appendChild(aaravBText);
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l5l-bubble--expanded', 'cp-l5l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l5l-bubble--faded');
-      meeraBubble.appendChild(meeraBName);
       meeraBubble.appendChild(meeraBText);
 
       function _showBubbles5() {
-        aaravBubble.classList.add('cp-l5l-bubble--guide-prompt');
         meeraBubble.classList.add('cp-l5l-bubble--guide-prompt');
-        aaravBubble.classList.remove('cp-l5l-bubble--faded');
         meeraBubble.classList.remove('cp-l5l-bubble--faded');
-        aaravFadeTimer = setTimeout(function () {
-          aaravBubble.classList.add('cp-l5l-bubble--faded');
-        }, 3000);
         meeraFadeTimer = setTimeout(function () {
           meeraBubble.classList.add('cp-l5l-bubble--faded');
         }, 3000);
       }
 
       if (idx === 0) {
-        guideText.textContent = 'Aarav and Meera are solving \xd7 and \xf7. Solve left to right!';
+        guideText.textContent = 'Solving \xd7 and \xf7. Solve left to right!';
         setTimeout(function () {
           if (_currentPageId !== page.id || phase !== 'idle') return;
           guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
@@ -18436,39 +17882,6 @@ var ContentRenderer = (function () {
     var roundIdx = 0;
     var phase    = 'idle';
 
-    function _aaravSvg6() {
-      return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
-        '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
-        '<rect x="23" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
-        '<rect x="50" y="104" width="17" height="38" rx="8.5" fill="#3A5F9E"/>' +
-        '<ellipse cx="31" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
-        '<ellipse cx="58" cy="141" rx="13" ry="7" fill="#1E3A70"/>' +
-        '<rect x="17" y="62" width="56" height="48" rx="14" fill="#5B9BD5"/>' +
-        '<path d="M33 62 L45 78 L57 62" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<rect x="37" y="54" width="16" height="14" fill="#FDDCB5"/>' +
-        '<rect x="3" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
-        '<rect x="70" y="64" width="17" height="38" rx="8.5" fill="#5B9BD5"/>' +
-        '<ellipse cx="11.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
-        '<ellipse cx="78.5" cy="104" rx="9" ry="9" fill="#FDDCB5"/>' +
-        '<circle cx="45" cy="32" r="28" fill="#FDDCB5"/>' +
-        '<path d="M17 32 Q17 4 45 4 Q73 4 73 32 Q72 14 59 9 Q45 5 31 9 Q18 14 17 32Z" fill="#3D2510"/>' +
-        '<ellipse cx="17" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
-        '<ellipse cx="73" cy="34" rx="5" ry="6" fill="#FDDCB5"/>' +
-        '<path d="M32 20 Q37 17 42 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
-        '<path d="M48 20 Q53 17 58 20" stroke="#3D2510" stroke-width="2.2" stroke-linecap="round" fill="none"/>' +
-        '<ellipse cx="37" cy="29" rx="5.5" ry="6" fill="white"/>' +
-        '<ellipse cx="53" cy="29" rx="5.5" ry="6" fill="white"/>' +
-        '<circle cx="37" cy="30" r="3.5" fill="#1E0D00"/>' +
-        '<circle cx="53" cy="30" r="3.5" fill="#1E0D00"/>' +
-        '<circle cx="38.5" cy="28.5" r="1.5" fill="white"/>' +
-        '<circle cx="54.5" cy="28.5" r="1.5" fill="white"/>' +
-        '<ellipse cx="45" cy="37" rx="3" ry="2.5" fill="#E8B897"/>' +
-        '<path d="M36 45 Q45 53 54 45" stroke="#C07858" stroke-width="2.5" fill="none" stroke-linecap="round"/>' +
-        '<circle cx="28" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
-        '<circle cx="62" cy="38" r="6" fill="#FFB8A0" opacity="0.5"/>' +
-        '</svg>';
-    }
-
     function _meeraSvg6() {
       return '<svg viewBox="0 0 90 150" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
         '<ellipse cx="45" cy="146" rx="22" ry="5" fill="rgba(0,0,0,0.08)"/>' +
@@ -18508,7 +17921,6 @@ var ContentRenderer = (function () {
 
     var wrap = _el('div', 'cp-l6l-wrap');
     wrap.dataset.pageId = page.id;
-    var aaravFadeTimer = null;
     var meeraFadeTimer = null;
     var roundBadge   = null;
     var headerDotEls = [];
@@ -18538,18 +17950,7 @@ var ContentRenderer = (function () {
         roundBadge.className = 'cp-lab-round-badge';
         _pt.appendChild(roundBadge);
       }
-      var _hr = document.querySelector('.header__right');
-      if (_hr) {
-        var _ld = document.createElement('div');
-        _ld.className = 'cp-lab-header-dots';
-        rounds.forEach(function () {
-          var d = document.createElement('span');
-          d.className = 'cp-lab-header-dot';
-          _ld.appendChild(d);
-          headerDotEls.push(d);
-        });
-        _hr.insertBefore(_ld, _hr.firstChild);
-      }
+
     }());
 
     var classEl = _el('div', 'cp-l6l-classroom');
@@ -18560,19 +17961,6 @@ var ContentRenderer = (function () {
     classBg.setAttribute('draggable', 'false');
     classBg.className = 'cp-l6l-class-bg';
     classEl.appendChild(classBg);
-
-    var aaravEl = _el('div', 'cp-l6l-student cp-l6l-student--left');
-    aaravEl.setAttribute('aria-hidden', 'true');
-    var aaravLabel = _el('span', 'cp-l6l-student__label cp-l6l-student__label--blue'); aaravLabel.textContent = 'Aarav';
-    aaravEl.appendChild(aaravLabel);
-    var aaravBubble = _el('div', 'cp-l6l-bubble cp-l6l-bubble--aarav cp-l6l-bubble--faded');
-    var aaravBName  = _el('span', 'cp-l6l-bubble__name cp-l6l-bubble__name--blue'); aaravBName.textContent = 'Aarav';
-    var aaravBText  = _el('p', 'cp-l6l-bubble__text'); aaravBText.textContent = 'I think \xd7 goes first!';
-    aaravBubble.appendChild(aaravBName); aaravBubble.appendChild(aaravBText);
-    aaravEl.appendChild(aaravBubble);
-    var aaravSvgWrap = _el('div', 'cp-l6l-student__svg-wrap'); var _aImg = document.createElement('img'); _aImg.src = 'assets/images/aarav.webp'; _aImg.alt = 'Aarav'; aaravSvgWrap.appendChild(_aImg);
-    aaravEl.appendChild(aaravSvgWrap);
-    classEl.appendChild(aaravEl);
 
     var boardEl = _el('div', 'cp-l6l-board');
     var boardTitle = _el('div', 'cp-l6l-board__title');
@@ -18589,11 +17977,10 @@ var ContentRenderer = (function () {
     var meeraEl = _el('div', 'cp-l6l-student cp-l6l-student--right');
     meeraEl.setAttribute('aria-hidden', 'true');
     var meeraLabel = _el('span', 'cp-l6l-student__label cp-l6l-student__label--pink'); meeraLabel.textContent = 'Meera';
-    meeraEl.appendChild(meeraLabel);
     var meeraBubble = _el('div', 'cp-l6l-bubble cp-l6l-bubble--meera cp-l6l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l6l-bubble__name cp-l6l-bubble__name--pink'); meeraBName.textContent = 'Meera';
     var meeraBText  = _el('p', 'cp-l6l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
-    meeraBubble.appendChild(meeraBName); meeraBubble.appendChild(meeraBText);
+    meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
     var meeraSvgWrap = _el('div', 'cp-l6l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
     meeraEl.appendChild(meeraSvgWrap);
@@ -18688,32 +18075,38 @@ var ContentRenderer = (function () {
       boardEl.classList.add('cp-l6l-board--blurred');
 
       var tokens = round.tokens;
-      var corrStep1 = tokens[round.bracketOpen + 1] + ' + ' + tokens[round.bracketClose - 1] + ' = ' + round.bracketResult;
-      var corrStep2 = '';
+      var bracketContent6 = tokens[round.bracketOpen + 1] + ' + ' + tokens[round.bracketClose - 1];
+      var corrStep1, corrStep2;
       if (round.bracketOpen === 0) {
-        corrStep2 = round.bracketResult + ' \xd7 ' + tokens[tokens.length - 1] + ' = ' + round.finalResult;
+        corrStep1 = { highlight: '(' + bracketContent6 + ')', suffix: '\xd7 ' + tokens[tokens.length - 1], isExpr: true };
+        corrStep2 = { highlight: String(round.bracketResult), suffix: '\xd7 ' + tokens[tokens.length - 1], isExpr: false };
       } else {
-        corrStep2 = tokens[0] + ' \xd7 ' + round.bracketResult + ' = ' + round.finalResult;
+        corrStep1 = { prefix: tokens[0] + ' \xd7', highlight: '(' + bracketContent6 + ')', isExpr: true };
+        corrStep2 = { prefix: tokens[0] + ' \xd7', highlight: String(round.bracketResult), isExpr: false };
       }
 
-      function _makeCard6(cls, avatarSrc, name, nameCls, method, steps, answerVal, ansCls) {
+      function _makeCard6(cls, steps, answerVal, ansCls) {
         var card = _el('div', 'cp-l6l-dc-card ' + cls);
-        var hdr  = _el('div', 'cp-l6l-dc-header');
-        var av   = _el('span', 'cp-l6l-dc-avatar');
-        var avImg = document.createElement('img');
-        avImg.src = avatarSrc; avImg.alt = '';
-        avImg.className = 'cp-l6l-dc-avatar__img';
-        av.appendChild(avImg);
+        var hdr = _el('div', 'cp-l6l-dc-header');
         var hdrInfo = _el('div', 'cp-l6l-dc-header-info');
-        var nmEl = _el('span', 'cp-l6l-dc-name ' + nameCls); nmEl.textContent = name;
-        var mtEl = _el('span', 'cp-l6l-dc-method'); mtEl.textContent = method;
-        hdrInfo.appendChild(nmEl); hdrInfo.appendChild(mtEl);
-        hdr.appendChild(av); hdr.appendChild(hdrInfo);
+        var multLabel = _el('span', 'cp-l6l-dc-mult-label');
+        multLabel.textContent = 'Brackets first';
+        hdrInfo.appendChild(multLabel);
+        hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
         card.appendChild(_el('div', 'cp-l6l-dc-divider cp-l6l-dc-divider--dashed'));
         var stepsEl = _el('div', 'cp-l6l-dc-steps');
         steps.forEach(function (s) {
-          var st = _el('div', 'cp-l6l-dc-step'); st.textContent = s;
+          var st = _el('div', 'cp-l6l-dc-step');
+          if (s && typeof s === 'object') {
+            if (s.prefix) { st.appendChild(document.createTextNode(s.prefix + ' ')); }
+            var chip = _el('span', 'cp-l6l-dc-step__chip' + (s.isExpr ? ' cp-l6l-dc-step__chip--expr' : ''));
+            chip.textContent = s.highlight;
+            st.appendChild(chip);
+            if (s.suffix) { st.appendChild(document.createTextNode(' ' + s.suffix)); }
+          } else {
+            st.textContent = s;
+          }
           stepsEl.appendChild(st);
         });
         card.appendChild(stepsEl);
@@ -18724,27 +18117,13 @@ var ContentRenderer = (function () {
         return card;
       }
 
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-
-      aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l6l-bubble--faded');
-      aaravBubble.classList.add('cp-l6l-bubble--expanded');
-      aaravBubble.appendChild(_makeCard6(
-        'cp-l6l-dc-card--wrong',
-        'assets/images/aarav.webp', 'Aarav', 'cp-l6l-dc-name--aarav',
-        '\xb7 \xd7 first',
-        round.wrongSteps || [],
-        round.compareWrong, 'cp-l6l-dc-answer--wrong'
-      ));
 
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l6l-bubble--faded');
       meeraBubble.classList.add('cp-l6l-bubble--expanded');
       meeraBubble.appendChild(_makeCard6(
         'cp-l6l-dc-card--right',
-        'assets/images/meera.webp', 'Meera', 'cp-l6l-dc-name--meera',
-        '\xb7 ( ) first',
         [corrStep1, corrStep2],
         round.compareRight, 'cp-l6l-dc-answer--right'
       ));
@@ -18773,8 +18152,8 @@ var ContentRenderer = (function () {
       comparePanel.appendChild(caption);
 
       if (typeof anime !== 'undefined') {
-        anime.set([aaravBubble, meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
-        anime({ targets: [aaravBubble, meeraBubble], opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
+        anime.set([meeraBubble, comparePanel], { opacity: 0, translateY: 8 });
+        anime({ targets: meeraBubble, opacity: 1, translateY: 0, duration: 420, easing: 'easeOutBack' });
         anime({ targets: comparePanel, opacity: 1, translateY: 0, duration: 380, delay: 200, easing: 'easeOutCubic' });
       }
     }
@@ -18974,13 +18353,6 @@ var ContentRenderer = (function () {
         anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
         anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
       }
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
-      aaravBubble.classList.remove('cp-l6l-bubble--faded', 'cp-l6l-bubble--guide-prompt');
-      aaravBText.textContent = 'Hmm, let me look again!';
-      if (typeof anime !== 'undefined') {
-        anime.set(aaravBubble, { scale: 0.92, opacity: 0.7 });
-        anime({ targets: aaravBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
-      }
     }
 
     function _renderTiles6(round) {
@@ -19037,55 +18409,34 @@ var ContentRenderer = (function () {
       });
       if (roundBadge) {
         roundBadge.innerHTML = '';
-        var _bi6 = document.createElement('span');
-        _bi6.className = 'cp-lab-round-badge__icon';
-        _bi6.setAttribute('aria-hidden', 'true');
-        _bi6.textContent = '🏆';
         var _bt6 = document.createElement('span');
         _bt6.className = 'cp-lab-round-badge__text';
-        _bt6.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
-        roundBadge.appendChild(_bi6); roundBadge.appendChild(_bt6);
+        _bt6.textContent = 'Example ' + (idx + 1) + ' of ' + rounds.length;
+        roundBadge.appendChild(_bt6);
       }
-      headerDotEls.forEach(function (d, i) {
-        d.className = 'cp-lab-header-dot' +
-          (i < idx ? ' cp-lab-header-dot--done' : '') +
-          (i === idx ? ' cp-lab-header-dot--active' : '');
-      });
+
       nextBtnRow.hidden   = true;
       nextBtn.hidden      = true;
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
       boardEl.classList.remove('cp-l6l-board--blurred');
-      aaravBText.textContent = 'I think \xd7 goes first!';
       meeraBText.textContent = 'Tap what to solve first!';
-      if (aaravFadeTimer) { clearTimeout(aaravFadeTimer); aaravFadeTimer = null; }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
-      aaravBubble.innerHTML = '';
-      aaravBubble.classList.remove('cp-l6l-bubble--expanded', 'cp-l6l-bubble--guide-prompt');
-      aaravBubble.classList.add('cp-l6l-bubble--faded');
-      aaravBubble.appendChild(aaravBName);
-      aaravBubble.appendChild(aaravBText);
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l6l-bubble--expanded', 'cp-l6l-bubble--guide-prompt');
       meeraBubble.classList.add('cp-l6l-bubble--faded');
-      meeraBubble.appendChild(meeraBName);
       meeraBubble.appendChild(meeraBText);
 
       function _showBubbles6() {
-        aaravBubble.classList.add('cp-l6l-bubble--guide-prompt');
         meeraBubble.classList.add('cp-l6l-bubble--guide-prompt');
-        aaravBubble.classList.remove('cp-l6l-bubble--faded');
         meeraBubble.classList.remove('cp-l6l-bubble--faded');
-        aaravFadeTimer = setTimeout(function () {
-          aaravBubble.classList.add('cp-l6l-bubble--faded');
-        }, 3000);
         meeraFadeTimer = setTimeout(function () {
           meeraBubble.classList.add('cp-l6l-bubble--faded');
         }, 3000);
       }
 
       if (idx === 0) {
-        guideText.textContent = 'Aarav and Meera are solving an expression with ( ). What goes first?';
+        guideText.textContent = 'Solving an expression with ( ). What goes first?';
         setTimeout(function () {
           if (_currentPageId !== page.id || phase !== 'idle') return;
           guideText.textContent = 'Watch the board! Tap the operator INSIDE the brackets first!';
@@ -19603,57 +18954,52 @@ var ContentRenderer = (function () {
     wrap.dataset.pageId = page.id;
 
     var titleEl = _el('h2', 'cp-l8bl-title');
-    titleEl.textContent = page.instruction || 'Arrange The Boxes in Corrent Sequence';
+    titleEl.textContent = page.instruction || 'Arrange The Boxes in Correct Sequence';
     wrap.appendChild(titleEl);
 
-    var arena = _el('div', 'cp-l8bl-arena');
-
-    /* ── Source column (no label) ── */
-    var sourceCol  = _el('div', 'cp-l8bl-source');
-    var sourceList = _el('div', 'cp-l8bl-source-list');
-    sourceCol.appendChild(sourceList);
-    arena.appendChild(sourceCol);
-
-    /* ── Target column ── */
-    var targetCol  = _el('div', 'cp-l8bl-target');
-    var targetRows = _el('div', 'cp-l8bl-target-rows');
-    targetCol.appendChild(targetRows);
-    arena.appendChild(targetCol);
-
-    wrap.appendChild(arena);
+    /* ── Sortable list ── */
+    var listEl = _el('div', 'cp-l8bl-list');
+    listEl.setAttribute('role', 'list');
+    wrap.appendChild(listEl);
 
     var feedbackEl = _el('p', 'cp-l8bl-feedback');
     feedbackEl.setAttribute('aria-live', 'polite');
     wrap.appendChild(feedbackEl);
 
+    var btnRow = _el('div', 'cp-l8bl-btn-row');
+    var checkBtn = _el('button', 'cp-l8bl-check-btn');
+    checkBtn.textContent = 'Check Order';
+    btnRow.appendChild(checkBtn);
+
     var clearBtn = _el('button', 'cp-l8bl-clear-btn');
-    clearBtn.textContent = 'Clear';
+    clearBtn.textContent = 'Reset';
     clearBtn.style.display = 'none';
-    wrap.appendChild(clearBtn);
+    btnRow.appendChild(clearBtn);
+    wrap.appendChild(btnRow);
 
     area.appendChild(wrap);
 
     /* ── State ── */
-    var correctOrder     = page.correctOrder;
-    var numSlots         = correctOrder.length;
-    var slotEls          = [];
-    var slotContents     = [];
-    var tileEls          = {};
-    var tilePlaceholders = {};
-    var draggedId        = null;
+    var correctOrder = page.correctOrder;
+    var tileEls      = {};
+    var draggedId    = null;
+    var dragOverSpec = null;
 
-    for (var si = 0; si < numSlots; si++) slotContents[si] = null;
-
-    /* ── Build source tiles ── */
+    /* ── Build tiles in initial order ── */
     page.tiles.forEach(function (td) {
-      var ph = _el('div', 'cp-l8bl-source-placeholder');
-      tilePlaceholders[td.id] = ph;
+      var item = _el('div', 'cp-l8bl-list-item');
+      item.dataset.tileId = td.id;
+      item.setAttribute('role', 'listitem');
 
       var tile = _el('div', 'cp-l8bl-tile cp-l8bl-tile--' + td.colorKey);
       tile.setAttribute('draggable', 'true');
-      tile.setAttribute('role', 'button');
       tile.setAttribute('aria-label', td.label || (td.letter + ' — ' + td.word));
       tile.dataset.tileId = td.id;
+
+      var handleEl = _el('span', 'cp-l8bl-tile__handle');
+      handleEl.textContent = '⠿⠿';
+      handleEl.setAttribute('aria-hidden', 'true');
+      tile.appendChild(handleEl);
 
       var letterEl = _el('span', 'cp-l8bl-tile__letter');
       letterEl.textContent = td.letter || td.id;
@@ -19664,30 +19010,57 @@ var ContentRenderer = (function () {
       tile.appendChild(wordEl);
 
       tileEls[td.id] = tile;
-      ph.appendChild(tile);
-      sourceList.appendChild(ph);
+      item.appendChild(tile);
+      listEl.appendChild(item);
 
-      /* HTML5 drag */
+      /* ── HTML5 drag ── */
       tile.addEventListener('dragstart', function (e) {
         draggedId = td.id;
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', td.id);
-        tile.classList.add('cp-l8bl-tile--dragging');
-      });
-      tile.addEventListener('dragend', function () {
-        tile.classList.remove('cp-l8bl-tile--dragging');
+        setTimeout(function () { tile.classList.add('cp-l8bl-tile--dragging'); }, 0);
       });
 
-      /* Touch drag */
+      tile.addEventListener('dragend', function () {
+        tile.classList.remove('cp-l8bl-tile--dragging');
+        _clearIndicators();
+        draggedId    = null;
+        dragOverSpec = null;
+      });
+
+      item.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        if (!draggedId || draggedId === td.id) return;
+        var rect   = item.getBoundingClientRect();
+        var before = e.clientY < (rect.top + rect.height / 2);
+        _clearIndicators();
+        item.classList.add(before ? 'cp-l8bl-list-item--above' : 'cp-l8bl-list-item--below');
+        dragOverSpec = (before ? 'before:' : 'after:') + td.id;
+      });
+
+      item.addEventListener('dragleave', function (e) {
+        if (!item.contains(e.relatedTarget)) {
+          item.classList.remove('cp-l8bl-list-item--above', 'cp-l8bl-list-item--below');
+        }
+      });
+
+      item.addEventListener('drop', function (e) {
+        e.preventDefault();
+        _clearIndicators();
+        var id = e.dataTransfer.getData('text/plain') || draggedId;
+        if (id && dragOverSpec) _moveTile(id, dragOverSpec);
+      });
+
+      /* ── Touch drag ── */
       var ghost = null;
       var offX, offY;
 
       tile.addEventListener('touchstart', function (e) {
         e.preventDefault();
-        var t  = e.touches[0];
-        var r  = tile.getBoundingClientRect();
-        offX   = t.clientX - r.left;
-        offY   = t.clientY - r.top;
+        var t = e.touches[0];
+        var r = tile.getBoundingClientRect();
+        offX      = t.clientX - r.left;
+        offY      = t.clientY - r.top;
         draggedId = td.id;
 
         ghost = tile.cloneNode(true);
@@ -19709,114 +19082,94 @@ var ContentRenderer = (function () {
         var el = document.elementFromPoint(t.clientX, t.clientY);
         ghost.style.display = '';
 
-        slotEls.forEach(function (s) { s.classList.remove('cp-l8bl-slot--hover'); });
-        var hs = el && el.closest('.cp-l8bl-slot');
-        if (hs) hs.classList.add('cp-l8bl-slot--hover');
+        _clearIndicators();
+        var hoverItem = el && el.closest('.cp-l8bl-list-item');
+        if (hoverItem && hoverItem !== item) {
+          var hoverId  = hoverItem.dataset.tileId;
+          var hRect    = hoverItem.getBoundingClientRect();
+          var before   = t.clientY < (hRect.top + hRect.height / 2);
+          hoverItem.classList.add(before ? 'cp-l8bl-list-item--above' : 'cp-l8bl-list-item--below');
+          dragOverSpec = (before ? 'before:' : 'after:') + hoverId;
+        } else {
+          dragOverSpec = null;
+        }
       }, { passive: false });
 
-      tile.addEventListener('touchend', function (e) {
+      tile.addEventListener('touchend', function () {
         if (!ghost) return;
-        var t = e.changedTouches[0];
-        ghost.style.display = 'none';
-        var el = document.elementFromPoint(t.clientX, t.clientY);
         if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
         ghost = null;
         tile.classList.remove('cp-l8bl-tile--dragging');
-        slotEls.forEach(function (s) { s.classList.remove('cp-l8bl-slot--hover'); });
-
-        var dropSlot = el && el.closest('.cp-l8bl-slot');
-        if (dropSlot) _placeTile(td.id, parseInt(dropSlot.dataset.slotIdx, 10));
+        _clearIndicators();
+        if (dragOverSpec) _moveTile(td.id, dragOverSpec);
+        draggedId    = null;
+        dragOverSpec = null;
       });
     });
 
-    /* ── Build target slots (no number badge) ── */
-    for (var ri = 0; ri < numSlots; ri++) {
-      (function (idx) {
-        var row  = _el('div', 'cp-l8bl-target-row');
-        var slot = _el('div', 'cp-l8bl-slot');
-        slot.dataset.slotIdx = idx;
-        slotEls.push(slot);
-
-        slot.addEventListener('dragover', function (e) {
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-          slot.classList.add('cp-l8bl-slot--hover');
-        });
-        slot.addEventListener('dragleave', function () {
-          slot.classList.remove('cp-l8bl-slot--hover');
-        });
-        slot.addEventListener('drop', function (e) {
-          e.preventDefault();
-          slot.classList.remove('cp-l8bl-slot--hover');
-          var id = e.dataTransfer.getData('text/plain') || draggedId;
-          if (id) _placeTile(id, idx);
-        });
-
-        row.appendChild(slot);
-        targetRows.appendChild(row);
-      })(ri);
+    /* ── Helpers ── */
+    function _clearIndicators() {
+      var items = listEl.querySelectorAll('.cp-l8bl-list-item');
+      for (var i = 0; i < items.length; i++) {
+        items[i].classList.remove('cp-l8bl-list-item--above', 'cp-l8bl-list-item--below');
+      }
     }
 
-    /* ── Tile placement logic ── */
-    function _placeTile(tileId, slotIdx) {
+    function _moveTile(fromId, toSpec) {
+      var parts    = toSpec.split(':');
+      var position = parts[0];
+      var targetId = parts[1];
+
+      var fromItem = listEl.querySelector('.cp-l8bl-list-item[data-tile-id="' + fromId + '"]');
+      var toItem   = listEl.querySelector('.cp-l8bl-list-item[data-tile-id="' + targetId + '"]');
+      if (!fromItem || !toItem || fromItem === toItem) return;
+
+      if (position === 'before') {
+        listEl.insertBefore(fromItem, toItem);
+      } else {
+        var next = toItem.nextSibling;
+        if (next) listEl.insertBefore(fromItem, next);
+        else       listEl.appendChild(fromItem);
+      }
+
+      /* Clear wrong state on any move */
+      var allItems = listEl.querySelectorAll('.cp-l8bl-list-item');
+      for (var i = 0; i < allItems.length; i++) {
+        allItems[i].classList.remove('cp-l8bl-list-item--wrong');
+      }
       feedbackEl.textContent = '';
       feedbackEl.className   = 'cp-l8bl-feedback';
       clearBtn.style.display = 'none';
-      slotEls.forEach(function (s) { s.classList.remove('cp-l8bl-slot--wrong'); });
-
-      var tile = tileEls[tileId];
-      if (!tile) return;
-
-      /* If tile already occupies another slot, clear it */
-      for (var i = 0; i < numSlots; i++) {
-        if (slotContents[i] === tileId && i !== slotIdx) {
-          slotContents[i] = null;
-          slotEls[i].classList.remove('cp-l8bl-slot--filled');
-          break;
-        }
-      }
-
-      /* If target slot already has a different tile, return it to source */
-      var existing = slotContents[slotIdx];
-      if (existing && existing !== tileId) {
-        slotContents[slotIdx] = null;
-        var exTile = tileEls[existing];
-        var exPh   = tilePlaceholders[existing];
-        if (exTile && exPh) {
-          exTile.classList.remove('cp-l8bl-tile--in-slot');
-          exPh.appendChild(exTile);
-        }
-      }
-
-      /* Move tile into slot */
-      slotContents[slotIdx] = tileId;
-      slotEls[slotIdx].classList.add('cp-l8bl-slot--filled');
-      slotEls[slotIdx].appendChild(tile);
-      tile.classList.add('cp-l8bl-tile--in-slot');
-
-      /* Auto-check when all slots are filled */
-      if (slotContents.every(function (c) { return c !== null; })) {
-        _autoCheck();
-      }
     }
 
-    /* ── Auto Check ── */
-    function _autoCheck() {
+    /* ── Check button ── */
+    checkBtn.addEventListener('click', function () {
+      _checkOrder();
+    });
+
+    function _checkOrder() {
       if (_currentPageId !== page.id) return;
 
-      var allCorrect = slotContents.every(function (tileId, idx) {
-        return tileId === correctOrder[idx];
+      var items        = listEl.querySelectorAll('.cp-l8bl-list-item');
+      var currentOrder = [];
+      for (var i = 0; i < items.length; i++) {
+        currentOrder.push(items[i].dataset.tileId);
+      }
+
+      var allCorrect = currentOrder.every(function (id, idx) {
+        return id === correctOrder[idx];
       });
 
       if (allCorrect) {
         _showSuccess();
       } else {
-        /* Highlight incorrect slots red */
-        slotContents.forEach(function (tileId, idx) {
-          if (tileId !== correctOrder[idx]) {
-            slotEls[idx].classList.add('cp-l8bl-slot--wrong');
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].dataset.tileId !== correctOrder[i]) {
+            items[i].classList.add('cp-l8bl-list-item--wrong');
+          } else {
+            items[i].classList.remove('cp-l8bl-list-item--wrong');
           }
-        });
+        }
         feedbackEl.textContent = page.wrongHint || 'Not quite! Think about which operation comes first in BODMAS.';
         feedbackEl.className   = 'cp-l8bl-feedback cp-l8bl-feedback--hint';
         if (typeof playWrong === 'function') playWrong();
@@ -19829,15 +19182,14 @@ var ContentRenderer = (function () {
 
     /* ── Clear / Reset ── */
     clearBtn.addEventListener('click', function () {
-      for (var i = 0; i < numSlots; i++) {
-        var tid = slotContents[i];
-        if (tid) {
-          slotContents[i] = null;
-          slotEls[i].classList.remove('cp-l8bl-slot--filled', 'cp-l8bl-slot--wrong');
-          var te = tileEls[tid];
-          var ph = tilePlaceholders[tid];
-          if (te && ph) { te.classList.remove('cp-l8bl-tile--in-slot'); ph.appendChild(te); }
-        }
+      /* Restore original shuffled order from page.tiles */
+      page.tiles.forEach(function (td) {
+        var item = listEl.querySelector('.cp-l8bl-list-item[data-tile-id="' + td.id + '"]');
+        if (item) listEl.appendChild(item);
+      });
+      var allItems = listEl.querySelectorAll('.cp-l8bl-list-item');
+      for (var i = 0; i < allItems.length; i++) {
+        allItems[i].classList.remove('cp-l8bl-list-item--wrong');
       }
       feedbackEl.textContent = '';
       feedbackEl.className   = 'cp-l8bl-feedback';
@@ -19852,24 +19204,21 @@ var ContentRenderer = (function () {
       wrap.innerHTML = '';
 
       var hdEl = _el('h2', 'cp-l8bl-title');
-      hdEl.textContent = page.instruction || 'Arrange The Boxes in Corrent Sequence';
+      hdEl.textContent = page.instruction || 'Arrange The Boxes in Correct Sequence';
       wrap.appendChild(hdEl);
 
-      /* Ordered tile ladder */
-      var resultTarget = _el('div', 'cp-l8bl-target');
-      var resultRows   = _el('div', 'cp-l8bl-target-rows');
-      resultTarget.appendChild(resultRows);
-      wrap.appendChild(resultTarget);
+      var resultList = _el('div', 'cp-l8bl-list cp-l8bl-list--success');
+      wrap.appendChild(resultList);
 
       correctOrder.forEach(function (tileId) {
         var td = null;
         for (var k = 0; k < page.tiles.length; k++) {
           if (page.tiles[k].id === tileId) { td = page.tiles[k]; break; }
         }
-        var row  = _el('div', 'cp-l8bl-target-row');
-        var slot = _el('div', 'cp-l8bl-slot cp-l8bl-slot--filled cp-l8bl-slot--correct');
+        var item = _el('div', 'cp-l8bl-list-item cp-l8bl-list-item--correct');
+        item.style.padding = '4px 0';
+
         var tile = _el('div', 'cp-l8bl-tile cp-l8bl-tile--' + td.colorKey + ' cp-l8bl-tile--in-slot');
-        tile.style.cursor = 'default';
         tile.setAttribute('aria-label', td.label || (td.letter + ' — ' + td.word));
 
         var lEl = _el('span', 'cp-l8bl-tile__letter');
@@ -19879,9 +19228,8 @@ var ContentRenderer = (function () {
         wEl.textContent = td.word || td.label || td.id;
         tile.appendChild(wEl);
 
-        slot.appendChild(tile);
-        row.appendChild(slot);
-        resultRows.appendChild(row);
+        item.appendChild(tile);
+        resultList.appendChild(item);
       });
 
       /* BODMAS letter row */
@@ -19916,15 +19264,13 @@ var ContentRenderer = (function () {
       }
     }
 
-    /* ── Entrance animation: container fades in, then tiles slide left → right one by one ── */
+    /* ── Entrance animation: tiles slide in from left one by one ── */
     if (typeof anime !== 'undefined') {
-      /* Hide all tiles before the sequence starts */
       page.tiles.forEach(function (td) {
         var tile = tileEls[td.id];
         if (tile) anime.set(tile, { translateX: -320, opacity: 0 });
       });
 
-      /* Fade the wrap in quickly so placeholders & slots are visible */
       anime.set(wrap, { opacity: 0 });
       anime({
         targets: wrap,
@@ -19932,7 +19278,6 @@ var ContentRenderer = (function () {
         duration: 220,
         easing: 'easeOutCubic',
         complete: function () {
-          /* Slide each tile in from the left, one by one */
           page.tiles.forEach(function (td, i) {
             var tile = tileEls[td.id];
             if (!tile) return;
@@ -19957,120 +19302,205 @@ var ContentRenderer = (function () {
   ══════════════════════════════════════════════════════ */
 
   function _renderL9NestedBrackets(page, area) {
-    var questions = page.questions || [];
-    var qIdx      = 0;
-    var stepIdx   = 0;
-    var answered  = false;
+    var questions  = page.questions || [];
+    var qIdx       = 0;
+    var stepIdx    = 0;
+    var answered   = false;
+    var currentVal = '';
 
     var wrap = _el('div', 'cp-l9nb-wrap');
     wrap.dataset.pageId = page.id;
 
-    /* Section heading — outside card */
-    var heading = _el('h2', 'cp-l9nb-title');
-    heading.textContent = 'Nested Brackets';
-    wrap.appendChild(heading);
-
-    /* Card */
+    /* ── Card ── */
     var cardEl = _el('div', 'cp-l9nb-card');
-    var qLabel = _el('p',   'cp-l9nb-card__label');
+    var qLabel = _el('p', 'cp-l9nb-card__label');
     qLabel.setAttribute('aria-live', 'polite');
-    var hintEl = _el('p',   'cp-l9nb-card__prompt');
-    var bodyEl = _el('div', 'cp-l9nb-card__body');
+    var hintEl = _el('p', 'cp-l9nb-card__prompt');
 
     /* Expression strip */
     var exprBox   = _el('div', 'cp-l9nb-expr-box');
     var stripWrap = _el('div', 'cp-l9nb-strip');
     exprBox.appendChild(stripWrap);
 
-    /* Input panel (hidden initially) */
-    var inputPanel = _el('div', 'cp-l9nb-input-panel cp-l9nb-input-panel--hidden');
-    var inputRow   = _el('div', 'cp-l9nb-input-row');
-    var subExprEl  = _el('span', 'cp-l9nb-subexpr');
-    var inputEl    = _el('input', 'cp-l9nb-input');
-    inputEl.type = 'text';
-    inputEl.setAttribute('inputmode', 'none');
-    inputEl.setAttribute('autocomplete', 'off');
-    inputEl.setAttribute('aria-label', 'Your answer');
-    var submitBtn  = _el('button', 'cp-l9nb-submit-btn');
-    submitBtn.textContent = 'Submit';
-    inputRow.appendChild(subExprEl);
-    inputRow.appendChild(inputEl);
-    inputRow.appendChild(submitBtn);
-    inputPanel.appendChild(inputRow);
+    /* ── Input section (shown after tapping correct operator) ── */
+    var inputSection = _el('div', 'cp-l9nb-input-section cp-l9nb-hidden');
 
-    bodyEl.appendChild(exprBox);
-    bodyEl.appendChild(inputPanel);
+    var subExprRow = _el('div', 'cp-l9nb-subexpr-row');
+    var subExprEl  = _el('span', 'cp-l9nb-subexpr');
+    var eqEl       = _el('span', 'cp-l9nb-eq');
+    eqEl.textContent = '=';
+    var dropZone   = _el('div', 'cp-l9nb-drop-zone');
+    dropZone.setAttribute('role', 'textbox');
+    dropZone.setAttribute('aria-label', 'Drag a number here or tap a digit below');
+    subExprRow.appendChild(subExprEl);
+    subExprRow.appendChild(eqEl);
+    subExprRow.appendChild(dropZone);
+
+    var submitBtn = _el('button', 'cp-l9nb-submit-btn');
+    submitBtn.textContent = 'Submit';
+
+    inputSection.appendChild(subExprRow);
+    inputSection.appendChild(submitBtn);
+
+    /* Tap drop zone to open keyboard */
+    dropZone.addEventListener('click', function () {
+      if (!inputSection.classList.contains('cp-l9nb-hidden')) _showPad();
+    });
+
+    /* Drop zone — HTML5 drag target */
+    dropZone.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      dropZone.classList.add('cp-l9nb-drop-zone--hover');
+    });
+    dropZone.addEventListener('dragleave', function () {
+      dropZone.classList.remove('cp-l9nb-drop-zone--hover');
+    });
+    dropZone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropZone.classList.remove('cp-l9nb-drop-zone--hover');
+      var d = e.dataTransfer.getData('text/plain');
+      if (/^[0-9]$/.test(d)) { currentVal += d; _updateDrop(); }
+    });
+
+    function _updateDrop() {
+      dropZone.textContent = currentVal;
+      dropZone.classList.toggle('cp-l9nb-drop-zone--filled', currentVal.length > 0);
+      dropZone.classList.remove('cp-l9nb-drop-zone--wrong', 'cp-l9nb-drop-zone--correct');
+    }
+
     cardEl.appendChild(qLabel);
     cardEl.appendChild(hintEl);
-    cardEl.appendChild(bodyEl);
+    cardEl.appendChild(exprBox);
+    cardEl.appendChild(inputSection);
     wrap.appendChild(cardEl);
     area.appendChild(wrap);
 
-    /* ── Floating numpad ── */
-    var _oldNp = document.querySelector('[data-l9nb-numpad]');
-    if (_oldNp) { _oldNp.parentNode.removeChild(_oldNp); }
+    /* ── Floating keypad (appended to body, positioned near drop zone) ── */
+    var _oldPad = document.querySelector('[data-l9nb-pad]');
+    if (_oldPad) _oldPad.parentNode.removeChild(_oldPad);
 
-    var _numpad = _el('div', 'cp-l9nb-numpad cp-l9nb-numpad--hidden');
-    _numpad.setAttribute('data-l9nb-numpad', '');
+    var floatPad = _el('div', 'cp-l9nb-float-pad cp-l9nb-float-pad--hidden');
+    floatPad.setAttribute('data-l9nb-pad', '');
 
-    var _ndisp = _el('div', 'cp-l9nb-numpad__disp');
-    _ndisp.textContent = '–';
-    _numpad.appendChild(_ndisp);
+    var padKeys = ['1','2','3','4','5','6','7','8','9','⌫','0','C'];
+    padKeys.forEach(function (k) {
+      var isDigit = /^[0-9]$/.test(k);
+      var cls = 'cp-l9nb-key';
+      if (k === '⌫') cls += ' cp-l9nb-key--del';
+      if (k === 'C')  cls += ' cp-l9nb-key--clear';
+      var keyEl = _el('div', cls);
+      keyEl.textContent = k;
 
-    var _ngrid = _el('div', 'cp-l9nb-numpad__grid');
-    var _padKeys = ['1','2','3','4','5','6','7','8','9','Clear','0','Del'];
-    _padKeys.forEach(function (k) {
-      var cls = 'cp-l9nb-numpad__btn';
-      if (k === 'Clear') cls += ' cp-l9nb-numpad__btn--clear';
-      if (k === 'Del')   cls += ' cp-l9nb-numpad__btn--del';
-      var btn = _el('button', cls);
-      btn.textContent = k;
-      btn.setAttribute('tabindex', '-1');
-      function _onTap(e) {
-        e.preventDefault();
-        if (k === 'Clear') {
-          inputEl.value = '';
-        } else if (k === 'Del') {
-          inputEl.value = inputEl.value.slice(0, -1);
-        } else {
-          inputEl.value += k;
-        }
-        _ndisp.textContent = inputEl.value || '–';
-        inputEl.dispatchEvent(new Event('input'));
-        inputEl.focus();
+      if (isDigit) {
+        keyEl.setAttribute('draggable', 'true');
+
+        /* HTML5 drag */
+        keyEl.addEventListener('dragstart', function (e) {
+          e.dataTransfer.effectAllowed = 'copy';
+          e.dataTransfer.setData('text/plain', k);
+          keyEl.classList.add('cp-l9nb-key--dragging');
+        });
+        keyEl.addEventListener('dragend', function () {
+          keyEl.classList.remove('cp-l9nb-key--dragging');
+        });
+
+        /* Touch drag */
+        var ghost = null;
+        var offX, offY;
+        keyEl.addEventListener('touchstart', function (e) {
+          e.preventDefault();
+          var t = e.touches[0];
+          var r = keyEl.getBoundingClientRect();
+          offX  = t.clientX - r.left;
+          offY  = t.clientY - r.top;
+          ghost = keyEl.cloneNode(true);
+          ghost.classList.add('cp-l9nb-key--ghost');
+          ghost.style.cssText = 'position:fixed;pointer-events:none;z-index:10000;width:' +
+            r.width + 'px;height:' + r.height + 'px;left:' + (t.clientX - offX) +
+            'px;top:' + (t.clientY - offY) + 'px;';
+          document.body.appendChild(ghost);
+          keyEl.classList.add('cp-l9nb-key--dragging');
+        }, { passive: false });
+
+        keyEl.addEventListener('touchmove', function (e) {
+          if (!ghost) return;
+          e.preventDefault();
+          var t = e.touches[0];
+          ghost.style.left = (t.clientX - offX) + 'px';
+          ghost.style.top  = (t.clientY - offY) + 'px';
+          ghost.style.display = 'none';
+          var el = document.elementFromPoint(t.clientX, t.clientY);
+          ghost.style.display = '';
+          if (el && el.closest('.cp-l9nb-drop-zone')) {
+            dropZone.classList.add('cp-l9nb-drop-zone--hover');
+          } else {
+            dropZone.classList.remove('cp-l9nb-drop-zone--hover');
+          }
+        }, { passive: false });
+
+        keyEl.addEventListener('touchend', function (e) {
+          if (!ghost) return;
+          var t = e.changedTouches[0];
+          ghost.style.display = 'none';
+          var el = document.elementFromPoint(t.clientX, t.clientY);
+          if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
+          ghost = null;
+          keyEl.classList.remove('cp-l9nb-key--dragging');
+          dropZone.classList.remove('cp-l9nb-drop-zone--hover');
+          if (el && el.closest('.cp-l9nb-drop-zone')) {
+            currentVal += k;
+            _updateDrop();
+          }
+        });
       }
-      btn.addEventListener('mousedown', _onTap);
-      btn.addEventListener('touchstart', _onTap, { passive: false });
-      _ngrid.appendChild(btn);
+
+      keyEl.addEventListener('click', function () {
+        if (k === 'C') {
+          currentVal = '';
+        } else if (k === '⌫') {
+          currentVal = currentVal.slice(0, -1);
+        } else if (isDigit) {
+          currentVal += k;
+        }
+        _updateDrop();
+      });
+
+      floatPad.appendChild(keyEl);
     });
-    _numpad.appendChild(_ngrid);
-    document.body.appendChild(_numpad);
 
-    function _positionNumpad() {
-      var r  = inputEl.getBoundingClientRect();
-      var nw = _numpad.offsetWidth || 196;
-      var nh = _numpad.offsetHeight || 268;
-      var left = r.right + 10;
-      if (left + nw > window.innerWidth - 8) { left = r.left - nw - 10; }
+    document.body.appendChild(floatPad);
+
+    function _positionPad() {
+      var r  = dropZone.getBoundingClientRect();
+      var pw = floatPad.offsetWidth  || 210;
+      var ph = floatPad.offsetHeight || 200;
+      var left = r.right + 14;
+      if (left + pw > window.innerWidth - 8) left = r.left - pw - 14;
       var top = r.top;
-      if (top + nh > window.innerHeight - 8) { top = window.innerHeight - nh - 8; }
-      _numpad.style.left = Math.max(4, left) + 'px';
-      _numpad.style.top  = Math.max(4, top)  + 'px';
+      if (top + ph > window.innerHeight - 8) top = window.innerHeight - ph - 8;
+      floatPad.style.left = Math.max(4, left) + 'px';
+      floatPad.style.top  = Math.max(4, top)  + 'px';
     }
 
-    function _showNumpad() {
-      _ndisp.textContent = inputEl.value || '–';
-      _numpad.classList.remove('cp-l9nb-numpad--hidden');
-      _positionNumpad();
+    function _showPad() {
+      floatPad.classList.remove('cp-l9nb-float-pad--hidden');
+      _positionPad();
     }
-    function _hideNumpad() {
-      _numpad.classList.add('cp-l9nb-numpad--hidden');
+    function _hidePad() {
+      floatPad.classList.add('cp-l9nb-float-pad--hidden');
     }
 
-    inputEl.addEventListener('focus', _showNumpad);
-    inputEl.addEventListener('blur',  function () { setTimeout(_hideNumpad, 180); });
-    window.addEventListener('scroll', _positionNumpad, true);
-    window.addEventListener('resize', _positionNumpad);
+    function _onDocClick(e) {
+      if (floatPad.classList.contains('cp-l9nb-float-pad--hidden')) return;
+      if (floatPad.contains(e.target) || dropZone.contains(e.target)) return;
+      _hidePad();
+    }
+    document.addEventListener('click', _onDocClick, true);
+    document.addEventListener('touchend', _onDocClick, true);
+
+    window.addEventListener('resize', _positionPad);
+    window.addEventListener('scroll', _positionPad, true);
 
     /* ── helpers ── */
     function _getHint(phase) {
@@ -20079,7 +19509,6 @@ var ContentRenderer = (function () {
       return page.hintLast || '';
     }
 
-    /* Determine bracket depth for a token given the expression tokens array */
     function _bracketDepths(tokens) {
       var depths = [];
       var depth  = 0;
@@ -20091,7 +19520,7 @@ var ContentRenderer = (function () {
       return depths;
     }
 
-    function _renderStrip(exprStr, activeOp) {
+    function _renderStrip(exprStr) {
       stripWrap.innerHTML = '';
       var tokens = exprStr.split(/\s+/).filter(Boolean);
       var depths = _bracketDepths(tokens);
@@ -20105,31 +19534,28 @@ var ContentRenderer = (function () {
           bSpan.setAttribute('aria-hidden', 'true');
           stripWrap.appendChild(bSpan);
         } else if (/^[+\-\xd7\xf7−×÷]$/.test(tok) || tok === '−' || tok === '×' || tok === '÷') {
-          var localIdx = opCount++;
+          opCount++;
           var tile = _el('button', 'cp-l9nb-op-tile');
-          if (activeOp && tok === activeOp) tile.classList.add('cp-l9nb-op-tile--selected');
           tile.textContent = tok;
           tile.setAttribute('aria-label', 'Operator ' + tok);
-          (function (btn, operator, idx) {
+          (function (btn, operator) {
             btn.addEventListener('click', function () {
               if (answered) return;
               var q    = questions[qIdx];
               var step = q.steps[stepIdx];
               if (operator === step.correctOp) {
-                /* correct */
                 btn.classList.add('cp-l9nb-op-tile--correct');
-                answered = true;
-                /* show input panel */
-                subExprEl.textContent = step.subExpr + ' =';
-                inputEl.value = '';
-                inputPanel.classList.remove('cp-l9nb-input-panel--hidden');
-                inputEl.focus();
+                answered   = true;
+                currentVal = '';
+                subExprEl.textContent = step.subExpr;
+                _updateDrop();
+                inputSection.classList.remove('cp-l9nb-hidden');
+                _showPad();
                 if (typeof anime !== 'undefined') {
-                  anime.set(inputPanel, { opacity: 0, translateY: 12 });
-                  anime({ targets: inputPanel, opacity: 1, translateY: 0, duration: 320, easing: 'easeOutCubic' });
+                  anime.set(inputSection, { opacity: 0, translateY: 10 });
+                  anime({ targets: inputSection, opacity: 1, translateY: 0, duration: 280, easing: 'easeOutCubic' });
                 }
               } else {
-                /* wrong */
                 btn.classList.add('cp-l9nb-op-tile--wrong');
                 setTimeout(function () { btn.classList.remove('cp-l9nb-op-tile--wrong'); }, 700);
                 hintEl.textContent = page.wrongHint || '';
@@ -20139,7 +19565,7 @@ var ContentRenderer = (function () {
                 }
               }
             });
-          }(tile, tok, localIdx));
+          }(tile, tok));
           stripWrap.appendChild(tile);
         } else {
           var numTile = _el('span', 'cp-l9nb-num-tile');
@@ -20153,20 +19579,19 @@ var ContentRenderer = (function () {
     function _loadStep() {
       var q    = questions[qIdx];
       var step = q.steps[stepIdx];
-      answered = false;
-      inputPanel.classList.add('cp-l9nb-input-panel--hidden');
-      inputEl.value = '';
+      answered   = false;
+      currentVal = '';
+      inputSection.classList.add('cp-l9nb-hidden');
+      _hidePad();
+      _updateDrop();
       hintEl.textContent = _getHint(step.phase);
       qLabel.textContent = q.label || '';
-      _renderStrip(q.expression, null);
 
-      /* Update expression to current reduced form after stepIdx > 0 */
-      if (stepIdx > 0) {
-        var prevStep = q.steps[stepIdx - 1];
-        _renderStrip(prevStep.reducedExpression, null);
-        q.expression = prevStep.reducedExpression;
+      if (stepIdx === 0) {
+        _renderStrip(q.expression);
+      } else {
+        _renderStrip(q.steps[stepIdx - 1].reducedExpression);
       }
-      /* Reset expression reference per question */
     }
 
     function _advanceStep() {
@@ -20175,21 +19600,26 @@ var ContentRenderer = (function () {
       if (step.isFinal) {
         _showAnswer(q);
       } else {
-        var nextStep = q.steps[stepIdx + 1];
+        stepIdx++;
+        answered   = false;
+        currentVal = '';
+        inputSection.classList.add('cp-l9nb-hidden');
+        _hidePad();
+        _updateDrop();
+        var nextStep = q.steps[stepIdx];
         hintEl.textContent = _getHint(nextStep.phase);
-        _renderStrip(step.reducedExpression, null);
+        _renderStrip(step.reducedExpression);
         if (typeof anime !== 'undefined') {
           anime.set(stripWrap, { opacity: 0 });
           anime({ targets: stripWrap, opacity: 1, duration: 350 });
         }
-        stepIdx++;
-        answered = false;
-        inputPanel.classList.add('cp-l9nb-input-panel--hidden');
       }
     }
 
     function _showAnswer(q) {
-      inputPanel.classList.add('cp-l9nb-input-panel--hidden');
+      inputSection.classList.add('cp-l9nb-hidden');
+      _hidePad();
+
       var ansWrap = _el('div', 'cp-l9nb-answer-banner');
       var ansNum  = _el('div', 'cp-l9nb-answer-num');
       ansNum.textContent = q.finalAnswer;
@@ -20218,50 +19648,44 @@ var ContentRenderer = (function () {
         }, 3000);
       } else {
         setTimeout(function () {
-          if (page.next) renderPage(page.next);
+          if (_currentPageId === page.id && page.next) renderPage(page.next);
         }, 3000);
       }
     }
 
-
-    function runCheck() {
-      var q    = questions[qIdx];
+    function _runCheck() {
+      var q   = questions[qIdx];
       var step = q.steps[stepIdx];
-      var val  = parseInt(inputEl.value, 10);
-      if (isNaN(val)) { inputEl.focus(); return; }
+      var val = parseInt(currentVal, 10);
+      if (isNaN(val) || currentVal === '') {
+        dropZone.classList.add('cp-l9nb-drop-zone--wrong');
+        if (typeof anime !== 'undefined') {
+          anime({ targets: dropZone, translateX: [0, -5, 5, -4, 4, 0], duration: 300, easing: 'easeInOutSine' });
+        }
+        return;
+      }
       if (val === step.answer) {
         if (typeof playCorrect === 'function') playCorrect();
-        inputEl.classList.add('cp-l9nb-input--correct');
+        dropZone.classList.add('cp-l9nb-drop-zone--correct');
         setTimeout(function () {
-          inputEl.classList.remove('cp-l9nb-input--correct');
+          dropZone.classList.remove('cp-l9nb-drop-zone--correct');
           _advanceStep();
         }, 500);
       } else {
         if (typeof playWrong === 'function') playWrong();
-        inputEl.classList.add('cp-l9nb-input--wrong');
+        dropZone.classList.add('cp-l9nb-drop-zone--wrong');
         if (typeof anime !== 'undefined') {
-          anime({ targets: inputPanel, translateX: [0, -7, 7, -5, 5, 0], duration: 340, easing: 'easeInOutSine' });
+          anime({ targets: inputSection, translateX: [0, -7, 7, -5, 5, 0], duration: 340, easing: 'easeInOutSine' });
         }
         setTimeout(function () {
-          inputEl.classList.remove('cp-l9nb-input--wrong');
-          inputEl.value = '';
-          inputEl.focus();
+          dropZone.classList.remove('cp-l9nb-drop-zone--wrong');
+          currentVal = '';
+          _updateDrop();
         }, 500);
       }
     }
 
-    submitBtn.addEventListener('click', function () { runCheck(); });
-
-    inputEl.addEventListener('input', function () {
-      _ndisp.textContent = inputEl.value || '–';
-    });
-
-    inputEl.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { runCheck(); return; }
-      if (['Backspace','Delete','Tab','ArrowLeft','ArrowRight','Home','End'].indexOf(e.key) !== -1) return;
-      if (/^[0-9]$/.test(e.key)) return;
-      e.preventDefault();
-    });
+    submitBtn.addEventListener('click', function () { _runCheck(); });
 
     _loadStep();
   }

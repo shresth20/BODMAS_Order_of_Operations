@@ -37,3 +37,42 @@
 @media (prefers-reduced-motion: reduce) {
   .card-shake        { animation: none !important; outline: 3px solid #EF4444; }
 }
+
+/* ── Hand Nudge ─────────────────────────────────────────────────────── */
+.hand-nudge {
+  position: fixed;
+  width: 70px;
+  height: 64px;
+  pointer-events: none;
+  user-select: none;
+  z-index: 10000;
+  opacity: 0;
+  object-fit: contain;
+  will-change: transform, opacity;
+}
+
+/* Tap: hand scales up (hover) → scales down (press) × 2 then fades — 3.6 s total */
+@keyframes handNudgeTap {
+  0%   { opacity: 0; transform: translateY(-10px) scale(0.75); }
+  8%   { opacity: 1; transform: translateY(0)     scale(1.0);  }
+  20%  { opacity: 1; transform: translateY(-5px)  scale(1.35); } /* raise / wind-up */
+  34%  { opacity: 1; transform: translateY(10px)  scale(0.78); } /* press in       */
+  46%  { opacity: 1; transform: translateY(0)     scale(1.0);  } /* release        */
+  58%  { opacity: 1; transform: translateY(-5px)  scale(1.35); } /* raise again    */
+  72%  { opacity: 1; transform: translateY(10px)  scale(0.78); } /* press again    */
+  84%  { opacity: 1; transform: translateY(0)     scale(1.0);  } /* release        */
+  100% { opacity: 0; transform: translateY(-8px)  scale(0.85); }
+}
+
+.hand-nudge--tap {
+  animation: handNudgeTap 3.6s ease-in-out forwards;
+}
+
+/* Drag: position/opacity driven entirely by anime.js */
+.hand-nudge--drag {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hand-nudge { display: none !important; }
+}
