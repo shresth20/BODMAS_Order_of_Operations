@@ -1,6 +1,18 @@
 /* pages.js — Level 1: × Before + | Level 2: × Before − | ... | Level 6: Brackets First
    Lesson plan: bodmas_lesson_plan_mechanics_sequence.md, Section 01–06 */
 
+var GAME_HTP = {
+  subtitle: 'Learn to solve maths using BODMAS order of operations!',
+  steps: [
+    'Read the real-life scenario and find the expression.',
+    'In the Lab, tap to highlight which part to solve first.',
+    '<strong>×</strong> and <strong>÷</strong> always come before <strong>+</strong> and <strong>−</strong>.',
+    '<strong>Brackets ( )</strong> have the highest priority.',
+    'Practice questions after each level.',
+    'Complete all 6 levels and the <strong>BODMAS Challenge</strong>.'
+  ]
+};
+
 var CONTENT_PAGES = [
 
   // ═══════════════════════════════════════════════════════════
@@ -15,7 +27,7 @@ var CONTENT_PAGES = [
     expression: '3 × 4 + 2',
     question: 'How many crayons in all? Which part do you solve first?',
     questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many crayons in all? Which part do you solve first?',
-    buttonLabel: '🔍 Let\'s Investigate!',
+    buttonLabel: '🔍 Start Exploring',
     next: '1.1'
   },
 
@@ -125,7 +137,7 @@ var CONTENT_PAGES = [
     expression: '20 − 3 × 4',
     question: 'How many bananas are left? Which part do you solve first?',
     questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many bananas are left? Which part do you solve first?',
-    buttonLabel: '🔍 Let\'s Investigate!',
+    buttonLabel: '🔍 Start Exploring',
     next: '2.1'
   },
 
@@ -234,7 +246,7 @@ var CONTENT_PAGES = [
     expression: '12 ÷ 3 + 5',
     question: 'How many laddoos in total? Which part do you solve first?',
     questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many laddoos in total? Which part do you solve first?',
-    buttonLabel: '🔍 Let\'s Investigate!',
+    buttonLabel: '🔍 Start Exploring',
     next: '3.1'
   },
 
@@ -321,7 +333,7 @@ var CONTENT_PAGES = [
         prompt: 'Which method is correct?',
         expression: '12 + 8 ÷ 4',
         methods: [
-          { label: '÷ first', steps: ['12 + 8 ÷ 4', '8 ÷ 4 = 2', '12 + 2 = 14'], answer: 14, correct: true },
+          { label: 'Division first', steps: ['12 + 8 ÷ 4', '8 ÷ 4 = 2', '12 + 2 = 14'], answer: 14, correct: true },
           { label: 'Left → right', steps: ['12 + 8 ÷ 4', '12 + 8 = 20', '20 ÷ 4 = 5'], answer: 5, correct: false }
         ],
         okMsg: 'Correct! Always do ÷ before +.',
@@ -342,7 +354,7 @@ var CONTENT_PAGES = [
     expression: '10 − 4 + 3',
     question: 'How many stickers does Riya have now? Which part do you solve first?',
     questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many stickers does Riya have now? Which part do you solve first?',
-    buttonLabel: '🔍 Let\'s Investigate!',
+    buttonLabel: '🔍 Start Exploring',
     next: '4.1'
   },
 
@@ -449,7 +461,7 @@ var CONTENT_PAGES = [
     expression: '12 ÷ 2 × 3',
     question: 'How many chocolates in total? Which part do you solve first?',
     questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many chocolates in total? Which part do you solve first?',
-    buttonLabel: '🔍 Let\'s Investigate!',
+    buttonLabel: '🔍 Start Exploring',
     next: '5.1'
   },
 
@@ -556,7 +568,7 @@ var CONTENT_PAGES = [
     expression: '3 \xd7 (4 + 2)',
     question: 'How many students in all? Which part do you solve first?',
     questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many students in all? Which part do you solve first?',
-    buttonLabel: '🔍 Let\'s Investigate!',
+    buttonLabel: '🔍 Start Exploring',
     next: '6.1'
   },
 
@@ -751,7 +763,7 @@ var CONTENT_PAGES = [
   {
     id: '9.1',
     type: 'l9-insert-brackets',
-    title: 'INSERT THE BRACKETS!',
+    title: 'Insert The Brackets!',
     instruction: 'Place the brackets to make it true!',
     subInstruction: 'Tap where ( goes, then where ) goes.',
     puzzles: [

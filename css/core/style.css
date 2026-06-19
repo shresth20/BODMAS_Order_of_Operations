@@ -478,7 +478,7 @@ body:has(.cp-l6i-wrap) .content-deco--l6-5 { display: block; }
   background: transparent;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: background-color var(--dur-fast), transform var(--dur-fast);
+  transition: background-color var(--dur-fast), transform var(--dur-fast), box-shadow var(--dur-fast);
   flex-shrink: 0;
   padding: 0;
   border-radius: 50%;
@@ -500,7 +500,7 @@ body:has(.cp-l6i-wrap) .content-deco--l6-5 { display: block; }
   padding: var(--space-sm) clamp(36px, 4vw, 64px);
   min-height: var(--size-btn-lg);
   cursor: pointer;
-  transition: background var(--dur-fast), transform var(--dur-fast), opacity var(--dur-fast);
+  transition: background var(--dur-fast), transform var(--dur-fast), opacity var(--dur-fast), box-shadow var(--dur-fast);
   box-shadow: var(--shadow-submit);
 }
 .btn-submit:hover:not(:disabled) {
@@ -521,6 +521,7 @@ body:has(.cp-l6i-wrap) .content-deco--l6-5 { display: block; }
 }
 
 .progress-dots { display: flex; align-items: center; gap: clamp(6px, 0.8vw, 10px); }
+.progress-track--empty { visibility: hidden; }
 
 .dot {
   width: clamp(14px, 2vw, 22px); height: clamp(14px, 2vw, 22px); border-radius: 50%;
@@ -870,3 +871,21 @@ body:has(.cp-l6i-wrap) .content-deco--l6-5 { display: block; }
 .game-asset    { object-fit: contain; aspect-ratio: 16 / 10; width: 100%; }
 .bg-layer      { object-fit: cover; width: 100vw; height: 100vh; }
 .character-img { object-fit: contain; width: clamp(80px, 12vw, 160px); }
+
+/* ── Glow effects: submit button + header icon buttons ── */
+.btn-submit:not(:disabled) {
+  filter: drop-shadow(0 0 10px rgba(245, 182, 26, 0.6));
+  transition: background var(--dur-fast), transform var(--dur-fast), opacity var(--dur-fast), box-shadow var(--dur-fast), filter 0.2s ease;
+}
+.btn-submit:hover:not(:disabled) {
+  filter: drop-shadow(0 0 22px rgba(245, 182, 26, 0.92));
+}
+.btn-submit:active:not(:disabled) {
+  filter: none;
+}
+.icon-btn {
+  transition: background var(--dur-fast), transform var(--dur-fast), box-shadow var(--dur-fast), filter 0.18s ease;
+}
+.icon-btn:hover {
+  filter: drop-shadow(0 0 12px rgba(59, 198, 255, 0.75));
+}

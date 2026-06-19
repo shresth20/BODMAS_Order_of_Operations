@@ -1,6 +1,7 @@
 /* App orchestrator — rendering, event handling, screen transitions */
 
 var _htpShownOnce = false;
+var _htpIsIntro   = false;
 var _feedbackTimeout = null;
 
 /* ── Init ──────────────────────────────────────────── */
@@ -136,10 +137,7 @@ function buildLoadingHTML() {
 function handleReset() {
   if (window.CONTENT_MODE && typeof ContentRenderer !== 'undefined') {
     var pageId = ContentRenderer.getCurrentPageId();
-    if (pageId) {
-      var sectionStart = pageId.split('.')[0] + '.0';
-      ContentRenderer.renderPage(sectionStart);
-    }
+    if (pageId) ContentRenderer.renderPage(pageId);
   }
 }
 
@@ -204,18 +202,10 @@ function scheduleAutoAdvanceFromLoading() {
   setTimeout(function() {
     if (window.CONTENT_MODE) {
       var overlay = qs('#loader-overlay');
-      if (overlay) {
-        overlay.classList.add('loader--tap-ready');
-        overlay.addEventListener('click', function _onTap() {
-          overlay.removeEventListener('click', _onTap);
-          overlay.classList.add('loader--hidden');
-          document.body.classList.add('content-page-active');
-          if (typeof ContentRenderer !== 'undefined') ContentRenderer.renderPage('1.0');
-        });
-      } else {
-        document.body.classList.add('content-page-active');
-        if (typeof ContentRenderer !== 'undefined') ContentRenderer.renderPage('1.0');
-      }
+      if (overlay) overlay.classList.add('loader--hidden');
+      document.body.classList.add('content-page-active');
+      _htpIsIntro = true;
+      openHowToPlay();
     }
   }, 2200);
 }
@@ -233,6 +223,33 @@ function escapeText(str) {
 function openHowToPlay() {
   var modal = qs('#htp-modal');
   if (!modal) return;
+
+  if (typeof GAME_HTP !== 'undefined') {
+    var subtitleEl = qs('#htp-subtitle');
+    var stepsEl    = qs('#htp-steps');
+    if (subtitleEl && GAME_HTP.subtitle) subtitleEl.textContent = GAME_HTP.subtitle;
+    if (stepsEl && Array.isArray(GAME_HTP.steps)) {
+      stepsEl.innerHTML = '';
+      GAME_HTP.steps.forEach(function(step, i) {
+        var li   = document.createElement('li');
+        li.className = 'modal-step';
+
+        var num  = document.createElement('span');
+        num.className = 'modal-step__num';
+        num.setAttribute('aria-hidden', 'true');
+        num.textContent = i + 1;
+
+        var text = document.createElement('span');
+        text.className = 'modal-step__text';
+        text.innerHTML = step;
+
+        li.appendChild(num);
+        li.appendChild(text);
+        stepsEl.appendChild(li);
+      });
+    }
+  }
+
   modal.classList.add('modal--open');
   modal.setAttribute('aria-hidden', 'false');
   document.addEventListener('keydown', handleModalKeydown);
@@ -246,6 +263,13 @@ function closeHowToPlay() {
   modal.classList.remove('modal--open');
   modal.setAttribute('aria-hidden', 'true');
   document.removeEventListener('keydown', handleModalKeydown);
+
+  if (_htpIsIntro) {
+    _htpIsIntro = false;
+    if (typeof ContentRenderer !== 'undefined') ContentRenderer.renderPage('1.0');
+    return;
+  }
+
   var btnInfo = qs('#btn-info');
   if (btnInfo) btnInfo.focus();
 }

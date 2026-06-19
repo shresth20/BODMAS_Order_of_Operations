@@ -31,6 +31,8 @@ var ContentRenderer = (function () {
     if (_ibDots) _ibDots.remove();
     var _pDotsEl = document.getElementById('progress-dots');
     if (_pDotsEl) _pDotsEl.style.removeProperty('display');
+    var _ptEl = document.querySelector('.progress-track');
+    if (_ptEl) _ptEl.classList.add('progress-track--empty');
     if (typeof Narration !== 'undefined') Narration.stop();
     _currentPageId = pageId;
 
@@ -12916,6 +12918,7 @@ var ContentRenderer = (function () {
       var _pt = document.querySelector('.progress-track');
       var _pd = document.getElementById('progress-dots');
       if (_pt && _pd) {
+        _pt.classList.remove('progress-track--empty');
         _pd.style.display = 'none';
         roundBadge = document.createElement('div');
         roundBadge.className = 'cp-lab-round-badge';
@@ -14142,6 +14145,7 @@ var ContentRenderer = (function () {
       var _pt = document.querySelector('.progress-track');
       var _pd = document.getElementById('progress-dots');
       if (_pt && _pd) {
+        _pt.classList.remove('progress-track--empty');
         _pd.style.display = 'none';
         roundBadge = document.createElement('div');
         roundBadge.className = 'cp-lab-round-badge';
@@ -14715,18 +14719,14 @@ var ContentRenderer = (function () {
       rowEl.classList.add(pfx + '-row--center');
 
       if (isLast && (!step.hlTokens || step.hlTokens.length === 0)) {
-        /* Final answer row: "Answer = [X]" */
-        var prefixSpan = _el('span', pfx + '-step-plain');
-        prefixSpan.dataset.tw = 'Answer = ';
-        prefixSpan.style.opacity = '0';
-        rowEl.appendChild(prefixSpan);
+        /* Final answer row: just the value pill, no "Answer =" label */
         var finPill = _el('span', pfx + '-step__hl');
         finPill.classList.add(pfx + '-step__hl--final');
         finPill.textContent = step.expr.replace(/^= /, '');
         finPill.style.opacity = '0';
         rowEl.appendChild(finPill);
       } else {
-        var toks = step.expr.split(' ');
+        var toks = step.expr.replace(/^= /, '').split(' ');
         var hlSet = {};
         (step.hlTokens || []).forEach(function (t) { hlSet[t] = true; });
         var isResult = (idx === 1 && step.hlTokens && step.hlTokens.length === 1);
@@ -15278,6 +15278,7 @@ var ContentRenderer = (function () {
       var _pt = document.querySelector('.progress-track');
       var _pd = document.getElementById('progress-dots');
       if (_pt && _pd) {
+        _pt.classList.remove('progress-track--empty');
         _pd.style.display = 'none';
         roundBadge = document.createElement('div');
         roundBadge.className = 'cp-lab-round-badge';
@@ -16206,6 +16207,7 @@ var ContentRenderer = (function () {
       var _pt = document.querySelector('.progress-track');
       var _pd = document.getElementById('progress-dots');
       if (_pt && _pd) {
+        _pt.classList.remove('progress-track--empty');
         _pd.style.display = 'none';
         roundBadge = document.createElement('div');
         roundBadge.className = 'cp-lab-round-badge';
@@ -16274,7 +16276,8 @@ var ContentRenderer = (function () {
 
     function _tileClass4(tok, isLtr) {
       if (isLtr) {
-        return (tok === '+' || tok === '−') ? 'cp-l4l-tile cp-l4l-tile--ltr-op' : 'cp-l4l-tile cp-l4l-tile--ltr-num';
+        if (tok === '−') return 'cp-l4l-tile cp-l4l-tile--ltr-op cp-l4l-tile--ltr-sub';
+        return (tok === '+') ? 'cp-l4l-tile cp-l4l-tile--ltr-op' : 'cp-l4l-tile cp-l4l-tile--ltr-num';
       }
       if (tok === '+')      return 'cp-l4l-tile cp-l4l-tile--add-op';
       if (tok === '−') return 'cp-l4l-tile cp-l4l-tile--sub-op';
@@ -17075,6 +17078,7 @@ var ContentRenderer = (function () {
       var _pt = document.querySelector('.progress-track');
       var _pd = document.getElementById('progress-dots');
       if (_pt && _pd) {
+        _pt.classList.remove('progress-track--empty');
         _pd.style.display = 'none';
         roundBadge = document.createElement('div');
         roundBadge.className = 'cp-lab-round-badge';
@@ -17945,6 +17949,7 @@ var ContentRenderer = (function () {
       var _pt = document.querySelector('.progress-track');
       var _pd = document.getElementById('progress-dots');
       if (_pt && _pd) {
+        _pt.classList.remove('progress-track--empty');
         _pd.style.display = 'none';
         roundBadge = document.createElement('div');
         roundBadge.className = 'cp-lab-round-badge';
@@ -19712,6 +19717,7 @@ var ContentRenderer = (function () {
     });
     var _pt = document.querySelector('.progress-track');
     if (_pt) {
+      _pt.classList.remove('progress-track--empty');
       _pt.appendChild(dotsRow);
     } else {
       wrap.appendChild(dotsRow); /* fallback if shell element absent */
@@ -19725,7 +19731,7 @@ var ContentRenderer = (function () {
     var labelEl  = _el('p',   'cp-l9ib-card__label');
     labelEl.setAttribute('aria-live', 'polite');
     var titleEl  = _el('h2',  'cp-l9ib-title');
-    titleEl.textContent = page.title || 'INSERT THE BRACKETS!';
+    titleEl.textContent = page.title || 'Insert The Brackets!';
     var promptEl = _el('p',   'cp-l9ib-card__prompt');
     promptEl.textContent = page.instruction || 'Place the brackets to make it true!';
     var bodyEl   = _el('div', 'cp-l9ib-card__body');
@@ -20107,7 +20113,7 @@ var ContentRenderer = (function () {
 
       if (qIdx < questions.length) {
         var q = questions[qIdx];
-        counterEl.textContent  = 'QUESTION ' + q.n + ' OF ' + total;
+        counterEl.textContent  = 'Question ' + q.n + ' of ' + total;
         ruleBanner.textContent = 'Rule ' + q.n + ' — ' + q.rule;
         ruleBanner.className   = _sharedContentClasses('cp-l9br-rule-banner cp-l9br-rule-banner--active');
         promptEl.textContent   = 'Tap the operator you should solve FIRST.';

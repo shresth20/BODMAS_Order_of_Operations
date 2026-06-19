@@ -1696,7 +1696,7 @@
   border-radius: 14px;
   cursor: pointer;
   text-align: left;
-  transition: transform 0.14s, background 0.14s, border-color 0.14s;
+  transition: transform 0.14s, background 0.14s, border-color 0.14s, box-shadow 0.14s;
   min-height: 48px;
 }
 
@@ -1807,7 +1807,7 @@
   min-width: clamp(52px, 8vw, 84px);
   min-height: 50px;
   cursor: pointer;
-  transition: transform 0.14s, border-color 0.14s, background 0.14s;
+  transition: transform 0.14s, border-color 0.14s, background 0.14s, box-shadow 0.14s;
 }
 
 .choice-button:hover,
@@ -5301,6 +5301,7 @@
 .cp-l4l-tile--num,
 .cp-l4l-tile--ltr-num  { background: transparent; color: white; border: none; box-shadow: none; cursor: default; pointer-events: none; font-size: clamp(30px, 5vw, 60px); text-shadow: 1px 2px 5px rgba(0,0,0,0.4); }
 .cp-l4l-tile--ltr-op   { background: transparent; border-radius: 50%; border: 3px solid #18D6A0; color: #18D6A0; box-shadow: 0 0 14px rgba(24,214,160,0.45); text-shadow: 0 0 8px rgba(24,214,160,0.55); font-family: 'Lilita One', var(--font-primary); font-size: clamp(42px, 6.5vw, 76px);}
+.cp-l4l-tile--ltr-sub  { padding-bottom: 0.2em; }
 .cp-l4l-tile--add-op   { background: transparent; border-radius: 50%; border: 3px solid #18D6A0; color: #18D6A0; box-shadow: 0 0 14px rgba(24,214,160,0.4); text-shadow: 0 0 8px rgba(24,214,160,0.55); font-family: 'Lilita One', var(--font-primary); font-size: clamp(42px, 6.5vw, 76px); }
 .cp-l4l-tile--sub-op   { background: transparent; border-radius: 50%; border: 3px solid #FF6A58; color: #FF6A58; box-shadow: 0 0 14px rgba(255,106,88,0.45); text-shadow: 0 0 8px rgba(255,106,88,0.6); font-family: 'Lilita One', var(--font-primary); font-size: clamp(42px, 6.5vw, 76px); padding-bottom: 0.2em;}
 .cp-l4l-tile--ltr-op:hover  { box-shadow: 0 0 22px rgba(24,214,160,0.7); transform: translateY(-2px) scale(1.08); }
@@ -5491,7 +5492,7 @@
 }
 .cp-l4r-step__hl--result {
   color: #18D6A0;
-  background: rgba(15, 168, 120, 0.18);
+  background: #18d6a021;
 }
 .cp-l4r-step__hl--final {
   color: #18D6A0;
@@ -6369,7 +6370,7 @@
   flex-direction: column;
   gap: clamp(10px, 1.8vh, 22px);
   width: 100%;
-  max-width: 680px;
+  max-width: 800px;
   text-align: center;
   border: 2.5px solid #6F8BFF;
   border-radius: 22px;
@@ -7273,7 +7274,6 @@
   text-shadow: 1px 2px 5px rgba(0,0,0,0.4);
 }
 .cp-l6l-tile--eq {
-  background: rgba(255,255,255,0.18);
   color: rgba(255,255,255,0.88);
   cursor: default;
   pointer-events: none;
@@ -9936,3 +9936,139 @@
   .cp-l9br-step-cols { flex-direction: column; }
   .cp-l9rs-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   GLOW EFFECTS — filter: drop-shadow() bypasses overflow:hidden clipping.
+   Appended last so cascade always wins regardless of specificity elsewhere.
+══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Extend transitions to include filter ── */
+.cp-l1i-cta, .cp-l2i-cta, .cp-l3i-cta, .cp-l4i-cta, .cp-l5i-cta, .cp-l6i-cta,
+.cp-l1r-btn, .cp-l2r-btn, .cp-l3r-btn, .cp-l4r-btn, .cp-l5r-btn, .cp-l6r-btn {
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.2s ease;
+}
+
+/* ── Level intro CTA buttons ── */
+.cp-l1i-cta         { filter: drop-shadow(0 0 10px rgba(255, 169, 58, 0.55)); }
+.cp-l1i-cta:hover   { filter: drop-shadow(0 0 22px rgba(255, 169, 58, 0.88)); }
+.cp-l1i-cta:active  { filter: none; }
+.cp-l2i-cta         { filter: drop-shadow(0 0 10px rgba(196, 138, 255, 0.55)); }
+.cp-l2i-cta:hover   { filter: drop-shadow(0 0 22px rgba(196, 138, 255, 0.88)); }
+.cp-l2i-cta:active  { filter: none; }
+.cp-l3i-cta         { filter: drop-shadow(0 0 10px rgba(59, 198, 255, 0.55)); }
+.cp-l3i-cta:hover   { filter: drop-shadow(0 0 22px rgba(59, 198, 255, 0.88)); }
+.cp-l3i-cta:active  { filter: none; }
+.cp-l4i-cta         { filter: drop-shadow(0 0 10px rgba(24, 214, 160, 0.55)); }
+.cp-l4i-cta:hover   { filter: drop-shadow(0 0 22px rgba(24, 214, 160, 0.88)); }
+.cp-l4i-cta:active  { filter: none; }
+.cp-l5i-cta         { filter: drop-shadow(0 0 10px rgba(111, 139, 255, 0.55)); }
+.cp-l5i-cta:hover   { filter: drop-shadow(0 0 22px rgba(111, 139, 255, 0.88)); }
+.cp-l5i-cta:active  { filter: none; }
+.cp-l6i-cta         { filter: drop-shadow(0 0 10px rgba(255, 111, 168, 0.55)); }
+.cp-l6i-cta:hover   { filter: drop-shadow(0 0 22px rgba(255, 111, 168, 0.88)); }
+.cp-l6i-cta:active  { filter: none; }
+
+/* ── Level reveal / continue buttons ── */
+.cp-l1r-btn         { filter: drop-shadow(0 0 10px rgba(255, 169, 58, 0.55)); }
+.cp-l1r-btn:hover   { filter: drop-shadow(0 0 22px rgba(255, 169, 58, 0.88)); }
+.cp-l1r-btn:active  { filter: none; }
+.cp-l2r-btn         { filter: drop-shadow(0 0 10px rgba(196, 138, 255, 0.55)); }
+.cp-l2r-btn:hover   { filter: drop-shadow(0 0 22px rgba(196, 138, 255, 0.88)); }
+.cp-l2r-btn:active  { filter: none; }
+.cp-l3r-btn         { filter: drop-shadow(0 0 10px rgba(59, 198, 255, 0.55)); }
+.cp-l3r-btn:hover   { filter: drop-shadow(0 0 22px rgba(59, 198, 255, 0.88)); }
+.cp-l3r-btn:active  { filter: none; }
+.cp-l4r-btn         { filter: drop-shadow(0 0 10px rgba(24, 214, 160, 0.55)); }
+.cp-l4r-btn:hover   { filter: drop-shadow(0 0 22px rgba(24, 214, 160, 0.88)); }
+.cp-l4r-btn:active  { filter: none; }
+.cp-l5r-btn         { filter: drop-shadow(0 0 10px rgba(111, 139, 255, 0.55)); }
+.cp-l5r-btn:hover   { filter: drop-shadow(0 0 22px rgba(111, 139, 255, 0.88)); }
+.cp-l5r-btn:active  { filter: none; }
+.cp-l6r-btn         { filter: drop-shadow(0 0 10px rgba(255, 111, 168, 0.55)); }
+.cp-l6r-btn:hover   { filter: drop-shadow(0 0 22px rgba(255, 111, 168, 0.88)); }
+.cp-l6r-btn:active  { filter: none; }
+
+/* ── Practice: operator buttons by operator color ── */
+.cp-l1p-op-btn--mul, .cp-l2p-op-btn--mul, .cp-l4p-op-btn--mul, .cp-l5p-op-btn--mul,
+.cp-l6p-op-btn--mul { transition: filter 0.18s ease, transform 0.1s ease, box-shadow 0.1s ease; }
+.cp-l1p-op-btn--mul:hover, .cp-l2p-op-btn--mul:hover, .cp-l4p-op-btn--mul:hover,
+.cp-l5p-op-btn--mul:hover, .cp-l6p-op-btn--mul:hover { filter: drop-shadow(0 0 16px rgba(255, 169, 58, 0.78)); }
+
+.cp-l1p-op-btn--add, .cp-l3p-op-btn--add, .cp-l4p-op-btn--add, .cp-l5p-op-btn--add,
+.cp-l6p-op-btn--add { transition: filter 0.18s ease, transform 0.1s ease, box-shadow 0.1s ease; }
+.cp-l1p-op-btn--add:hover, .cp-l3p-op-btn--add:hover, .cp-l4p-op-btn--add:hover,
+.cp-l5p-op-btn--add:hover, .cp-l6p-op-btn--add:hover { filter: drop-shadow(0 0 16px rgba(24, 214, 160, 0.78)); }
+
+.cp-l2p-op-btn--sub, .cp-l3p-op-btn--sub, .cp-l4p-op-btn--sub, .cp-l5p-op-btn--sub,
+.cp-l6p-op-btn--sub { transition: filter 0.18s ease, transform 0.1s ease, box-shadow 0.1s ease; }
+.cp-l2p-op-btn--sub:hover, .cp-l3p-op-btn--sub:hover, .cp-l4p-op-btn--sub:hover,
+.cp-l5p-op-btn--sub:hover, .cp-l6p-op-btn--sub:hover { filter: drop-shadow(0 0 16px rgba(255, 106, 88, 0.78)); }
+
+.cp-l3p-op-btn--div, .cp-l4p-op-btn--div, .cp-l5p-op-btn--div,
+.cp-l6p-op-btn--div { transition: filter 0.18s ease, transform 0.1s ease, box-shadow 0.1s ease; }
+.cp-l3p-op-btn--div:hover, .cp-l4p-op-btn--div:hover, .cp-l5p-op-btn--div:hover,
+.cp-l6p-op-btn--div:hover { filter: drop-shadow(0 0 16px rgba(59, 198, 255, 0.78)); }
+
+.cp-l6p-op-btn--brkt { transition: filter 0.18s ease, transform 0.1s ease, box-shadow 0.1s ease; }
+.cp-l6p-op-btn--brkt:hover { filter: drop-shadow(0 0 16px rgba(255, 111, 168, 0.78)); }
+
+/* ── Practice: rule-opt buttons per level ── */
+.cp-l1p-rule-opt { transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, filter 0.2s ease; }
+.cp-l1p-rule-opt         { filter: drop-shadow(0 0 8px rgba(255, 169, 58, 0.45)); }
+.cp-l1p-rule-opt:hover   { filter: drop-shadow(0 0 18px rgba(255, 169, 58, 0.82)); }
+.cp-l2p-rule-opt { transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, filter 0.2s ease; }
+.cp-l2p-rule-opt         { filter: drop-shadow(0 0 8px rgba(196, 138, 255, 0.45)); }
+.cp-l2p-rule-opt:hover   { filter: drop-shadow(0 0 18px rgba(196, 138, 255, 0.82)); }
+.cp-l3p-rule-opt { transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, filter 0.2s ease; }
+.cp-l3p-rule-opt         { filter: drop-shadow(0 0 8px rgba(59, 198, 255, 0.45)); }
+.cp-l3p-rule-opt:hover   { filter: drop-shadow(0 0 18px rgba(59, 198, 255, 0.82)); }
+.cp-l4p-rule-opt { transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, filter 0.2s ease; }
+.cp-l4p-rule-opt         { filter: drop-shadow(0 0 8px rgba(24, 214, 160, 0.45)); }
+.cp-l4p-rule-opt:hover   { filter: drop-shadow(0 0 18px rgba(24, 214, 160, 0.82)); }
+.cp-l5p-rule-opt { transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, filter 0.2s ease; }
+.cp-l5p-rule-opt         { filter: drop-shadow(0 0 8px rgba(111, 139, 255, 0.45)); }
+.cp-l5p-rule-opt:hover   { filter: drop-shadow(0 0 18px rgba(111, 139, 255, 0.82)); }
+.cp-l6p-rule-opt { transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease, filter 0.2s ease; }
+.cp-l6p-rule-opt         { filter: drop-shadow(0 0 8px rgba(255, 111, 168, 0.45)); }
+.cp-l6p-rule-opt:hover   { filter: drop-shadow(0 0 18px rgba(255, 111, 168, 0.82)); }
+
+/* ── Practice: choice buttons per level ── */
+.cp-l1p-choice-btn:hover { filter: drop-shadow(0 0 16px rgba(255, 169, 58, 0.78)); }
+.cp-l2p-choice-btn:hover { filter: drop-shadow(0 0 16px rgba(196, 138, 255, 0.78)); }
+.cp-l3p-choice-btn:hover { filter: drop-shadow(0 0 16px rgba(59, 198, 255, 0.78)); }
+.cp-l4p-choice-btn:hover { filter: drop-shadow(0 0 16px rgba(24, 214, 160, 0.78)); }
+.cp-l5p-choice-btn:hover { filter: drop-shadow(0 0 16px rgba(111, 139, 255, 0.78)); }
+.cp-l6p-choice-btn:hover { filter: drop-shadow(0 0 16px rgba(255, 111, 168, 0.78)); }
+
+/* ── Practice: method cards per level ── */
+.cp-l1p-method-card:hover { filter: drop-shadow(0 0 18px rgba(255, 169, 58, 0.72)); }
+.cp-l2p-method-card:hover { filter: drop-shadow(0 0 18px rgba(196, 138, 255, 0.72)); }
+.cp-l3p-method-card:hover { filter: drop-shadow(0 0 18px rgba(59, 198, 255, 0.72)); }
+.cp-l4p-method-card:hover { filter: drop-shadow(0 0 18px rgba(24, 214, 160, 0.72)); }
+.cp-l5p-method-card:hover { filter: drop-shadow(0 0 18px rgba(111, 139, 255, 0.72)); }
+.cp-l6p-method-card:hover { filter: drop-shadow(0 0 18px rgba(255, 111, 168, 0.72)); }
+
+/* ── BODMAS ladder tiles: glow on hover matches border color ── */
+.cp-l8bl-tile { transition: transform 0.12s ease, box-shadow 0.18s ease, filter 0.18s ease, opacity 0.12s ease; }
+.cp-l8bl-tile--yellow:not(.cp-l8bl-tile--in-slot):hover { filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.78)); }
+.cp-l8bl-tile--purple:not(.cp-l8bl-tile--in-slot):hover { filter: drop-shadow(0 0 16px rgba(192, 132, 252, 0.78)); }
+.cp-l8bl-tile--green:not(.cp-l8bl-tile--in-slot):hover  { filter: drop-shadow(0 0 16px rgba(34, 197, 94, 0.78)); }
+.cp-l8bl-tile--teal:not(.cp-l8bl-tile--in-slot):hover   { filter: drop-shadow(0 0 16px rgba(20, 184, 166, 0.78)); }
+.cp-l8bl-tile--orange:not(.cp-l8bl-tile--in-slot):hover { filter: drop-shadow(0 0 16px rgba(251, 146, 60, 0.78)); }
+.cp-l8bl-tile--blue:not(.cp-l8bl-tile--in-slot):hover   { filter: drop-shadow(0 0 16px rgba(34, 211, 238, 0.78)); }
+.cp-l8bl-tile--pink:not(.cp-l8bl-tile--in-slot):hover   { filter: drop-shadow(0 0 16px rgba(244, 114, 182, 0.78)); }
+
+/* ── BODMAS check button ── */
+.cp-l8bl-check-btn       { filter: drop-shadow(0 0 10px rgba(124, 58, 237, 0.5)); transition: filter 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease; }
+.cp-l8bl-check-btn:hover { filter: drop-shadow(0 0 22px rgba(124, 58, 237, 0.88)); }
+.cp-l8bl-check-btn:active { filter: none; }
+
+/* ── L9 nested brackets: tappable operator tiles ── */
+.cp-l9nb-op-tile { transition: filter 0.16s ease, box-shadow 0.16s ease, transform 0.12s ease; }
+.cp-l9nb-op-tile:hover { filter: drop-shadow(0 0 14px rgba(99, 102, 241, 0.78)); }
+
+/* ── Insert-brackets gaps ── */
+.cp-l9ib-gap { transition: border-color 0.14s, background 0.14s, box-shadow 0.14s, filter 0.14s, color 0.14s; }
+.cp-l9ib-gap:hover  { filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.75)); }
+.cp-l9ib-gap--open,
+.cp-l9ib-gap--close { filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.65)); }

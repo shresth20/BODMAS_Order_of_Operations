@@ -34,6 +34,8 @@ var HandNudge = (function () {
     '.cp-l1l-tile--mul-op',
     '.cp-l2l-tile--mul-op',
     '.cp-l3l-tile--div-op',
+    '.cp-l4l-tile--sub-op',
+    '.cp-l4l-tile--add-op',
     '.cp-l5l-tile--mul-op',
     '.cp-l5l-tile--div-op',
     '.cp-l6l-tile--mul-op'
@@ -50,7 +52,12 @@ var HandNudge = (function () {
     '.cp-btn-mission:not(:disabled)',
     '.cp-btn-intro:not(:disabled)',
     '.cp-btn-primary:not(:disabled)',
-    '.cp-l8bl-check-btn:not(:disabled)'
+    '.cp-l8bl-check-btn:not(:disabled)',
+    /* Practice pages (l1-practice … l6-practice) */
+    '[class*="p-op-btn"]:not(:disabled)',
+    '[class*="p-rule-opt"]:not(:disabled)',
+    '[class*="p-choice-btn"]:not(:disabled)',
+    '[class*="p-method-card"]:not(:disabled)'
   ].join(', ');
 
   /* ── Singleton image element ─────────────────────────────────────────── */
