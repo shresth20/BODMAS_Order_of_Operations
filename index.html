@@ -61,6 +61,36 @@
 
     </main>
 
+    <!-- ═══ LAYER 3.5: Page-specific content decorations (z-index 35, inside board-container stacking context) ═══ -->
+    <div id="content-deco-layer" class="layer-content-deco" aria-hidden="true">
+      <div class="content-deco content-deco--l1-1"><img src="assets/images/L1-1.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l1-2"><img src="assets/images/L1-2.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l1-3"><img src="assets/images/L1-3.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l1-4"><img src="assets/images/L1-4.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l2-1"><img src="assets/images/L2-1.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l2-2"><img src="assets/images/L2-2.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l2-3"><img src="assets/images/L2-3.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l2-4"><img src="assets/images/L2-4.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l3-1"><img src="assets/images/L3-1.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l3-2"><img src="assets/images/L3-2.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l3-3"><img src="assets/images/L3-3.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l3-4"><img src="assets/images/L3-4.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l3-5"><img src="assets/images/L3-5.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l4-1"><img src="assets/images/L4-1.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l4-2"><img src="assets/images/L4-2.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l4-3"><img src="assets/images/L4-3.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l4-4"><img src="assets/images/L4-4.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l5-1"><img src="assets/images/L5-1.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l5-2"><img src="assets/images/L5-2.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l5-3"><img src="assets/images/L5-3.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l5-4"><img src="assets/images/L5-4.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l6-1"><img src="assets/images/L6-1.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l6-2"><img src="assets/images/L6-2.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l6-3"><img src="assets/images/L6-2.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l6-4"><img src="assets/images/L6-2.webp" alt="" draggable="false"></div>
+      <div class="content-deco content-deco--l6-5"><img src="assets/images/L6-3.webp" alt="" draggable="false"></div>
+    </div>
+
   </div>
 
   <!-- ═══ LAYER 6: Feedback (fixed, above all board layers) ═══ -->
@@ -169,7 +199,7 @@
   </div>
 
   <!-- PixiJS (used by division-lab canvas board) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.10/pixi.min.js"></script>
+  <script src="js/vendor/pixi.min.js"></script>
   <!-- Anime.js (local) -->
   <script src="js/vendor/anime.min.js"></script>
 
@@ -181,6 +211,7 @@
   <script src="js/core/i18n.js"></script>
   <script src="js/core/frames.js"></script>
   <script src="js/core/app.js"></script>
+  <script src="js/core/hand-nudge.js"></script>
 
   <!-- Content pages system (loaded after game shell) -->
   <script>window.CONTENT_MODE = true;</script>
