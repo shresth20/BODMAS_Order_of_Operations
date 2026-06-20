@@ -2584,8 +2584,8 @@
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.8vh, 18px);
-  width: 100%;
-  max-width: 680px;
+  width: fit-content;
+  max-width: 100%;
   text-align: center;
   border: 2.5px solid #ffa93a73;
   border-radius: 22px;
@@ -3610,8 +3610,8 @@
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.8vh, 22px);
-  width: 100%;
-  max-width: 680px;
+  width: fit-content;
+  max-width: 100%;
   text-align: center;
   border: 2.5px solid #C48AFF;
   border-radius: 22px;
@@ -4528,8 +4528,8 @@
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.8vh, 22px);
-  width: 100%;
-  max-width: 680px;
+  width: fit-content;
+  max-width: 100%;
   text-align: center;
   border: 2.5px solid #3BC6FF;
   border-radius: 22px;
@@ -5448,8 +5448,8 @@
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.8vh, 22px);
-  width: 100%;
-  max-width: 800px;
+  width: fit-content;
+  max-width: 100%;
   text-align: center;
   border: 2.5px solid #18D6A0;
   border-radius: 22px;
@@ -6369,8 +6369,8 @@
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.8vh, 22px);
-  width: 100%;
-  max-width: 800px;
+  width: fit-content;
+  max-width: 100%;
   text-align: center;
   border: 2.5px solid #6F8BFF;
   border-radius: 22px;
@@ -7422,8 +7422,8 @@
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 1.8vh, 22px);
-  width: 100%;
-  max-width: 680px;
+  width: fit-content;
+  max-width: 100%;
   text-align: center;
   border: 2.5px solid #FF6FA8;
   border-radius: 22px;
