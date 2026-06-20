@@ -1,6 +1,7 @@
 /* App orchestrator — rendering, event handling, screen transitions */
 
 var _htpShownOnce = false;
+var _htpIsIntro   = false;
 var _feedbackTimeout = null;
 
 /* ── Init ──────────────────────────────────────────── */
@@ -15,6 +16,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* ── Apply translations to all static DOM elements ─── */
 function applyStaticTranslations() {
+  /* Generic data-i18n* bindings (textContent / html / title / aria-label / alt) */
+  _applyI18nAttributes(document);
+
+  /* Document title */
+  document.title = I18n.t('pageTitle');
+
+  /* CSS-generated "Tap to Begin" label (loader pseudo-element reads this var) */
+  if (document.documentElement && document.documentElement.style) {
+    document.documentElement.style.setProperty('--i18n-tap-to-begin', JSON.stringify(I18n.t('tapToBegin')));
+  }
+
   /* Language modal */
   _setText('#lang-title',    I18n.t('langPopupTitle'));
   _setText('#lang-subtitle', I18n.t('langPopupSubtitle'));
@@ -32,6 +44,28 @@ function applyStaticTranslations() {
     fsBtn.title = I18n.t(fsKey);
     fsBtn.setAttribute('aria-label', I18n.t(fsKey));
   }
+}
+
+/* Translate any element carrying a data-i18n* attribute within `root`.
+   data-i18n → textContent, data-i18n-html → innerHTML,
+   data-i18n-title → title, data-i18n-aria → aria-label, data-i18n-alt → alt. */
+function _applyI18nAttributes(root) {
+  if (!root || !root.querySelectorAll) return;
+  var attrMap = [
+    ['data-i18n',       function(el, txt) { el.textContent = txt; }],
+    ['data-i18n-html',  function(el, txt) { el.innerHTML = txt; }],
+    ['data-i18n-title', function(el, txt) { el.title = txt; }],
+    ['data-i18n-aria',  function(el, txt) { el.setAttribute('aria-label', txt); }],
+    ['data-i18n-alt',   function(el, txt) { el.setAttribute('alt', txt); }]
+  ];
+  attrMap.forEach(function(pair) {
+    var attr = pair[0], apply = pair[1];
+    var nodes = root.querySelectorAll('[' + attr + ']');
+    for (var i = 0; i < nodes.length; i++) {
+      var key = nodes[i].getAttribute(attr);
+      if (key) apply(nodes[i], I18n.t(key));
+    }
+  });
 }
 
 function _setText(sel, text) {
@@ -136,10 +170,7 @@ function buildLoadingHTML() {
 function handleReset() {
   if (window.CONTENT_MODE && typeof ContentRenderer !== 'undefined') {
     var pageId = ContentRenderer.getCurrentPageId();
-    if (pageId) {
-      var sectionStart = pageId.split('.')[0] + '.0';
-      ContentRenderer.renderPage(sectionStart);
-    }
+    if (pageId) ContentRenderer.renderPage(pageId);
   }
 }
 
@@ -204,18 +235,10 @@ function scheduleAutoAdvanceFromLoading() {
   setTimeout(function() {
     if (window.CONTENT_MODE) {
       var overlay = qs('#loader-overlay');
-      if (overlay) {
-        overlay.classList.add('loader--tap-ready');
-        overlay.addEventListener('click', function _onTap() {
-          overlay.removeEventListener('click', _onTap);
-          overlay.classList.add('loader--hidden');
-          document.body.classList.add('content-page-active');
-          if (typeof ContentRenderer !== 'undefined') ContentRenderer.renderPage('1.0');
-        });
-      } else {
-        document.body.classList.add('content-page-active');
-        if (typeof ContentRenderer !== 'undefined') ContentRenderer.renderPage('1.0');
-      }
+      if (overlay) overlay.classList.add('loader--hidden');
+      document.body.classList.add('content-page-active');
+      _htpIsIntro = true;
+      openHowToPlay();
     }
   }, 2200);
 }
@@ -233,6 +256,34 @@ function escapeText(str) {
 function openHowToPlay() {
   var modal = qs('#htp-modal');
   if (!modal) return;
+
+  if (typeof GAME_HTP !== 'undefined') {
+    var subtitleEl = qs('#htp-subtitle');
+    var stepsEl    = qs('#htp-steps');
+    if (subtitleEl && GAME_HTP.subtitle) subtitleEl.textContent = I18n.t(GAME_HTP.subtitle);
+    if (stepsEl && Array.isArray(GAME_HTP.steps)) {
+      stepsEl.innerHTML = '';
+      GAME_HTP.steps.forEach(function(stepKey, i) {
+        var step = I18n.t(stepKey);
+        var li   = document.createElement('li');
+        li.className = 'modal-step';
+
+        var num  = document.createElement('span');
+        num.className = 'modal-step__num';
+        num.setAttribute('aria-hidden', 'true');
+        num.textContent = i + 1;
+
+        var text = document.createElement('span');
+        text.className = 'modal-step__text';
+        text.innerHTML = step;
+
+        li.appendChild(num);
+        li.appendChild(text);
+        stepsEl.appendChild(li);
+      });
+    }
+  }
+
   modal.classList.add('modal--open');
   modal.setAttribute('aria-hidden', 'false');
   document.addEventListener('keydown', handleModalKeydown);
@@ -246,6 +297,13 @@ function closeHowToPlay() {
   modal.classList.remove('modal--open');
   modal.setAttribute('aria-hidden', 'true');
   document.removeEventListener('keydown', handleModalKeydown);
+
+  if (_htpIsIntro) {
+    _htpIsIntro = false;
+    if (typeof ContentRenderer !== 'undefined') ContentRenderer.renderPage('1.0');
+    return;
+  }
+
   var btnInfo = qs('#btn-info');
   if (btnInfo) btnInfo.focus();
 }
@@ -403,7 +461,12 @@ function _applyLanguage(langCode, langLabel) {
     GameState.selectedAnswer = null;
     GameState.isSubmitted    = false;
     applyStaticTranslations();
-    renderScreen(GameState.currentScreen);
+    if (window.CONTENT_MODE && typeof ContentRenderer !== 'undefined') {
+      var _pid = ContentRenderer.getCurrentPageId();
+      if (_pid) ContentRenderer.renderPage(_pid);
+    } else {
+      renderScreen(GameState.currentScreen);
+    }
   }, 1800);
 }
 

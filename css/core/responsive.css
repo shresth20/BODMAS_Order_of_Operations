@@ -474,7 +474,6 @@
   #lang-card {
     padding: clamp(10px, 2vh, 14px) clamp(12px, 2.5vw, 18px);
     max-height: calc(100dvh - 20px);
-    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 

@@ -10,6 +10,69 @@ var ContentRenderer = (function () {
   var _subtractionLabResult    = null; /* { firstNumber, secondNumber } — set by 3.1, read by 3.2 */
   var _multiplicationLabResult = null; /* { bigNumber, multiplier, product } — set by 4.1, read by 4.2 */
 
+  /* ── i18n: translate page-config text fields at render time ──
+     pages.js stores i18n KEYS in these named fields; everything else
+     (expressions, tokens, numeric results, ids) is passed through untouched.
+     A whitelisted field name is the ONLY trigger for translation, so math
+     expressions never get translated even though they are strings. */
+  var _I18N_TEXT_FIELDS = {
+    scenario: 1, scenarioHtml: 1, question: 1, questionHtml: 1, buttonLabel: 1,
+    title: 1, ruleTitle: 1, ruleText: 1, bodmasTag: 1, completionMsg: 1,
+    instruction: 1, subInstruction: 1, hintInner: 1, hintMiddle: 1, hintLast: 1,
+    wrongHint: 1, prompt: 1, okMsg: 1, rule: 1, label: 1, word: 1, successMsg: 1
+  };
+  var _I18N_TEXT_ARRAY_FIELDS = { options: 1 }; /* arrays whose string elements are keys */
+
+  function _i18nText(key) {
+    return (typeof I18n !== 'undefined' && typeof key === 'string') ? I18n.t(key) : key;
+  }
+
+  function _translateNode(node) {
+    if (Array.isArray(node)) {
+      return node.map(function (item) { return _translateNode(item); });
+    }
+    if (node && typeof node === 'object') {
+      var out = {};
+      for (var k in node) {
+        if (!Object.prototype.hasOwnProperty.call(node, k)) continue;
+        var val = node[k];
+        if (typeof val === 'string' && _I18N_TEXT_FIELDS[k]) {
+          out[k] = _i18nText(val);
+        } else if (Array.isArray(val) && _I18N_TEXT_ARRAY_FIELDS[k]) {
+          out[k] = val.map(function (s) { return typeof s === 'string' ? _i18nText(s) : _translateNode(s); });
+        } else {
+          out[k] = _translateNode(val);
+        }
+      }
+      return out;
+    }
+    return node;
+  }
+
+  /* Returns a translated CLONE; the source CONTENT_PAGES object is never mutated,
+     so language switches re-translate from the original English keys. */
+  function _translatePageConfig(page) {
+    if (!page || typeof page !== 'object') return page;
+    return _translateNode(page);
+  }
+
+  /* Split a (translated) rule sentence on single-char operators, returning
+     L1-reveal token descriptors: text fragments -> {kind:'tw'}, operators ->
+     {kind:<opMap[char]>}. Splitting the full localized string keeps word order
+     correct in every language while the operators still pop in as pills. */
+  function _ruleSentenceTokens(text, opMap) {
+    var tokens = [], buf = '';
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (opMap[ch]) {
+        if (buf) { tokens.push({ kind: 'tw', text: buf }); buf = ''; }
+        tokens.push({ kind: opMap[ch], text: ch });
+      } else { buf += ch; }
+    }
+    if (buf) tokens.push({ kind: 'tw', text: buf });
+    return tokens;
+  }
+
   /* ── Public: render a page by id into #content-area ── */
   function renderPage(pageId) {
     var page = _findPage(pageId);
@@ -17,6 +80,7 @@ var ContentRenderer = (function () {
       console.warn('[ContentRenderer] Page not found:', pageId);
       return;
     }
+    page = _translatePageConfig(page);
 
     var area = document.getElementById('content-area');
     if (!area) return;
@@ -31,6 +95,8 @@ var ContentRenderer = (function () {
     if (_ibDots) _ibDots.remove();
     var _pDotsEl = document.getElementById('progress-dots');
     if (_pDotsEl) _pDotsEl.style.removeProperty('display');
+    var _ptEl = document.querySelector('.progress-track');
+    if (_ptEl) _ptEl.classList.add('progress-track--empty');
     if (typeof Narration !== 'undefined') Narration.stop();
     _currentPageId = pageId;
 
@@ -287,6 +353,23 @@ var ContentRenderer = (function () {
   function _wipeLeftTo(pageId) {
     var area = document.getElementById('content-area');
     if (typeof anime !== 'undefined' && area) {
+      /* Capture decos that are currently visible so we can fade them out */
+      var outDecos = Array.prototype.filter.call(
+        document.querySelectorAll('.content-deco'),
+        function (d) { return window.getComputedStyle(d).display !== 'none'; }
+      );
+
+      /* Fade + shrink decos out alongside the content slide */
+      if (outDecos.length) {
+        anime({
+          targets:  outDecos,
+          opacity:  [1, 0],
+          scale:    [1, 0.82],
+          duration: 340,
+          easing:   'easeInQuad'
+        });
+      }
+
       anime({
         targets: area,
         translateX: [0, '-100%'],
@@ -294,6 +377,8 @@ var ContentRenderer = (function () {
         duration: 450,
         easing: 'easeInQuad',
         complete: function () {
+          /* Reset deco inline styles synchronously — no repaint before :has() switches */
+          outDecos.forEach(function (d) { d.style.opacity = ''; d.style.transform = ''; });
           anime.set(area, { translateX: 0, opacity: 1 });
           renderPage(pageId);
         }
@@ -7841,7 +7926,7 @@ var ContentRenderer = (function () {
     }
 
     function _loadQuestion(q, i) {
-      labelEl.textContent   = 'Question ' + (i + 1) + ' of ' + questions.length;
+      labelEl.textContent   = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent    = q.expression || '';
       exprEl.style.display  = q.expression ? '' : 'none';
       promptEl.textContent  = q.prompt || '';
@@ -8554,7 +8639,7 @@ var ContentRenderer = (function () {
     }
 
     function _loadQuestion(q, i) {
-      labelEl.textContent    = 'Question ' + (i + 1) + ' of ' + questions.length;
+      labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
       promptEl.textContent   = q.prompt || '';
@@ -12916,6 +13001,7 @@ var ContentRenderer = (function () {
       var _pt = document.querySelector('.progress-track');
       var _pd = document.getElementById('progress-dots');
       if (_pt && _pd) {
+        _pt.classList.remove('progress-track--empty');
         _pd.style.display = 'none';
         roundBadge = document.createElement('div');
         roundBadge.className = 'cp-lab-round-badge';
@@ -12937,13 +13023,13 @@ var ContentRenderer = (function () {
 
     var boardEl = _el('div', 'cp-l1l-board');
     var boardTitle = _el('div', 'cp-l1l-board__title');
-    boardTitle.innerHTML = '&#9733; MATH LAB &#9733;';
+    boardTitle.innerHTML = '&#9733; ' + I18n.t('mathLabTitle') + ' &#9733;';
     boardTitle.setAttribute('aria-hidden', 'true');
     boardEl.appendChild(boardTitle);
 
     var tilesRow = _el('div', 'cp-l1l-tiles');
     tilesRow.setAttribute('role', 'group');
-    tilesRow.setAttribute('aria-label', 'Expression tiles');
+    tilesRow.setAttribute('aria-label', I18n.t('ariaExpressionTiles'));
     boardEl.appendChild(tilesRow);
 
     classEl.appendChild(boardEl);
@@ -12953,7 +13039,7 @@ var ContentRenderer = (function () {
     var meeraLabel = _el('span', 'cp-l1l-student__label cp-l1l-student__label--pink'); meeraLabel.textContent = 'Meera';
     var meeraBubble = _el('div', 'cp-l1l-bubble cp-l1l-bubble--meera cp-l1l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l1l-bubble__name cp-l1l-bubble__name--pink'); meeraBName.textContent = 'Meera';
-    var meeraBText  = _el('p', 'cp-l1l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
+    var meeraBText  = _el('p', 'cp-l1l-bubble__text'); meeraBText.textContent = I18n.t('meeraTapFirst');
     meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
     var meeraSvgWrap = _el('div', 'cp-l1l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
@@ -13082,7 +13168,7 @@ var ContentRenderer = (function () {
         var hdr = _el('div', 'cp-l1l-dc-header');
         var hdrInfo = _el('div', 'cp-l1l-dc-header-info');
         var multLabel = _el('span', 'cp-l1l-dc-mult-label');
-        multLabel.textContent = 'Multiplication first';
+        multLabel.textContent = I18n.t('methodMultiplicationFirst');
         hdrInfo.appendChild(multLabel);
         hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
@@ -13137,7 +13223,7 @@ var ContentRenderer = (function () {
       capAv.className = 'cp-l1l-dc-caption__avatar';
       var capBody = _el('div', 'cp-l1l-dc-caption__body');
       var capLabel = _el('span', 'cp-l1l-dc-caption__label');
-      capLabel.textContent = 'Two different answers for';
+      capLabel.textContent = I18n.t('dcTwoDifferent');
       var capExpr = _el('span', 'cp-l1l-dc-caption__expr');
       tokens.forEach(function (tok, i) {
         if (i > 0) capExpr.appendChild(document.createTextNode(' '));
@@ -13165,7 +13251,7 @@ var ContentRenderer = (function () {
       if (round.hasCompare) _showCompare(round);
 
       var isLast = (roundIdx === rounds.length - 1);
-      nextBtn.textContent = isLast ? 'See the Rule' : 'Next Round';
+      nextBtn.textContent = isLast ? I18n.t('btnSeeRule') : I18n.t('btnNextRound');
       nextBtn.className   = _sharedContentClasses('cp-l1l-next-btn' + (isLast ? ' cp-l1l-next-btn--final' : ''));
       nextBtn.onclick = function () {
         if (isLast) {
@@ -13192,7 +13278,7 @@ var ContentRenderer = (function () {
 
       var ansTile = _el('div', 'cp-l1l-tile cp-l1l-tile--answer');
       ansTile.textContent = String(round.finalResult);
-      ansTile.setAttribute('aria-label', 'Answer: ' + round.finalResult);
+      ansTile.setAttribute('aria-label', I18n.t('ariaAnswerN', { n: round.finalResult }));
 
       tilesRow.appendChild(eqTile);
       tilesRow.appendChild(ansTile);
@@ -13228,7 +13314,7 @@ var ContentRenderer = (function () {
       if (phase !== 'add-wait') return;
       phase = 'final-merge';
       if (typeof playCorrect === 'function') playCorrect();
-      guideText.textContent = 'Brilliant! Merging now…';
+      guideText.textContent = I18n.t('labMergingNow');
 
       var allTiles = Array.prototype.slice.call(tilesRow.querySelectorAll('.cp-l1l-tile'));
       // allTiles after reduction = [left-number, + operator, right-number]
@@ -13276,7 +13362,7 @@ var ContentRenderer = (function () {
         t.textContent = rt.text;
 
         if (rt.kind === 'add-op') {
-          t.setAttribute('aria-label', 'Tap + to add');
+          t.setAttribute('aria-label', I18n.t('guideTapToAdd'));
           (function (tile, r) {
             tile.addEventListener('click', function () { _onAddTap(r); });
           }(t, round));
@@ -13301,7 +13387,7 @@ var ContentRenderer = (function () {
         }
       }
 
-      guideText.textContent = 'Great! Now tap + to finish.';
+      guideText.textContent = I18n.t('guideGreatNowTapFinish', { op: '+' });
       phase = 'add-wait';
     }
 
@@ -13322,7 +13408,7 @@ var ContentRenderer = (function () {
         /* Meera gives a hint in her speech bubble */
         if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
         meeraBubble.classList.remove('cp-l1l-bubble--faded', 'cp-l1l-bubble--guide-prompt');
-        meeraBText.textContent = '🔍 Look again. Is there a multiplication \xd7 sign in the sum?';
+        meeraBText.textContent = I18n.t('guideLookAgainMul');
         if (typeof anime !== 'undefined') {
           anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
           anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
@@ -13333,11 +13419,11 @@ var ContentRenderer = (function () {
       /* correct — numbers slide toward each other and collide */
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
-      guideText.textContent = 'Watch them come together!';
+      guideText.textContent = I18n.t('guideWatchTogether');
       /* Meera gives a compliment */
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
       meeraBubble.classList.remove('cp-l1l-bubble--faded', 'cp-l1l-bubble--guide-prompt');
-      meeraBText.textContent = 'Yes! × goes first! Brilliant! ⭐';
+      meeraBText.textContent = I18n.t('praiseOpGoesFirst', { op: '×' });
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
         anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 380, delay: 80, easing: 'easeOutBack' });
@@ -13386,7 +13472,7 @@ var ContentRenderer = (function () {
         tile.textContent = tok;
         tile.dataset.idx = ti;
         if (isOp) {
-          tile.setAttribute('aria-label', 'Tap ' + tok + ' first');
+          tile.setAttribute('aria-label', I18n.t('guideTapOpFirstInline', { op: tok }));
           (function (t, token, mul) {
             t.addEventListener('click', function () { _onTileTap(t, token, mul); });
           }(tile, tok, isMul));
@@ -13407,7 +13493,7 @@ var ContentRenderer = (function () {
       phase = 'idle';
       var round = rounds[idx];
 
-      roundLabel.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+      roundLabel.textContent = I18n.t('counterRoundNofTotal', { n: idx + 1, total: rounds.length });
       dotEls.forEach(function (d, i) {
         d.className = _sharedContentClasses('cp-l1l-dot' +
           (i < idx  ? ' cp-l1l-dot--done'   : '') +
@@ -13419,7 +13505,7 @@ var ContentRenderer = (function () {
         roundBadge.innerHTML = '';
         var _bt = document.createElement('span');
         _bt.className = 'cp-lab-round-badge__text';
-        _bt.textContent = 'Example ' + (idx + 1) + ' of ' + rounds.length;
+        _bt.textContent = I18n.t('counterExampleNofTotal', { n: idx + 1, total: rounds.length });
         roundBadge.appendChild(_bt);
       }
 
@@ -13429,7 +13515,7 @@ var ContentRenderer = (function () {
       boardEl.classList.remove('cp-l1l-board--blurred');
 
       /* Reset bubble text before re-appending */
-      meeraBText.textContent = 'Tap what to solve first!';
+      meeraBText.textContent = I18n.t('meeraTapFirst');
 
       /* Reset bubbles to speech-bubble state, hidden until guide text fires */
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
@@ -13449,14 +13535,14 @@ var ContentRenderer = (function () {
 
       /* Guide-bar intro: round 0 holds 1s before showing the tap prompt + bubbles */
       if (idx === 0) {
-        guideText.textContent = 'Solving the equation with + and ×. Watch carefully.';
+        guideText.textContent = I18n.t('guideSolvingWith', { a: '+', b: '×' });
         setTimeout(function () {
           if (_currentPageId !== page.id || phase !== 'idle') return;
-          guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
+          guideText.textContent = I18n.t('guideWatchBoard');
           _showBubbles();
         }, 1000);
       } else {
-        guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
+        guideText.textContent = I18n.t('guideWatchBoard');
       }
 
       _renderTiles(round);
@@ -13495,16 +13581,9 @@ var ContentRenderer = (function () {
         echo -> id of element to pulse when this token pops in
     */
     var rowDefs = [
-      /* Row 0: "When an equation has × and +, solve Multiplication first." */
-      [
-        { kind: 'tw',  text: 'When an equation has ' },
-        { kind: 'mul', text: '\xd7' },
-        { kind: 'tw',  text: ' and ' },
-        { kind: 'add', text: '+' },
-        { kind: 'sep', text: ', solve ' },
-        { kind: 'mul', text: '\xd7' },
-        { kind: 'sep', text: ' first.' }
-      ],
+      /* Row 0: rule sentence built from translated page.ruleText, split on
+         operators so each ×/+ pops in as a pill (word order follows the locale). */
+      _ruleSentenceTokens(page.ruleText || '', { '\xd7': 'mul', '+': 'add' }),
       /* Row 1: "3 + 4×2" */
       [
         { kind: 'step-plain', text: '3 + ', center: true },
@@ -13745,7 +13824,7 @@ var ContentRenderer = (function () {
     var barEl   = _el('div', 'cp-l1p-progress-bar');
     var fillEl  = _el('div', 'cp-l1p-progress-bar__fill');
     barEl.setAttribute('role', 'progressbar');
-    barEl.setAttribute('aria-label', 'Practice progress');
+    barEl.setAttribute('aria-label', I18n.t('ariaPracticeProgress'));
     barEl.setAttribute('aria-valuemin', '0');
     barEl.setAttribute('aria-valuemax', String(questions.length));
     barEl.setAttribute('aria-valuenow', '0');
@@ -13828,7 +13907,7 @@ var ContentRenderer = (function () {
 
     function _loadQuestion(q, i) {
       cardEl.className       = _sharedContentClasses('cp-l1p-card cp-l1p-card--' + (q.kind || 'question'));
-      labelEl.textContent    = 'Question ' + (i + 1) + ' of ' + questions.length;
+      labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
       promptEl.textContent   = q.prompt || '';
@@ -13852,7 +13931,7 @@ var ContentRenderer = (function () {
             var cls = 'cp-l1p-op-btn cp-l1p-op-btn--' + (tok === '\xd7' ? 'mul' : 'add');
             var opBtn = _el('button', cls);
             opBtn.textContent = tok;
-            opBtn.setAttribute('aria-label', 'Operator: ' + tok);
+            opBtn.setAttribute('aria-label', I18n.t('ariaOperatorColon', { op: tok }));
             (function (btn, oidx) {
               btn.addEventListener('click', function () {
                 if (answered) return;
@@ -14142,6 +14221,7 @@ var ContentRenderer = (function () {
       var _pt = document.querySelector('.progress-track');
       var _pd = document.getElementById('progress-dots');
       if (_pt && _pd) {
+        _pt.classList.remove('progress-track--empty');
         _pd.style.display = 'none';
         roundBadge = document.createElement('div');
         roundBadge.className = 'cp-lab-round-badge';
@@ -14162,13 +14242,13 @@ var ContentRenderer = (function () {
 
     var boardEl = _el('div', 'cp-l2l-board');
     var boardTitle = _el('div', 'cp-l2l-board__title');
-    boardTitle.innerHTML = '&#9733; MATH LAB &#9733;';
+    boardTitle.innerHTML = '&#9733; ' + I18n.t('mathLabTitle') + ' &#9733;';
     boardTitle.setAttribute('aria-hidden', 'true');
     boardEl.appendChild(boardTitle);
 
     var tilesRow = _el('div', 'cp-l2l-tiles');
     tilesRow.setAttribute('role', 'group');
-    tilesRow.setAttribute('aria-label', 'Expression tiles');
+    tilesRow.setAttribute('aria-label', I18n.t('ariaExpressionTiles'));
     boardEl.appendChild(tilesRow);
 
     classEl.appendChild(boardEl);
@@ -14178,7 +14258,7 @@ var ContentRenderer = (function () {
     var meeraLabel = _el('span', 'cp-l2l-student__label cp-l2l-student__label--pink'); meeraLabel.textContent = 'Meera';
     var meeraBubble = _el('div', 'cp-l2l-bubble cp-l2l-bubble--meera cp-l2l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l2l-bubble__name cp-l2l-bubble__name--pink'); meeraBName.textContent = 'Meera';
-    var meeraBText  = _el('p', 'cp-l2l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
+    var meeraBText  = _el('p', 'cp-l2l-bubble__text'); meeraBText.textContent = I18n.t('meeraTapFirst');
     meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
     var meeraSvgWrap = _el('div', 'cp-l2l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
@@ -14305,7 +14385,7 @@ var ContentRenderer = (function () {
         var hdr = _el('div', 'cp-l2l-dc-header');
         var hdrInfo = _el('div', 'cp-l2l-dc-header-info');
         var multLabel = _el('span', 'cp-l2l-dc-mult-label');
-        multLabel.textContent = 'Multiplication first';
+        multLabel.textContent = I18n.t('methodMultiplicationFirst');
         hdrInfo.appendChild(multLabel);
         hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
@@ -14350,7 +14430,7 @@ var ContentRenderer = (function () {
       capAv.className = 'cp-l2l-dc-caption__avatar';
       var capBody = _el('div', 'cp-l2l-dc-caption__body');
       var capLabel = _el('span', 'cp-l2l-dc-caption__label');
-      capLabel.textContent = 'Two different answers for';
+      capLabel.textContent = I18n.t('dcTwoDifferent');
       var capExpr = _el('span', 'cp-l2l-dc-caption__expr');
       tokens.forEach(function (tok, i) {
         if (i > 0) capExpr.appendChild(document.createTextNode(' '));
@@ -14376,7 +14456,7 @@ var ContentRenderer = (function () {
       if (round.hasCompare) _showCompare2(round);
 
       var isLast = (roundIdx === rounds.length - 1);
-      nextBtn.textContent = isLast ? 'See the Rule' : 'Next Round';
+      nextBtn.textContent = isLast ? I18n.t('btnSeeRule') : I18n.t('btnNextRound');
       nextBtn.className   = _sharedContentClasses('cp-l2l-next-btn' + (isLast ? ' cp-l2l-next-btn--final' : ''));
       nextBtn.onclick = function () {
         if (isLast) {
@@ -14403,7 +14483,7 @@ var ContentRenderer = (function () {
 
       var ansTile = _el('div', 'cp-l2l-tile cp-l2l-tile--answer');
       ansTile.textContent = String(round.finalResult);
-      ansTile.setAttribute('aria-label', 'Answer: ' + round.finalResult);
+      ansTile.setAttribute('aria-label', I18n.t('ariaAnswerN', { n: round.finalResult }));
 
       tilesRow.appendChild(eqTile);
       tilesRow.appendChild(ansTile);
@@ -14439,7 +14519,7 @@ var ContentRenderer = (function () {
       if (phase !== 'sub-wait') return;
       phase = 'final-merge';
       if (typeof playCorrect === 'function') playCorrect();
-      guideText.textContent = 'Brilliant! Merging now…';
+      guideText.textContent = I18n.t('labMergingNow');
 
       var allTiles = Array.prototype.slice.call(tilesRow.querySelectorAll('.cp-l2l-tile'));
       var numLeft  = allTiles[0];
@@ -14483,7 +14563,7 @@ var ContentRenderer = (function () {
         t.textContent = rt.text === '−' ? '-' : rt.text;
 
         if (rt.kind === 'sub-op') {
-          t.setAttribute('aria-label', 'Tap − to subtract');
+          t.setAttribute('aria-label', I18n.t('guideTapToSubtract'));
           (function (tile, r) {
             tile.addEventListener('click', function () { _onSubTap(r); });
           }(t, round));
@@ -14508,7 +14588,7 @@ var ContentRenderer = (function () {
         }
       }
 
-      guideText.textContent = 'Great! Now tap − to finish.';
+      guideText.textContent = I18n.t('guideGreatNowTapFinish', { op: '−' });
       phase = 'sub-wait';
     }
 
@@ -14527,7 +14607,7 @@ var ContentRenderer = (function () {
         }
         if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
         meeraBubble.classList.remove('cp-l2l-bubble--faded', 'cp-l2l-bubble--guide-prompt');
-        meeraBText.textContent = '🔍 Look again. Is there a multiplication \xd7 sign in the sum?';
+        meeraBText.textContent = I18n.t('guideLookAgainMul');
         if (typeof anime !== 'undefined') {
           anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
           anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
@@ -14537,8 +14617,8 @@ var ContentRenderer = (function () {
 
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
-      guideText.textContent = 'Watch them come together!';
-      meeraBText.textContent = 'Yes! \xd7 goes first! Brilliant! ⭐';
+      guideText.textContent = I18n.t('guideWatchTogether');
+      meeraBText.textContent = I18n.t('praiseOpGoesFirst', { op: '\xd7' });
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
         anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 380, delay: 80, easing: 'easeOutBack' });
@@ -14581,7 +14661,7 @@ var ContentRenderer = (function () {
         var tile  = _el('button', cls);
         tile.textContent = tok === '−' ? '-' : tok;
         tile.dataset.idx = ti;
-        tile.setAttribute('aria-label', 'Tile: ' + tok);
+        tile.setAttribute('aria-label', I18n.t('ariaTileX', { x: tok }));
         (function (t, token, mul) {
           t.addEventListener('click', function () { _onTileTap2(t, token, mul); });
         }(tile, tok, isMul));
@@ -14599,7 +14679,7 @@ var ContentRenderer = (function () {
       phase = 'idle';
       var round = rounds[idx];
 
-      roundLabel.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+      roundLabel.textContent = I18n.t('counterRoundNofTotal', { n: idx + 1, total: rounds.length });
       dotEls.forEach(function (d, i) {
         d.className = _sharedContentClasses('cp-l2l-dot' +
           (i < idx  ? ' cp-l2l-dot--done'   : '') +
@@ -14609,7 +14689,7 @@ var ContentRenderer = (function () {
         roundBadge.innerHTML = '';
         var _bt2 = document.createElement('span');
         _bt2.className = 'cp-lab-round-badge__text';
-        _bt2.textContent = 'Example ' + (idx + 1) + ' of ' + rounds.length;
+        _bt2.textContent = I18n.t('counterExampleNofTotal', { n: idx + 1, total: rounds.length });
         roundBadge.appendChild(_bt2);
       }
 
@@ -14619,7 +14699,7 @@ var ContentRenderer = (function () {
       comparePanel.innerHTML = '';
       boardEl.classList.remove('cp-l2l-board--blurred');
 
-      meeraBText.textContent = 'Tap what to solve first!';
+      meeraBText.textContent = I18n.t('meeraTapFirst');
 
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
 
@@ -14637,14 +14717,14 @@ var ContentRenderer = (function () {
       }
 
       if (idx === 0) {
-        guideText.textContent = 'Solving the equation with − and \xd7. Watch carefully.';
+        guideText.textContent = I18n.t('guideSolvingWith', { a: '−', b: '\xd7' });
         setTimeout(function () {
           if (_currentPageId !== page.id || phase !== 'idle') return;
-          guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
+          guideText.textContent = I18n.t('guideWatchBoard');
           _showBubbles2();
         }, 1000);
       } else {
-        guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
+        guideText.textContent = I18n.t('guideWatchBoard');
         _showBubbles2();
       }
 
@@ -14715,18 +14795,14 @@ var ContentRenderer = (function () {
       rowEl.classList.add(pfx + '-row--center');
 
       if (isLast && (!step.hlTokens || step.hlTokens.length === 0)) {
-        /* Final answer row: "Answer = [X]" */
-        var prefixSpan = _el('span', pfx + '-step-plain');
-        prefixSpan.dataset.tw = 'Answer = ';
-        prefixSpan.style.opacity = '0';
-        rowEl.appendChild(prefixSpan);
+        /* Final answer row: just the value pill, no "Answer =" label */
         var finPill = _el('span', pfx + '-step__hl');
         finPill.classList.add(pfx + '-step__hl--final');
         finPill.textContent = step.expr.replace(/^= /, '');
         finPill.style.opacity = '0';
         rowEl.appendChild(finPill);
       } else {
-        var toks = step.expr.split(' ');
+        var toks = step.expr.replace(/^= /, '').split(' ');
         var hlSet = {};
         (step.hlTokens || []).forEach(function (t) { hlSet[t] = true; });
         var isResult = (idx === 1 && step.hlTokens && step.hlTokens.length === 1);
@@ -14965,7 +15041,7 @@ var ContentRenderer = (function () {
     }
 
     function _loadQuestion2(q, i) {
-      labelEl.textContent    = 'Question ' + (i + 1) + ' of ' + questions.length;
+      labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
       promptEl.textContent   = q.prompt || '';
@@ -14989,7 +15065,7 @@ var ContentRenderer = (function () {
             var cls = 'cp-l2p-op-btn cp-l2p-op-btn--' + (tok === '\xd7' ? 'mul' : 'sub');
             var opBtn = _el('button', cls);
             opBtn.textContent = tok;
-            opBtn.setAttribute('aria-label', 'Operator: ' + tok);
+            opBtn.setAttribute('aria-label', I18n.t('ariaOperatorColon', { op: tok }));
             (function (btn, oidx) {
               btn.addEventListener('click', function () {
                 if (answered) return;
@@ -15278,6 +15354,7 @@ var ContentRenderer = (function () {
       var _pt = document.querySelector('.progress-track');
       var _pd = document.getElementById('progress-dots');
       if (_pt && _pd) {
+        _pt.classList.remove('progress-track--empty');
         _pd.style.display = 'none';
         roundBadge = document.createElement('div');
         roundBadge.className = 'cp-lab-round-badge';
@@ -15297,13 +15374,13 @@ var ContentRenderer = (function () {
 
     var boardEl = _el('div', 'cp-l3l-board');
     var boardTitle = _el('div', 'cp-l3l-board__title');
-    boardTitle.innerHTML = '&#9733; MATH LAB &#9733;';
+    boardTitle.innerHTML = '&#9733; ' + I18n.t('mathLabTitle') + ' &#9733;';
     boardTitle.setAttribute('aria-hidden', 'true');
     boardEl.appendChild(boardTitle);
 
     var tilesRow = _el('div', 'cp-l3l-tiles');
     tilesRow.setAttribute('role', 'group');
-    tilesRow.setAttribute('aria-label', 'Expression tiles');
+    tilesRow.setAttribute('aria-label', I18n.t('ariaExpressionTiles'));
     boardEl.appendChild(tilesRow);
 
     classEl.appendChild(boardEl);
@@ -15313,7 +15390,7 @@ var ContentRenderer = (function () {
     var meeraLabel = _el('span', 'cp-l3l-student__label cp-l3l-student__label--pink'); meeraLabel.textContent = 'Meera';
     var meeraBubble = _el('div', 'cp-l3l-bubble cp-l3l-bubble--meera cp-l3l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l3l-bubble__name cp-l3l-bubble__name--pink'); meeraBName.textContent = 'Meera';
-    var meeraBText  = _el('p', 'cp-l3l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
+    var meeraBText  = _el('p', 'cp-l3l-bubble__text'); meeraBText.textContent = I18n.t('meeraTapFirst');
     meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
     var meeraSvgWrap = _el('div', 'cp-l3l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
@@ -15444,7 +15521,7 @@ var ContentRenderer = (function () {
         var hdr = _el('div', 'cp-l3l-dc-header');
         var hdrInfo = _el('div', 'cp-l3l-dc-header-info');
         var multLabel = _el('span', 'cp-l3l-dc-mult-label');
-        multLabel.textContent = 'Division first';
+        multLabel.textContent = I18n.t('methodDivisionFirst');
         hdrInfo.appendChild(multLabel);
         hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
@@ -15489,7 +15566,7 @@ var ContentRenderer = (function () {
       capAv.className = 'cp-l3l-dc-caption__avatar';
       var capBody = _el('div', 'cp-l3l-dc-caption__body');
       var capLabel = _el('span', 'cp-l3l-dc-caption__label');
-      capLabel.textContent = 'Two different answers for';
+      capLabel.textContent = I18n.t('dcTwoDifferent');
       var capExpr = _el('span', 'cp-l3l-dc-caption__expr');
       tokens.forEach(function (tok, i) {
         if (i > 0) capExpr.appendChild(document.createTextNode(' '));
@@ -15516,7 +15593,7 @@ var ContentRenderer = (function () {
       if (round.hasCompare) _showCompare3(round);
 
       var isLast = (roundIdx === rounds.length - 1);
-      nextBtn.textContent = isLast ? 'See the Rule' : 'Next Round';
+      nextBtn.textContent = isLast ? I18n.t('btnSeeRule') : I18n.t('btnNextRound');
       nextBtn.className   = _sharedContentClasses('cp-l3l-next-btn' + (isLast ? ' cp-l3l-next-btn--final' : ''));
       nextBtn.onclick = function () {
         if (isLast) {
@@ -15543,7 +15620,7 @@ var ContentRenderer = (function () {
 
       var ansTile = _el('div', 'cp-l3l-tile cp-l3l-tile--answer');
       ansTile.textContent = String(round.finalResult);
-      ansTile.setAttribute('aria-label', 'Answer: ' + round.finalResult);
+      ansTile.setAttribute('aria-label', I18n.t('ariaAnswerN', { n: round.finalResult }));
 
       tilesRow.appendChild(eqTile);
       tilesRow.appendChild(ansTile);
@@ -15579,7 +15656,7 @@ var ContentRenderer = (function () {
       if (phase !== 'second-wait') return;
       phase = 'final-merge';
       if (typeof playCorrect === 'function') playCorrect();
-      guideText.textContent = 'Brilliant! Merging now…';
+      guideText.textContent = I18n.t('labMergingNow');
 
       var allTiles = Array.prototype.slice.call(tilesRow.querySelectorAll('.cp-l3l-tile'));
       var numLeft  = allTiles[0];
@@ -15624,7 +15701,7 @@ var ContentRenderer = (function () {
         t.textContent = rt.text === '−' ? '-' : rt.text;
 
         if (rt.kind === 'add-op' || rt.kind === 'sub-op') {
-          var opLabel = rt.kind === 'add-op' ? 'Tap + to add' : 'Tap − to subtract';
+          var opLabel = rt.kind === 'add-op' ? I18n.t('guideTapToAdd') : I18n.t('guideTapToSubtract');
           t.setAttribute('aria-label', opLabel);
           (function (tile, r) {
             tile.addEventListener('click', function () { _onSecondTap3(r); });
@@ -15651,7 +15728,7 @@ var ContentRenderer = (function () {
       }
 
       var secOp = reduced.filter(function (rt) { return rt.kind === 'add-op' || rt.kind === 'sub-op'; })[0];
-      guideText.textContent = 'Great! Now tap ' + (secOp ? secOp.text : '+') + ' to finish.';
+      guideText.textContent = I18n.t('guideGreatNowTapFinish', { op: (secOp ? secOp.text : '+') });
       phase = 'second-wait';
     }
 
@@ -15670,7 +15747,7 @@ var ContentRenderer = (function () {
         }
         if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
         meeraBubble.classList.remove('cp-l3l-bubble--faded', 'cp-l3l-bubble--guide-prompt');
-        meeraBText.textContent = '🔍 Look again. Is there a division \xf7 sign in the sum?';
+        meeraBText.textContent = I18n.t('guideLookAgainDiv');
         if (typeof anime !== 'undefined') {
           anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
           anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
@@ -15680,8 +15757,8 @@ var ContentRenderer = (function () {
 
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
-      guideText.textContent = 'Watch them come together!';
-      meeraBText.textContent = 'Yes! \xf7 goes first! Brilliant! ⭐';
+      guideText.textContent = I18n.t('guideWatchTogether');
+      meeraBText.textContent = I18n.t('praiseOpGoesFirst', { op: '\xf7' });
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
         anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 380, delay: 80, easing: 'easeOutBack' });
@@ -15725,7 +15802,7 @@ var ContentRenderer = (function () {
         tile.textContent = tok === '−' ? '-' : tok;
         if (tok === '\xf7') tile.classList.add('cp-op-div');
         tile.dataset.idx = ti;
-        tile.setAttribute('aria-label', 'Tile: ' + tok);
+        tile.setAttribute('aria-label', I18n.t('ariaTileX', { x: tok }));
         (function (t, token, div) {
           t.addEventListener('click', function () { _onTileTap3(t, token, div); });
         }(tile, tok, isDiv));
@@ -15743,7 +15820,7 @@ var ContentRenderer = (function () {
       phase = 'idle';
       var round = rounds[idx];
 
-      roundLabel.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+      roundLabel.textContent = I18n.t('counterRoundNofTotal', { n: idx + 1, total: rounds.length });
       dotEls.forEach(function (d, i) {
         d.className = _sharedContentClasses('cp-l3l-dot' +
           (i < idx  ? ' cp-l3l-dot--done'   : '') +
@@ -15753,7 +15830,7 @@ var ContentRenderer = (function () {
         roundBadge.innerHTML = '';
         var _bt3 = document.createElement('span');
         _bt3.className = 'cp-lab-round-badge__text';
-        _bt3.textContent = 'Example ' + (idx + 1) + ' of ' + rounds.length;
+        _bt3.textContent = I18n.t('counterExampleNofTotal', { n: idx + 1, total: rounds.length });
         roundBadge.appendChild(_bt3);
       }
 
@@ -15763,7 +15840,7 @@ var ContentRenderer = (function () {
       comparePanel.innerHTML = '';
       boardEl.classList.remove('cp-l3l-board--blurred');
 
-      meeraBText.textContent = 'Tap what to solve first!';
+      meeraBText.textContent = I18n.t('meeraTapFirst');
 
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
 
@@ -15781,14 +15858,14 @@ var ContentRenderer = (function () {
       }
 
       if (idx === 0) {
-        guideText.textContent = 'Solving the equation with + and \xf7. Watch carefully.';
+        guideText.textContent = I18n.t('guideSolvingWith', { a: '+', b: '\xf7' });
         setTimeout(function () {
           if (_currentPageId !== page.id || phase !== 'idle') return;
-          guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
+          guideText.textContent = I18n.t('guideWatchBoard');
           _showBubbles3();
         }, 1000);
       } else {
-        guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
+        guideText.textContent = I18n.t('guideWatchBoard');
         _showBubbles3();
       }
 
@@ -15901,7 +15978,7 @@ var ContentRenderer = (function () {
     }
 
     function _loadQuestion3(q, i) {
-      labelEl.textContent    = 'Question ' + (i + 1) + ' of ' + questions.length;
+      labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
       promptEl.textContent   = q.prompt || '';
@@ -15926,7 +16003,7 @@ var ContentRenderer = (function () {
             var cls = 'cp-l3p-op-btn cp-l3p-op-btn--' + variant;
             var opBtn = _el('button', cls);
             opBtn.textContent = tok;
-            opBtn.setAttribute('aria-label', 'Operator: ' + tok);
+            opBtn.setAttribute('aria-label', I18n.t('ariaOperatorColon', { op: tok }));
             (function (btn, oidx) {
               btn.addEventListener('click', function () {
                 if (answered) return;
@@ -16206,6 +16283,7 @@ var ContentRenderer = (function () {
       var _pt = document.querySelector('.progress-track');
       var _pd = document.getElementById('progress-dots');
       if (_pt && _pd) {
+        _pt.classList.remove('progress-track--empty');
         _pd.style.display = 'none';
         roundBadge = document.createElement('div');
         roundBadge.className = 'cp-lab-round-badge';
@@ -16225,13 +16303,13 @@ var ContentRenderer = (function () {
 
     var boardEl = _el('div', 'cp-l4l-board');
     var boardTitle = _el('div', 'cp-l4l-board__title');
-    boardTitle.innerHTML = '&#9733; MATH LAB &#9733;';
+    boardTitle.innerHTML = '&#9733; ' + I18n.t('mathLabTitle') + ' &#9733;';
     boardTitle.setAttribute('aria-hidden', 'true');
     boardEl.appendChild(boardTitle);
 
     var tilesRow = _el('div', 'cp-l4l-tiles');
     tilesRow.setAttribute('role', 'group');
-    tilesRow.setAttribute('aria-label', 'Expression tiles');
+    tilesRow.setAttribute('aria-label', I18n.t('ariaExpressionTiles'));
     boardEl.appendChild(tilesRow);
     classEl.appendChild(boardEl);
 
@@ -16240,7 +16318,7 @@ var ContentRenderer = (function () {
     var meeraLabel = _el('span', 'cp-l4l-student__label cp-l4l-student__label--pink'); meeraLabel.textContent = 'Meera';
     var meeraBubble = _el('div', 'cp-l4l-bubble cp-l4l-bubble--meera cp-l4l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l4l-bubble__name cp-l4l-bubble__name--pink'); meeraBName.textContent = 'Meera';
-    var meeraBText  = _el('p', 'cp-l4l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
+    var meeraBText  = _el('p', 'cp-l4l-bubble__text'); meeraBText.textContent = I18n.t('meeraTapFirst');
     meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
     var meeraSvgWrap = _el('div', 'cp-l4l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
@@ -16274,7 +16352,8 @@ var ContentRenderer = (function () {
 
     function _tileClass4(tok, isLtr) {
       if (isLtr) {
-        return (tok === '+' || tok === '−') ? 'cp-l4l-tile cp-l4l-tile--ltr-op' : 'cp-l4l-tile cp-l4l-tile--ltr-num';
+        if (tok === '−') return 'cp-l4l-tile cp-l4l-tile--ltr-op cp-l4l-tile--ltr-sub';
+        return (tok === '+') ? 'cp-l4l-tile cp-l4l-tile--ltr-op' : 'cp-l4l-tile cp-l4l-tile--ltr-num';
       }
       if (tok === '+')      return 'cp-l4l-tile cp-l4l-tile--add-op';
       if (tok === '−') return 'cp-l4l-tile cp-l4l-tile--sub-op';
@@ -16351,7 +16430,7 @@ var ContentRenderer = (function () {
         var hdr = _el('div', 'cp-l4l-dc-header');
         var hdrInfo = _el('div', 'cp-l4l-dc-header-info');
         var multLabel = _el('span', 'cp-l4l-dc-mult-label');
-        multLabel.textContent = 'Left to Right';
+        multLabel.textContent = I18n.t('optLeftToRight');
         hdrInfo.appendChild(multLabel);
         hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
@@ -16396,7 +16475,7 @@ var ContentRenderer = (function () {
       capAv.className = 'cp-l4l-dc-caption__avatar';
       var capBody = _el('div', 'cp-l4l-dc-caption__body');
       var capLabel = _el('span', 'cp-l4l-dc-caption__label');
-      capLabel.textContent = 'Two different answers for';
+      capLabel.textContent = I18n.t('dcTwoDifferent');
       var capExpr = _el('span', 'cp-l4l-dc-caption__expr');
       tokens.forEach(function (tok, i) {
         if (i > 0) capExpr.appendChild(document.createTextNode(' '));
@@ -16421,7 +16500,7 @@ var ContentRenderer = (function () {
     function _afterRoundComplete4(round) {
       if (round.hasCompare) _showCompare4(round);
       var isLast = (roundIdx === rounds.length - 1);
-      nextBtn.textContent = isLast ? 'See the Rule' : 'Next Round';
+      nextBtn.textContent = isLast ? I18n.t('btnSeeRule') : I18n.t('btnNextRound');
       nextBtn.className   = _sharedContentClasses('cp-l4l-next-btn' + (isLast ? ' cp-l4l-next-btn--final' : ''));
       nextBtn.onclick = function () {
         if (isLast) {
@@ -16446,7 +16525,7 @@ var ContentRenderer = (function () {
       eqTile.setAttribute('aria-hidden', 'true');
       var ansTile = _el('div', 'cp-l4l-tile cp-l4l-tile--answer');
       ansTile.textContent = String(round.finalResult);
-      ansTile.setAttribute('aria-label', 'Answer: ' + round.finalResult);
+      ansTile.setAttribute('aria-label', I18n.t('ariaAnswerN', { n: round.finalResult }));
       tilesRow.appendChild(eqTile);
       tilesRow.appendChild(ansTile);
       if (typeof anime !== 'undefined') {
@@ -16479,7 +16558,7 @@ var ContentRenderer = (function () {
       if (phase !== 'second-wait') return;
       phase = 'final-merge';
       if (typeof playCorrect === 'function') playCorrect();
-      guideText.textContent = 'Brilliant! Merging now…';
+      guideText.textContent = I18n.t('labMergingNow');
       var allTiles = Array.prototype.slice.call(tilesRow.querySelectorAll('.cp-l4l-tile'));
       var numLeft  = allTiles[0];
       var opTile   = allTiles[1];
@@ -16517,7 +16596,7 @@ var ContentRenderer = (function () {
         var t = _el('button', cls);
         t.textContent = rt.text === '−' ? '-' : rt.text;
         if (rt.kind === 'add-op' || rt.kind === 'sub-op') {
-          var opLabel = rt.kind === 'add-op' ? 'Tap + to add' : 'Tap − to subtract';
+          var opLabel = rt.kind === 'add-op' ? I18n.t('guideTapToAdd') : I18n.t('guideTapToSubtract');
           t.setAttribute('aria-label', opLabel);
           (function (tile, r) {
             tile.addEventListener('click', function () { _onSecondTap4(r); });
@@ -16540,7 +16619,7 @@ var ContentRenderer = (function () {
         }
       }
       var secOp = reduced.filter(function (rt) { return rt.kind === 'add-op' || rt.kind === 'sub-op'; })[0];
-      guideText.textContent = 'Great! Now tap ' + (secOp ? secOp.text : '+') + ' to finish.';
+      guideText.textContent = I18n.t('guideGreatNowTapFinish', { op: (secOp ? secOp.text : '+') });
       phase = 'second-wait';
     }
 
@@ -16559,7 +16638,7 @@ var ContentRenderer = (function () {
         }
         if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
         meeraBubble.classList.remove('cp-l4l-bubble--faded', 'cp-l4l-bubble--guide-prompt');
-        meeraBText.textContent = '🔍 Which + or − appears FIRST from left to right?';
+        meeraBText.textContent = I18n.t('guideWhichFirstLtr', { a: '+', b: '−' });
         if (typeof anime !== 'undefined') {
           anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
           anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
@@ -16568,8 +16647,8 @@ var ContentRenderer = (function () {
       }
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
-      guideText.textContent = 'Watch them come together!';
-      meeraBText.textContent = 'Yes! Left to right! Brilliant! ⭐';
+      guideText.textContent = I18n.t('guideWatchTogether');
+      meeraBText.textContent = I18n.t('praiseLtrBrilliant');
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
         anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 380, delay: 80, easing: 'easeOutBack' });
@@ -16607,7 +16686,7 @@ var ContentRenderer = (function () {
         var tile  = _el('button', cls);
         tile.textContent = tok === '−' ? '-' : tok;
         tile.dataset.idx = ti;
-        tile.setAttribute('aria-label', 'Tile: ' + tok);
+        tile.setAttribute('aria-label', I18n.t('ariaTileX', { x: tok }));
         (function (t, token, ltr) {
           t.addEventListener('click', function () { _onTileTap4(t, token, ltr); });
         }(tile, tok, isLtr));
@@ -16623,7 +16702,7 @@ var ContentRenderer = (function () {
     function _loadRound4(idx) {
       phase = 'idle';
       var round = rounds[idx];
-      roundLabel.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+      roundLabel.textContent = I18n.t('counterRoundNofTotal', { n: idx + 1, total: rounds.length });
       dotEls.forEach(function (d, i) {
         d.className = _sharedContentClasses('cp-l4l-dot' +
           (i < idx  ? ' cp-l4l-dot--done'   : '') +
@@ -16633,7 +16712,7 @@ var ContentRenderer = (function () {
         roundBadge.innerHTML = '';
         var _bt4 = document.createElement('span');
         _bt4.className = 'cp-lab-round-badge__text';
-        _bt4.textContent = 'Example ' + (idx + 1) + ' of ' + rounds.length;
+        _bt4.textContent = I18n.t('counterExampleNofTotal', { n: idx + 1, total: rounds.length });
         roundBadge.appendChild(_bt4);
       }
 
@@ -16641,7 +16720,7 @@ var ContentRenderer = (function () {
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
       boardEl.classList.remove('cp-l4l-board--blurred');
-      meeraBText.textContent = 'Tap what to solve first!';
+      meeraBText.textContent = I18n.t('meeraTapFirst');
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l4l-bubble--expanded', 'cp-l4l-bubble--guide-prompt');
@@ -16657,14 +16736,14 @@ var ContentRenderer = (function () {
       }
 
       if (idx === 0) {
-        guideText.textContent = 'Solving + and −. Solve left to right!';
+        guideText.textContent = I18n.t('guideSolvingLtr', { a: '+', b: '−' });
         setTimeout(function () {
           if (_currentPageId !== page.id || phase !== 'idle') return;
-          guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
+          guideText.textContent = I18n.t('guideWatchBoard');
           _showBubbles4();
         }, 1000);
       } else {
-        guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
+        guideText.textContent = I18n.t('guideWatchBoard');
         _showBubbles4();
       }
       _renderTiles4(round);
@@ -16772,7 +16851,7 @@ var ContentRenderer = (function () {
     }
 
     function _loadQuestion4(q, i) {
-      labelEl.textContent    = 'Question ' + (i + 1) + ' of ' + questions.length;
+      labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
       promptEl.textContent   = q.prompt || '';
@@ -16795,7 +16874,7 @@ var ContentRenderer = (function () {
             var cls = 'cp-l4p-op-btn cp-l4p-op-btn--' + variant;
             var opBtn = _el('button', cls);
             opBtn.textContent = tok;
-            opBtn.setAttribute('aria-label', 'Operator: ' + tok);
+            opBtn.setAttribute('aria-label', I18n.t('ariaOperatorColon', { op: tok }));
             (function (btn, oidx) {
               btn.addEventListener('click', function () {
                 if (answered) return;
@@ -17075,6 +17154,7 @@ var ContentRenderer = (function () {
       var _pt = document.querySelector('.progress-track');
       var _pd = document.getElementById('progress-dots');
       if (_pt && _pd) {
+        _pt.classList.remove('progress-track--empty');
         _pd.style.display = 'none';
         roundBadge = document.createElement('div');
         roundBadge.className = 'cp-lab-round-badge';
@@ -17094,13 +17174,13 @@ var ContentRenderer = (function () {
 
     var boardEl = _el('div', 'cp-l5l-board');
     var boardTitle = _el('div', 'cp-l5l-board__title');
-    boardTitle.innerHTML = '&#9733; MATH LAB &#9733;';
+    boardTitle.innerHTML = '&#9733; ' + I18n.t('mathLabTitle') + ' &#9733;';
     boardTitle.setAttribute('aria-hidden', 'true');
     boardEl.appendChild(boardTitle);
 
     var tilesRow = _el('div', 'cp-l5l-tiles');
     tilesRow.setAttribute('role', 'group');
-    tilesRow.setAttribute('aria-label', 'Expression tiles');
+    tilesRow.setAttribute('aria-label', I18n.t('ariaExpressionTiles'));
     boardEl.appendChild(tilesRow);
     classEl.appendChild(boardEl);
 
@@ -17109,7 +17189,7 @@ var ContentRenderer = (function () {
     var meeraLabel = _el('span', 'cp-l5l-student__label cp-l5l-student__label--pink'); meeraLabel.textContent = 'Meera';
     var meeraBubble = _el('div', 'cp-l5l-bubble cp-l5l-bubble--meera cp-l5l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l5l-bubble__name cp-l5l-bubble__name--pink'); meeraBName.textContent = 'Meera';
-    var meeraBText  = _el('p', 'cp-l5l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
+    var meeraBText  = _el('p', 'cp-l5l-bubble__text'); meeraBText.textContent = I18n.t('meeraTapFirst');
     meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
     var meeraSvgWrap = _el('div', 'cp-l5l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
@@ -17221,7 +17301,7 @@ var ContentRenderer = (function () {
         var hdr = _el('div', 'cp-l5l-dc-header');
         var hdrInfo = _el('div', 'cp-l5l-dc-header-info');
         var multLabel = _el('span', 'cp-l5l-dc-mult-label');
-        multLabel.textContent = 'Left to Right';
+        multLabel.textContent = I18n.t('optLeftToRight');
         hdrInfo.appendChild(multLabel);
         hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
@@ -17266,7 +17346,7 @@ var ContentRenderer = (function () {
       capAv.className = 'cp-l5l-dc-caption__avatar';
       var capBody = _el('div', 'cp-l5l-dc-caption__body');
       var capLabel = _el('span', 'cp-l5l-dc-caption__label');
-      capLabel.textContent = 'Two different answers for';
+      capLabel.textContent = I18n.t('dcTwoDifferent');
       var capExpr = _el('span', 'cp-l5l-dc-caption__expr');
       tokens.forEach(function (tok, i) {
         if (i > 0) capExpr.appendChild(document.createTextNode(' '));
@@ -17291,7 +17371,7 @@ var ContentRenderer = (function () {
     function _afterRoundComplete5(round) {
       if (round.hasCompare) _showCompare5(round);
       var isLast = (roundIdx === rounds.length - 1);
-      nextBtn.textContent = isLast ? 'See the Rule' : 'Next Round';
+      nextBtn.textContent = isLast ? I18n.t('btnSeeRule') : I18n.t('btnNextRound');
       nextBtn.className   = _sharedContentClasses('cp-l5l-next-btn' + (isLast ? ' cp-l5l-next-btn--final' : ''));
       nextBtn.onclick = function () {
         if (isLast) {
@@ -17316,7 +17396,7 @@ var ContentRenderer = (function () {
       eqTile.setAttribute('aria-hidden', 'true');
       var ansTile = _el('div', 'cp-l5l-tile cp-l5l-tile--answer');
       ansTile.textContent = String(round.finalResult);
-      ansTile.setAttribute('aria-label', 'Answer: ' + round.finalResult);
+      ansTile.setAttribute('aria-label', I18n.t('ariaAnswerN', { n: round.finalResult }));
       tilesRow.appendChild(eqTile);
       tilesRow.appendChild(ansTile);
       if (typeof anime !== 'undefined') {
@@ -17349,7 +17429,7 @@ var ContentRenderer = (function () {
       if (phase !== 'second-wait') return;
       phase = 'final-merge';
       if (typeof playCorrect === 'function') playCorrect();
-      guideText.textContent = 'Brilliant! Merging now…';
+      guideText.textContent = I18n.t('labMergingNow');
       var allTiles = Array.prototype.slice.call(tilesRow.querySelectorAll('.cp-l5l-tile'));
       var numLeft  = allTiles[0];
       var opTile   = allTiles[1];
@@ -17387,7 +17467,7 @@ var ContentRenderer = (function () {
         var t = _el('button', cls);
         t.textContent = rt.text === '−' ? '-' : rt.text;
         if (rt.kind === 'mul-op' || rt.kind === 'div-op') {
-          var opLabel = rt.kind === 'mul-op' ? 'Tap \xd7 to multiply' : 'Tap \xf7 to divide';
+          var opLabel = rt.kind === 'mul-op' ? I18n.t('guideTapToMultiply') : I18n.t('guideTapToDivide');
           t.setAttribute('aria-label', opLabel);
           (function (tile, r) {
             tile.addEventListener('click', function () { _onSecondTap5(r); });
@@ -17410,7 +17490,7 @@ var ContentRenderer = (function () {
         }
       }
       var secOp = reduced.filter(function (rt) { return rt.kind === 'mul-op' || rt.kind === 'div-op'; })[0];
-      guideText.textContent = 'Great! Now tap ' + (secOp ? secOp.text : '\xd7') + ' to finish.';
+      guideText.textContent = I18n.t('guideGreatNowTapFinish', { op: (secOp ? secOp.text : '\xd7') });
       phase = 'second-wait';
     }
 
@@ -17429,7 +17509,7 @@ var ContentRenderer = (function () {
         }
         if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
         meeraBubble.classList.remove('cp-l5l-bubble--faded', 'cp-l5l-bubble--guide-prompt');
-        meeraBText.textContent = '🔍 Which \xd7 or \xf7 appears FIRST from left to right?';
+        meeraBText.textContent = I18n.t('guideWhichFirstLtr', { a: '\xd7', b: '\xf7' });
         if (typeof anime !== 'undefined') {
           anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
           anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
@@ -17438,8 +17518,8 @@ var ContentRenderer = (function () {
       }
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
-      guideText.textContent = 'Watch them come together!';
-      meeraBText.textContent = 'Yes! Left to right! Brilliant! ⭐';
+      guideText.textContent = I18n.t('guideWatchTogether');
+      meeraBText.textContent = I18n.t('praiseLtrBrilliant');
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
         anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 380, delay: 80, easing: 'easeOutBack' });
@@ -17477,7 +17557,7 @@ var ContentRenderer = (function () {
         var tile  = _el('button', cls);
         tile.textContent = tok === '−' ? '-' : tok;
         tile.dataset.idx = ti;
-        tile.setAttribute('aria-label', 'Tile: ' + tok);
+        tile.setAttribute('aria-label', I18n.t('ariaTileX', { x: tok }));
         (function (t, token, ltr) {
           t.addEventListener('click', function () { _onTileTap5(t, token, ltr); });
         }(tile, tok, isLtr));
@@ -17493,7 +17573,7 @@ var ContentRenderer = (function () {
     function _loadRound5(idx) {
       phase = 'idle';
       var round = rounds[idx];
-      roundLabel.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+      roundLabel.textContent = I18n.t('counterRoundNofTotal', { n: idx + 1, total: rounds.length });
       dotEls.forEach(function (d, i) {
         d.className = _sharedContentClasses('cp-l5l-dot' +
           (i < idx  ? ' cp-l5l-dot--done'   : '') +
@@ -17503,7 +17583,7 @@ var ContentRenderer = (function () {
         roundBadge.innerHTML = '';
         var _bt5 = document.createElement('span');
         _bt5.className = 'cp-lab-round-badge__text';
-        _bt5.textContent = 'Example ' + (idx + 1) + ' of ' + rounds.length;
+        _bt5.textContent = I18n.t('counterExampleNofTotal', { n: idx + 1, total: rounds.length });
         roundBadge.appendChild(_bt5);
       }
 
@@ -17511,7 +17591,7 @@ var ContentRenderer = (function () {
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
       boardEl.classList.remove('cp-l5l-board--blurred');
-      meeraBText.textContent = 'Tap what to solve first!';
+      meeraBText.textContent = I18n.t('meeraTapFirst');
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l5l-bubble--expanded', 'cp-l5l-bubble--guide-prompt');
@@ -17527,14 +17607,14 @@ var ContentRenderer = (function () {
       }
 
       if (idx === 0) {
-        guideText.textContent = 'Solving \xd7 and \xf7. Solve left to right!';
+        guideText.textContent = I18n.t('guideSolvingLtr', { a: '\xd7', b: '\xf7' });
         setTimeout(function () {
           if (_currentPageId !== page.id || phase !== 'idle') return;
-          guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
+          guideText.textContent = I18n.t('guideWatchBoard');
           _showBubbles5();
         }, 1000);
       } else {
-        guideText.textContent = 'Watch the board! Which part should we solve FIRST? Tap it!';
+        guideText.textContent = I18n.t('guideWatchBoard');
         _showBubbles5();
       }
       _renderTiles5(round);
@@ -17642,7 +17722,7 @@ var ContentRenderer = (function () {
     }
 
     function _loadQuestion5(q, i) {
-      labelEl.textContent    = 'Question ' + (i + 1) + ' of ' + questions.length;
+      labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
       promptEl.textContent   = q.prompt || '';
@@ -17665,7 +17745,7 @@ var ContentRenderer = (function () {
             var cls = 'cp-l5p-op-btn cp-l5p-op-btn--' + variant;
             var opBtn = _el('button', cls);
             opBtn.textContent = tok;
-            opBtn.setAttribute('aria-label', 'Operator: ' + tok);
+            opBtn.setAttribute('aria-label', I18n.t('ariaOperatorColon', { op: tok }));
             (function (btn, oidx) {
               btn.addEventListener('click', function () {
                 if (answered) return;
@@ -17945,6 +18025,7 @@ var ContentRenderer = (function () {
       var _pt = document.querySelector('.progress-track');
       var _pd = document.getElementById('progress-dots');
       if (_pt && _pd) {
+        _pt.classList.remove('progress-track--empty');
         _pd.style.display = 'none';
         roundBadge = document.createElement('div');
         roundBadge.className = 'cp-lab-round-badge';
@@ -17964,13 +18045,13 @@ var ContentRenderer = (function () {
 
     var boardEl = _el('div', 'cp-l6l-board');
     var boardTitle = _el('div', 'cp-l6l-board__title');
-    boardTitle.innerHTML = '&#9733; MATH LAB &#9733;';
+    boardTitle.innerHTML = '&#9733; ' + I18n.t('mathLabTitle') + ' &#9733;';
     boardTitle.setAttribute('aria-hidden', 'true');
     boardEl.appendChild(boardTitle);
 
     var tilesRow = _el('div', 'cp-l6l-tiles');
     tilesRow.setAttribute('role', 'group');
-    tilesRow.setAttribute('aria-label', 'Expression tiles');
+    tilesRow.setAttribute('aria-label', I18n.t('ariaExpressionTiles'));
     boardEl.appendChild(tilesRow);
     classEl.appendChild(boardEl);
 
@@ -17979,7 +18060,7 @@ var ContentRenderer = (function () {
     var meeraLabel = _el('span', 'cp-l6l-student__label cp-l6l-student__label--pink'); meeraLabel.textContent = 'Meera';
     var meeraBubble = _el('div', 'cp-l6l-bubble cp-l6l-bubble--meera cp-l6l-bubble--faded');
     var meeraBName  = _el('span', 'cp-l6l-bubble__name cp-l6l-bubble__name--pink'); meeraBName.textContent = 'Meera';
-    var meeraBText  = _el('p', 'cp-l6l-bubble__text'); meeraBText.textContent = 'Tap what to solve first!';
+    var meeraBText  = _el('p', 'cp-l6l-bubble__text'); meeraBText.textContent = I18n.t('meeraTapFirst');
     meeraBubble.appendChild(meeraBText);
     meeraEl.appendChild(meeraBubble);
     var meeraSvgWrap = _el('div', 'cp-l6l-student__svg-wrap'); var _mImg = document.createElement('img'); _mImg.src = 'assets/images/meera.webp'; _mImg.alt = 'Meera'; meeraSvgWrap.appendChild(_mImg);
@@ -18090,7 +18171,7 @@ var ContentRenderer = (function () {
         var hdr = _el('div', 'cp-l6l-dc-header');
         var hdrInfo = _el('div', 'cp-l6l-dc-header-info');
         var multLabel = _el('span', 'cp-l6l-dc-mult-label');
-        multLabel.textContent = 'Brackets first';
+        multLabel.textContent = I18n.t('methodBracketsFirst');
         hdrInfo.appendChild(multLabel);
         hdr.appendChild(hdrInfo);
         card.appendChild(hdr);
@@ -18135,7 +18216,7 @@ var ContentRenderer = (function () {
       capAv.className = 'cp-l6l-dc-caption__avatar';
       var capBody = _el('div', 'cp-l6l-dc-caption__body');
       var capLabel = _el('span', 'cp-l6l-dc-caption__label');
-      capLabel.textContent = 'Brackets change the answer!';
+      capLabel.textContent = I18n.t('dcBracketsChange');
       var capExpr = _el('span', 'cp-l6l-dc-caption__expr');
       tokens.forEach(function (tok, i) {
         if (i > 0) capExpr.appendChild(document.createTextNode(' '));
@@ -18161,7 +18242,7 @@ var ContentRenderer = (function () {
     function _afterRoundComplete6(round) {
       if (round.hasCompare) _showCompare6(round);
       var isLast = (roundIdx === rounds.length - 1);
-      nextBtn.textContent = isLast ? 'See the Rule' : 'Next Round ►';
+      nextBtn.textContent = isLast ? I18n.t('btnSeeRule') : (I18n.t('btnNextRound') + ' ►');
       nextBtn.className   = _sharedContentClasses('cp-l6l-next-btn' + (isLast ? ' cp-l6l-next-btn--final' : ''));
       nextBtn.onclick = function () {
         if (isLast) {
@@ -18187,7 +18268,7 @@ var ContentRenderer = (function () {
       eqTile.setAttribute('aria-hidden', 'true');
       var ansTile = _el('div', 'cp-l6l-tile cp-l6l-tile--answer');
       ansTile.textContent = String(round.finalResult);
-      ansTile.setAttribute('aria-label', 'Answer: ' + round.finalResult);
+      ansTile.setAttribute('aria-label', I18n.t('ariaAnswerN', { n: round.finalResult }));
       tilesRow.appendChild(eqTile);
       tilesRow.appendChild(ansTile);
       if (typeof anime !== 'undefined') {
@@ -18221,7 +18302,7 @@ var ContentRenderer = (function () {
       if (phase !== 'second-wait') return;
       phase = 'final-merge';
       if (typeof playCorrect === 'function') playCorrect();
-      guideText.textContent = 'Brilliant! Merging now…';
+      guideText.textContent = I18n.t('labMergingNow');
       var allTiles = Array.prototype.slice.call(tilesRow.querySelectorAll('.cp-l6l-tile'));
       allTiles.forEach(function (t) { t.style.pointerEvents = 'none'; });
       if (typeof anime === 'undefined') { _showFinalAnswer6(round); return; }
@@ -18269,7 +18350,7 @@ var ContentRenderer = (function () {
         var t = _el('button', cls);
         t.textContent = rt.text === '−' ? '-' : rt.text;
         if (rt.kind === 'mul-op') {
-          t.setAttribute('aria-label', 'Tap \xd7 to multiply');
+          t.setAttribute('aria-label', I18n.t('guideTapToMultiply'));
           (function (tile, r) {
             tile.addEventListener('click', function () { _onMulTap6(r); });
           }(t, round));
@@ -18290,7 +18371,7 @@ var ContentRenderer = (function () {
           anime({ targets: resultTile, scale: [0, 1.38, 1], opacity: 1, duration: 580, delay: 100, easing: 'easeOutBack' });
         }
       }
-      guideText.textContent = 'Great! Now tap \xd7 to finish.';
+      guideText.textContent = I18n.t('guideGreatNowTapFinish', { op: '\xd7' });
       phase = 'second-wait';
     }
 
@@ -18299,8 +18380,8 @@ var ContentRenderer = (function () {
       if (phase !== 'idle') return;
       phase = 'bracket-merge';
       if (typeof playCorrect === 'function') playCorrect();
-      guideText.textContent = 'Watch the brackets collapse!';
-      meeraBText.textContent = 'Yes! Brackets first! Amazing! ⭐';
+      guideText.textContent = I18n.t('guideBracketsCollapse');
+      meeraBText.textContent = I18n.t('praiseBracketsAmazing');
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.9, opacity: 0.7 });
         anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 380, delay: 80, easing: 'easeOutBack' });
@@ -18348,7 +18429,7 @@ var ContentRenderer = (function () {
       }
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
       meeraBubble.classList.remove('cp-l6l-bubble--faded', 'cp-l6l-bubble--guide-prompt');
-      meeraBText.textContent = '\U0001F50D Solve inside the ( ) first — tap the operator inside the brackets!';
+      meeraBText.textContent = I18n.t('guideSolveInsideBrackets');
       if (typeof anime !== 'undefined') {
         anime.set(meeraBubble, { scale: 0.92, opacity: 0.7 });
         anime({ targets: meeraBubble, scale: 1, opacity: 1, duration: 280, easing: 'easeOutBack' });
@@ -18363,7 +18444,7 @@ var ContentRenderer = (function () {
         tile.textContent = tok === '−' ? '-' : tok;
         if (tok === '\xf7') tile.classList.add('cp-op-div');
         tile.dataset.idx = ti;
-        tile.setAttribute('aria-label', 'Tile: ' + tok);
+        tile.setAttribute('aria-label', I18n.t('ariaTileX', { x: tok }));
         if (ti === round.bracketOpIdx) {
           /* Only the bracket operator is interactive in idle phase */
           (function (t, r) {
@@ -18401,7 +18482,7 @@ var ContentRenderer = (function () {
     function _loadRound6(idx) {
       phase = 'idle';
       var round = rounds[idx];
-      roundLabel.textContent = 'Round ' + (idx + 1) + ' of ' + rounds.length;
+      roundLabel.textContent = I18n.t('counterRoundNofTotal', { n: idx + 1, total: rounds.length });
       dotEls.forEach(function (d, i) {
         d.className = _sharedContentClasses('cp-l6l-dot' +
           (i < idx  ? ' cp-l6l-dot--done'   : '') +
@@ -18411,7 +18492,7 @@ var ContentRenderer = (function () {
         roundBadge.innerHTML = '';
         var _bt6 = document.createElement('span');
         _bt6.className = 'cp-lab-round-badge__text';
-        _bt6.textContent = 'Example ' + (idx + 1) + ' of ' + rounds.length;
+        _bt6.textContent = I18n.t('counterExampleNofTotal', { n: idx + 1, total: rounds.length });
         roundBadge.appendChild(_bt6);
       }
 
@@ -18420,7 +18501,7 @@ var ContentRenderer = (function () {
       comparePanel.hidden = true;
       comparePanel.innerHTML = '';
       boardEl.classList.remove('cp-l6l-board--blurred');
-      meeraBText.textContent = 'Tap what to solve first!';
+      meeraBText.textContent = I18n.t('meeraTapFirst');
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
       meeraBubble.innerHTML = '';
       meeraBubble.classList.remove('cp-l6l-bubble--expanded', 'cp-l6l-bubble--guide-prompt');
@@ -18436,14 +18517,14 @@ var ContentRenderer = (function () {
       }
 
       if (idx === 0) {
-        guideText.textContent = 'Solving an expression with ( ). What goes first?';
+        guideText.textContent = I18n.t('guideSolvingBrackets');
         setTimeout(function () {
           if (_currentPageId !== page.id || phase !== 'idle') return;
-          guideText.textContent = 'Watch the board! Tap the operator INSIDE the brackets first!';
+          guideText.textContent = I18n.t('guideWatchBoardBrackets');
           _showBubbles6();
         }, 1000);
       } else {
-        guideText.textContent = 'Watch the board! Tap the operator INSIDE the brackets first!';
+        guideText.textContent = I18n.t('guideWatchBoardBrackets');
         _showBubbles6();
       }
       _renderTiles6(round);
@@ -18552,7 +18633,7 @@ var ContentRenderer = (function () {
     }
 
     function _loadQuestion6(q, i) {
-      labelEl.textContent    = 'Question ' + (i + 1) + ' of ' + questions.length;
+      labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
       promptEl.textContent   = q.prompt || '';
@@ -18583,7 +18664,7 @@ var ContentRenderer = (function () {
             var cls = 'cp-l6p-op-btn cp-l6p-op-btn--' + variant;
             var opBtn = _el('button', cls);
             opBtn.textContent = tok;
-            opBtn.setAttribute('aria-label', 'Operator: ' + tok);
+            opBtn.setAttribute('aria-label', I18n.t('ariaOperatorColon', { op: tok }));
             (function (btn, oidx) {
               btn.addEventListener('click', function () {
                 if (answered) return;
@@ -18968,11 +19049,11 @@ var ContentRenderer = (function () {
 
     var btnRow = _el('div', 'cp-l8bl-btn-row');
     var checkBtn = _el('button', 'cp-l8bl-check-btn');
-    checkBtn.textContent = 'Check Order';
+    checkBtn.textContent = I18n.t('btnCheckOrder');
     btnRow.appendChild(checkBtn);
 
     var clearBtn = _el('button', 'cp-l8bl-clear-btn');
-    clearBtn.textContent = 'Reset';
+    clearBtn.textContent = I18n.t('resetTitle');
     clearBtn.style.display = 'none';
     btnRow.appendChild(clearBtn);
     wrap.appendChild(btnRow);
@@ -19331,7 +19412,7 @@ var ContentRenderer = (function () {
     eqEl.textContent = '=';
     var dropZone   = _el('div', 'cp-l9nb-drop-zone');
     dropZone.setAttribute('role', 'textbox');
-    dropZone.setAttribute('aria-label', 'Drag a number here or tap a digit below');
+    dropZone.setAttribute('aria-label', I18n.t('ariaDragNumber'));
     subExprRow.appendChild(subExprEl);
     subExprRow.appendChild(eqEl);
     subExprRow.appendChild(dropZone);
@@ -19392,68 +19473,7 @@ var ContentRenderer = (function () {
       var keyEl = _el('div', cls);
       keyEl.textContent = k;
 
-      if (isDigit) {
-        keyEl.setAttribute('draggable', 'true');
-
-        /* HTML5 drag */
-        keyEl.addEventListener('dragstart', function (e) {
-          e.dataTransfer.effectAllowed = 'copy';
-          e.dataTransfer.setData('text/plain', k);
-          keyEl.classList.add('cp-l9nb-key--dragging');
-        });
-        keyEl.addEventListener('dragend', function () {
-          keyEl.classList.remove('cp-l9nb-key--dragging');
-        });
-
-        /* Touch drag */
-        var ghost = null;
-        var offX, offY;
-        keyEl.addEventListener('touchstart', function (e) {
-          e.preventDefault();
-          var t = e.touches[0];
-          var r = keyEl.getBoundingClientRect();
-          offX  = t.clientX - r.left;
-          offY  = t.clientY - r.top;
-          ghost = keyEl.cloneNode(true);
-          ghost.classList.add('cp-l9nb-key--ghost');
-          ghost.style.cssText = 'position:fixed;pointer-events:none;z-index:10000;width:' +
-            r.width + 'px;height:' + r.height + 'px;left:' + (t.clientX - offX) +
-            'px;top:' + (t.clientY - offY) + 'px;';
-          document.body.appendChild(ghost);
-          keyEl.classList.add('cp-l9nb-key--dragging');
-        }, { passive: false });
-
-        keyEl.addEventListener('touchmove', function (e) {
-          if (!ghost) return;
-          e.preventDefault();
-          var t = e.touches[0];
-          ghost.style.left = (t.clientX - offX) + 'px';
-          ghost.style.top  = (t.clientY - offY) + 'px';
-          ghost.style.display = 'none';
-          var el = document.elementFromPoint(t.clientX, t.clientY);
-          ghost.style.display = '';
-          if (el && el.closest('.cp-l9nb-drop-zone')) {
-            dropZone.classList.add('cp-l9nb-drop-zone--hover');
-          } else {
-            dropZone.classList.remove('cp-l9nb-drop-zone--hover');
-          }
-        }, { passive: false });
-
-        keyEl.addEventListener('touchend', function (e) {
-          if (!ghost) return;
-          var t = e.changedTouches[0];
-          ghost.style.display = 'none';
-          var el = document.elementFromPoint(t.clientX, t.clientY);
-          if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
-          ghost = null;
-          keyEl.classList.remove('cp-l9nb-key--dragging');
-          dropZone.classList.remove('cp-l9nb-drop-zone--hover');
-          if (el && el.closest('.cp-l9nb-drop-zone')) {
-            currentVal += k;
-            _updateDrop();
-          }
-        });
-      }
+      /* Keys are tap/click only — fixed in place, not draggable. */
 
       keyEl.addEventListener('click', function () {
         if (k === 'C') {
@@ -19485,10 +19505,12 @@ var ContentRenderer = (function () {
 
     function _showPad() {
       floatPad.classList.remove('cp-l9nb-float-pad--hidden');
+      dropZone.classList.add('cp-l9nb-drop-zone--active');
       _positionPad();
     }
     function _hidePad() {
       floatPad.classList.add('cp-l9nb-float-pad--hidden');
+      dropZone.classList.remove('cp-l9nb-drop-zone--active');
     }
 
     function _onDocClick(e) {
@@ -19537,7 +19559,7 @@ var ContentRenderer = (function () {
           opCount++;
           var tile = _el('button', 'cp-l9nb-op-tile');
           tile.textContent = tok;
-          tile.setAttribute('aria-label', 'Operator ' + tok);
+          tile.setAttribute('aria-label', I18n.t('ariaOperatorN', { n: tok }));
           (function (btn, operator) {
             btn.addEventListener('click', function () {
               if (answered) return;
@@ -19712,6 +19734,7 @@ var ContentRenderer = (function () {
     });
     var _pt = document.querySelector('.progress-track');
     if (_pt) {
+      _pt.classList.remove('progress-track--empty');
       _pt.appendChild(dotsRow);
     } else {
       wrap.appendChild(dotsRow); /* fallback if shell element absent */
@@ -19725,7 +19748,7 @@ var ContentRenderer = (function () {
     var labelEl  = _el('p',   'cp-l9ib-card__label');
     labelEl.setAttribute('aria-live', 'polite');
     var titleEl  = _el('h2',  'cp-l9ib-title');
-    titleEl.textContent = page.title || 'INSERT THE BRACKETS!';
+    titleEl.textContent = page.title || 'Insert The Brackets!';
     var promptEl = _el('p',   'cp-l9ib-card__prompt');
     promptEl.textContent = page.instruction || 'Place the brackets to make it true!';
     var bodyEl   = _el('div', 'cp-l9ib-card__body');
@@ -19795,7 +19818,7 @@ var ContentRenderer = (function () {
           var gap = _el('button', 'cp-l9ib-gap');
           if (gapIdx === openGap)  { gap.textContent = '('; gap.className = _sharedContentClasses('cp-l9ib-gap cp-l9ib-gap--open');  }
           if (gapIdx === closeGap) { gap.textContent = ')'; gap.className = _sharedContentClasses('cp-l9ib-gap cp-l9ib-gap--close'); }
-          gap.setAttribute('aria-label', 'Gap ' + gapIdx);
+          gap.setAttribute('aria-label', I18n.t('counterGapN', { n: gapIdx }));
           gap.addEventListener('click', function () { _onGapTap(gapIdx); });
           row.appendChild(gap);
           if (gapIdx < tokens.length) {
@@ -19973,7 +19996,7 @@ var ContentRenderer = (function () {
           confirmBanner.className = _sharedContentClasses('cp-l9ib-confirm cp-l9ib-confirm--hidden');
           _updateDots();
           _updatePhaseEl();
-          labelEl.textContent = 'Puzzle ' + (puzzleIdx + 1) + ' of ' + puzzles.length;
+          labelEl.textContent = I18n.t('counterPuzzleNofTotal', { n: puzzleIdx + 1, total: puzzles.length });
           _renderExpr();
         } else {
           if (page.next) renderPage(page.next);
@@ -20004,14 +20027,14 @@ var ContentRenderer = (function () {
 
     function _updatePhaseEl() {
       phaseEl.textContent = phase === 'place-open'
-        ? '👉 Tap a gap to place ('
-        : '👉 Now tap a gap to place )';
+        ? I18n.t('ibTapOpen')
+        : I18n.t('ibTapClose');
     }
 
     /* Init */
     _updateDots();
     _updatePhaseEl();
-    labelEl.textContent = 'Puzzle 1 of ' + puzzles.length;
+    labelEl.textContent = I18n.t('counterPuzzleNofTotal', { n: 1, total: puzzles.length });
     _renderExpr();
   }
 
@@ -20031,7 +20054,7 @@ var ContentRenderer = (function () {
 
     /* Title */
     var titleEl = _el('h2', 'cp-l9br-title');
-    titleEl.textContent = 'BODMAS Rapid Round';
+    titleEl.textContent = I18n.t('rapidRoundTitle');
     wrap.appendChild(titleEl);
 
     var card = _el('div', 'cp-l9br-card');
@@ -20061,7 +20084,7 @@ var ContentRenderer = (function () {
     area.appendChild(wrap);
 
     function _onWrongBr(hint) {
-      feedbackEl.textContent = hint || 'Not quite — think about which rule applies here.';
+      feedbackEl.textContent = hint || I18n.t('rapidWrongHint');
       feedbackEl.className   = _sharedContentClasses('cp-l9br-feedback cp-l9br-feedback--wrong');
       if (typeof playWrong === 'function') playWrong();
       if (typeof anime !== 'undefined') {
@@ -20107,10 +20130,10 @@ var ContentRenderer = (function () {
 
       if (qIdx < questions.length) {
         var q = questions[qIdx];
-        counterEl.textContent  = 'QUESTION ' + q.n + ' OF ' + total;
-        ruleBanner.textContent = 'Rule ' + q.n + ' — ' + q.rule;
+        counterEl.textContent  = I18n.t('counterQuestionNofTotal', { n: q.n, total: total });
+        ruleBanner.textContent = I18n.t('ruleBannerNofRule', { n: q.n, rule: q.rule });
         ruleBanner.className   = _sharedContentClasses('cp-l9br-rule-banner cp-l9br-rule-banner--active');
-        promptEl.textContent   = 'Tap the operator you should solve FIRST.';
+        promptEl.textContent   = I18n.t('promptTapOpFirst');
 
         /* Build expression strip */
         var stripEl = _el('div', 'cp-l9br-strip');
@@ -20127,7 +20150,7 @@ var ContentRenderer = (function () {
             var localIdx = opIdx++;
             var opBtn = _el('button', 'cp-l9br-op-btn');
             opBtn.textContent = tok;
-            opBtn.setAttribute('aria-label', 'Operator ' + tok);
+            opBtn.setAttribute('aria-label', I18n.t('ariaOperatorN', { n: tok }));
             (function (btn, operator) {
               btn.addEventListener('click', function () {
                 if (answered) return;
@@ -20145,7 +20168,7 @@ var ContentRenderer = (function () {
                 } else {
                   btn.classList.add('cp-l9br-op-btn--wrong');
                   setTimeout(function () { btn.classList.remove('cp-l9br-op-btn--wrong'); }, 700);
-                  _onWrongBr('Not quite — think about which rule applies here.');
+                  _onWrongBr(I18n.t('rapidWrongHint'));
                 }
               });
             }(opBtn, tok));
@@ -20160,30 +20183,30 @@ var ContentRenderer = (function () {
 
       } else if (stepOrder) {
         /* Question 7 — step ordering */
-        counterEl.textContent  = 'QUESTION ' + stepOrder.n + ' OF ' + total;
+        counterEl.textContent  = I18n.t('counterQuestionCapsNofTotal', { n: stepOrder.n, total: total });
         ruleBanner.textContent = stepOrder.label || 'Full BODMAS Challenge!';
         ruleBanner.className   = _sharedContentClasses('cp-l9br-rule-banner cp-l9br-rule-banner--challenge');
         promptEl.textContent   = '';
 
         var exprTitle = _el('p', 'cp-l9br-step-expr');
-        exprTitle.textContent = 'Solve: ' + stepOrder.expression;
+        exprTitle.textContent = I18n.t('stepOrderSolve', { expr: stepOrder.expression });
         var stepInst = _el('p', 'cp-l9br-step-inst');
-        stepInst.textContent = 'Click the steps in the exact order BODMAS wants them solved.';
+        stepInst.textContent = I18n.t('stepOrderInstruction');
         bodyEl.appendChild(exprTitle);
         bodyEl.appendChild(stepInst);
 
         /* Two columns */
         var cols    = _el('div', 'cp-l9br-step-cols');
         var srcCol  = _el('div', 'cp-l9br-step-src');
-        var srcHdr  = _el('p', 'cp-l9br-step-col-hdr'); srcHdr.textContent = 'DRAG FROM HERE (CLICK TO MOVE)';
+        var srcHdr  = _el('p', 'cp-l9br-step-col-hdr'); srcHdr.textContent = I18n.t('stepOrderDragHeader');
         var srcList = _el('div', 'cp-l9br-step-list');
         srcCol.appendChild(srcHdr);
         srcCol.appendChild(srcList);
         var tgtCol  = _el('div', 'cp-l9br-step-tgt');
-        var tgtHdr  = _el('p', 'cp-l9br-step-col-hdr'); tgtHdr.textContent = 'CORRECT ORDER';
+        var tgtHdr  = _el('p', 'cp-l9br-step-col-hdr'); tgtHdr.textContent = I18n.t('stepOrderCorrectHeader');
         var tgtList = _el('div', 'cp-l9br-step-list');
         var tgtPlaceholder = _el('p', 'cp-l9br-step-placeholder');
-        tgtPlaceholder.textContent = 'Click steps in BODMAS order';
+        tgtPlaceholder.textContent = I18n.t('stepOrderPlaceholder');
         tgtList.appendChild(tgtPlaceholder);
         tgtCol.appendChild(tgtHdr);
         tgtCol.appendChild(tgtList);
@@ -20192,7 +20215,7 @@ var ContentRenderer = (function () {
         bodyEl.appendChild(cols);
 
         var tryBtn = _el('button', 'cp-l9br-try-btn');
-        tryBtn.textContent = '↺ Try Again';
+        tryBtn.textContent = I18n.t('btnTryAgain');
         bodyEl.appendChild(tryBtn);
 
         /* Shuffle steps for display order */
@@ -20221,7 +20244,7 @@ var ContentRenderer = (function () {
           });
           if (!remaining.length) {
             var done = _el('p', 'cp-l9br-step-src-done');
-            done.textContent = 'All steps placed →';
+            done.textContent = I18n.t('stepOrderAllPlaced');
             srcList.appendChild(done);
           }
         }
@@ -20264,7 +20287,7 @@ var ContentRenderer = (function () {
             if (typeof playCorrect === 'function') playCorrect();
             if (typeof launchConfetti === 'function') launchConfetti();
             var resultsBtn = _el('button', 'cp-l9br-results-btn');
-            resultsBtn.textContent = '🏆 See Results →';
+            resultsBtn.textContent = I18n.t('btnSeeResults');
             resultsBtn.addEventListener('click', function () {
               if (page.next) renderPage(page.next);
             });
@@ -20321,7 +20344,7 @@ var ContentRenderer = (function () {
 
     /* Progress bar */
     var barWrap = _el('div', 'cp-l9rs-bar-wrap');
-    var barLabel = _el('p', 'cp-l9rs-bar-label'); barLabel.textContent = 'COMPLETE!';
+    var barLabel = _el('p', 'cp-l9rs-bar-label'); barLabel.textContent = I18n.t('resultsComplete');
     var barEl   = _el('div', 'cp-l9rs-bar');
     var fillEl  = _el('div', 'cp-l9rs-bar__fill');
     barEl.appendChild(fillEl);
@@ -20334,19 +20357,19 @@ var ContentRenderer = (function () {
     wrap.appendChild(trophy);
 
     /* Heading */
-    var heading = _el('h2', 'cp-l9rs-heading'); heading.textContent = 'BODMAS Champion!';
-    var sub     = _el('p',  'cp-l9rs-sub');     sub.textContent = 'You have mastered all the rules of BODMAS.';
+    var heading = _el('h2', 'cp-l9rs-heading'); heading.textContent = I18n.t('resultsChampionTitle');
+    var sub     = _el('p',  'cp-l9rs-sub');     sub.textContent = I18n.t('resultsChampionSubtitle');
     wrap.appendChild(heading);
     wrap.appendChild(sub);
 
     /* Rule cards */
     var cards = [
-      { label: 'B — Brackets first',                        color: 'yellow' },
-      { label: 'O — Of (means multiply, e.g. ½ of 10 = 5)', color: 'amber'  },
-      { label: 'D/M — ÷ and × before + −',   color: 'blue'   },
-      { label: 'D/M — ÷ × left to right',          color: 'green'  },
-      { label: 'A/S — + and − last',                    color: 'pink'   },
-      { label: 'A/S — + − left to right',               color: 'teal'   }
+      { label: I18n.t('champCardB'),   color: 'yellow' },
+      { label: I18n.t('champCardO'),   color: 'amber'  },
+      { label: I18n.t('champCardDM1'), color: 'blue'   },
+      { label: I18n.t('champCardDM2'), color: 'green'  },
+      { label: I18n.t('champCardAS1'), color: 'pink'   },
+      { label: I18n.t('champCardAS2'), color: 'teal'   }
     ];
     var grid = _el('div', 'cp-l9rs-grid');
     cards.forEach(function (c) {

@@ -24,7 +24,7 @@
     <div class="header__left">
       <div class="progress-track">
         <div class="progress-dots" id="progress-dots" role="progressbar" aria-label="Question progress"
-          aria-valuenow="0" aria-valuemax="6" aria-valuetext="0 of 6">
+          data-i18n-aria="questionProgressLabel" aria-valuenow="0" aria-valuemax="6" aria-valuetext="0 of 6">
           <!-- dots injected by app.js -->
         </div>
       </div>
@@ -55,7 +55,8 @@
     <main id="board" class="board" role="main">
 
       <!-- ═══ LAYER 4: Active content (replaced per screen) ═══ -->
-      <section id="content-area" aria-live="polite" aria-atomic="true" aria-label="Game content">
+      <section id="content-area" aria-live="polite" aria-atomic="true" aria-label="Game content"
+        data-i18n-aria="gameContentLabel">
         <!-- Populated by app.js renderScreen() -->
       </section>
 
@@ -133,24 +134,24 @@
 
   <!-- ═══ LAYER 5: Footer (persistent) ═══ -->
   <footer id="footer" class="footer" role="contentinfo">
-    <button class="btn-submit" id="btn-submit" disabled aria-disabled="true">
+    <button class="btn-submit" id="btn-submit" disabled aria-disabled="true" data-i18n="submitButton">
       Submit
     </button>
   </footer>
 
   <!-- ═══ Loader Overlay ═══ -->
-  <div id="loader-overlay" class="loader-overlay" aria-label="Loading">
-    <img class="loader-overlay__gif" src="assets/GIFs/loader.webp" alt="Loading...">
+  <div id="loader-overlay" class="loader-overlay" aria-label="Loading" data-i18n-aria="loadingMessage">
+    <img class="loader-overlay__gif" src="assets/GIFs/loader.webp" alt="Loading..." data-i18n-alt="loadingMessage">
   </div>
 
   <!-- ═══ How to Play Modal ═══ -->
   <div id="htp-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true"
     aria-labelledby="htp-title">
     <div class="modal-card" id="htp-card">
-      <button class="modal-close" id="modal-close" aria-label="Close How to Play">
+      <button class="modal-close" id="modal-close" aria-label="Close How to Play" data-i18n-aria="closeHelpLabel">
         <img src="assets/icons/close_popup.svg" alt="" draggable="false">
       </button>
-      <h2 class="modal-title" id="htp-title">How to Play</h2>
+      <h2 class="modal-title" id="htp-title" data-i18n="helpTitle">How to Play</h2>
       <p class="modal-subtitle" id="htp-subtitle"></p>
       <ol class="modal-steps" id="htp-steps"></ol>
       <img class="modal-character" src="assets/images/Swiftee-right.webp" alt="" aria-hidden="true" draggable="false">
@@ -163,7 +164,8 @@
     <div class="modal-card" id="lang-card">
       <!-- Select view -->
       <div id="lang-select-view">
-        <button class="modal-close" id="lang-close" aria-label="Close language selector">
+        <button class="modal-close" id="lang-close" aria-label="Close language selector"
+          data-i18n-aria="closeLanguageLabel">
           <img src="assets/icons/close_popup.svg" alt="" draggable="false">
         </button>
         <h2 class="modal-title" id="lang-title">Choose Your Language</h2>
@@ -181,7 +183,8 @@
               <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
             </svg>
           </button>
-          <ul class="lang-list" id="lang-list" role="listbox" aria-label="Language options" hidden>
+          <ul class="lang-list" id="lang-list" role="listbox" aria-label="Language options"
+            data-i18n-aria="languageOptionsLabel" hidden>
           </ul>
         </div>
         <div class="lang-actions">

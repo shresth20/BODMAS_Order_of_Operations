@@ -1,5 +1,19 @@
 /* pages.js — Level 1: × Before + | Level 2: × Before − | ... | Level 6: Brackets First
-   Lesson plan: bodmas_lesson_plan_mechanics_sequence.md, Section 01–06 */
+   Lesson plan: bodmas_lesson_plan_mechanics_sequence.md, Section 01–06
+   NOTE: translatable text fields hold i18n KEYS (resolved by ContentRenderer
+   via I18n.t at render time). Expressions, tokens and numeric data are literal. */
+
+var GAME_HTP = {
+  subtitle: 'htpSubtitle',
+  steps: [
+    'htpStep1',
+    'htpStep2',
+    'htpStep3',
+    'htpStep4',
+    'htpStep5',
+    'htpStep6'
+  ]
+};
 
 var CONTENT_PAGES = [
 
@@ -10,12 +24,12 @@ var CONTENT_PAGES = [
   {
     id: '1.0',
     type: 'l1-intro',
-    scenario: 'A child buys 3 packets of crayons with 4 crayons each, and gets 2 extra crayons.',
-    scenarioHtml: 'A child buys <span class="cp-l1i-hl">3 packets</span> of crayons with <span class="cp-l1i-hl">4 crayons</span> each, and gets <span class="cp-l1i-hl">2 extra</span> crayons.',
+    scenario: 'lvl1Scenario',
+    scenarioHtml: 'lvl1ScenarioHtml',
     expression: '3 × 4 + 2',
-    question: 'How many crayons in all? Which part do you solve first?',
-    questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many crayons in all? Which part do you solve first?',
-    buttonLabel: '🔍 Let\'s Investigate!',
+    question: 'lvl1Question',
+    questionHtml: 'lvl1QuestionHtml',
+    buttonLabel: 'btnStartExploring',
     next: '1.1'
   },
 
@@ -62,15 +76,15 @@ var CONTENT_PAGES = [
   {
     id: '1.2',
     type: 'l1-reveal',
-    title: 'You Found the Rule!',
-    ruleText: 'When a sum has × and +, solve Multiplication first, then +.',
+    title: 'revealTitle',
+    ruleText: 'lvl1RuleText',
     workedSteps: [
       { expr: '3 + 4 × 2', hlTokens: ['4', '×', '2'] },
       { expr: '= 3 + 8', hlTokens: ['8'] },
       { expr: '= 11', hlTokens: [] }
     ],
-    bodmasTag: 'Multiplication is done before Addition.',
-    buttonLabel: 'Continue',
+    bodmasTag: 'lvl1BodmasTag',
+    buttonLabel: 'btnContinue',
     next: '1.3'
   },
 
@@ -81,35 +95,35 @@ var CONTENT_PAGES = [
     questions: [
       {
         kind: 'tap-operator',
-        prompt: 'Which operator do you calculate FIRST?',
+        prompt: 'promptWhichOpFirst',
         expression: '3 + 4 × 2',
         tokens: ['+', '×'],
         correctIndex: 1,
-        wrongHint: '× and ÷ always go before + and − in BODMAS.',
-        okMsg: 'Correct! × is solved before +.'
+        wrongHint: 'hintMulDivFirst',
+        okMsg: 'okMulBeforeAdd'
       },
       {
         kind: 'choose-rule',
-        prompt: 'Which rule applies here?',
+        prompt: 'promptWhichRule',
         expression: '7 + 2 × 5',
-        options: ['× Before +', 'Left to Right'],
+        options: ['optMulBeforeAdd', 'optLeftToRight'],
         correctIndex: 0,
-        wrongHint: 'There\'s a × here — does it go first?',
-        okMsg: 'Right! Multiply comes before Add.'
+        wrongHint: 'hintXHereFirst',
+        okMsg: 'okMultiplyBeforeAdd'
       },
       {
         kind: 'which-method',
-        prompt: 'Which method is correct?',
+        prompt: 'promptWhichMethod',
         expression: '6 + 2 × 3',
         methods: [
-          { label: 'Multiplication first', steps: ['6 + 2 × 3', '6 + 6 = 12'], answer: 12, correct: true },
-          { label: 'Left → right', steps: ['6 + 2 × 3', '8 × 3 = 24'], answer: 24, correct: false }
+          { label: 'methodMultiplicationFirst', steps: ['6 + 2 × 3', '6 + 6 = 12'], answer: 12, correct: true },
+          { label: 'methodLeftToRight', steps: ['6 + 2 × 3', '8 × 3 = 24'], answer: 24, correct: false }
         ],
-        okMsg: 'Correct! Always do × before +.',
-        wrongHint: 'Look for the × sign — it goes first!'
+        okMsg: 'okAlwaysMulBeforeAdd',
+        wrongHint: 'hintLookForMul'
       }
     ],
-    completionMsg: 'Excellent! You\'ve mastered × Before +!',
+    completionMsg: 'lvl1Completion',
     next: '2.0'
   },
 
@@ -120,12 +134,12 @@ var CONTENT_PAGES = [
   {
     id: '2.0',
     type: 'l2-intro',
-    scenario: 'A shopkeeper has 20 bananas. He sells 3 baskets with 4 bananas each.',
-    scenarioHtml: 'A shopkeeper has <span class="cp-l2i-hl">20 bananas</span>. He sells <span class="cp-l2i-hl">3 baskets</span> with <span class="cp-l2i-hl">4 bananas</span> each.',
+    scenario: 'lvl2Scenario',
+    scenarioHtml: 'lvl2ScenarioHtml',
     expression: '20 − 3 × 4',
-    question: 'How many bananas are left? Which part do you solve first?',
-    questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many bananas are left? Which part do you solve first?',
-    buttonLabel: '🔍 Let\'s Investigate!',
+    question: 'lvl2Question',
+    questionHtml: 'lvl2QuestionHtml',
+    buttonLabel: 'btnStartExploring',
     next: '2.1'
   },
 
@@ -172,15 +186,15 @@ var CONTENT_PAGES = [
   {
     id: '2.2',
     type: 'l2-reveal',
-    title: 'You Found the Rule!',
-    ruleText: 'When a sum has × and −, solve × first, then −.',
+    title: 'revealTitle',
+    ruleText: 'lvl2RuleText',
     workedSteps: [
       { expr: '10 − 3 × 2', hlTokens: ['3', '×', '2'] },
       { expr: '= 10 − 6', hlTokens: ['6'] },
       { expr: '= 4', hlTokens: [] }
     ],
-    bodmasTag: 'Multiplication is done before Subtraction.',
-    buttonLabel: 'Continue',
+    bodmasTag: 'lvl2BodmasTag',
+    buttonLabel: 'btnContinue',
     next: '2.3'
   },
 
@@ -191,35 +205,35 @@ var CONTENT_PAGES = [
     questions: [
       {
         kind: 'tap-operator',
-        prompt: 'Which operator do you calculate FIRST?',
+        prompt: 'promptWhichOpFirst',
         expression: '10 − 3 × 2',
         tokens: ['−', '×'],
         correctIndex: 1,
-        wrongHint: '× and ÷ always go before + and − in BODMAS.',
-        okMsg: 'Correct! × is solved before −.'
+        wrongHint: 'hintMulDivFirst',
+        okMsg: 'okMulBeforeSub'
       },
       {
         kind: 'choose-rule',
-        prompt: 'Which rule applies here?',
+        prompt: 'promptWhichRule',
         expression: '8 − 2 × 3',
-        options: ['× Before −', 'Left to Right'],
+        options: ['optMulBeforeSub', 'optLeftToRight'],
         correctIndex: 0,
-        wrongHint: 'There\'s a × here — does it go first?',
-        okMsg: 'Right! Multiply comes before Subtract.'
+        wrongHint: 'hintXHereFirst',
+        okMsg: 'okMultiplyBeforeSubtract'
       },
       {
         kind: 'which-method',
-        prompt: 'Which method is correct?',
+        prompt: 'promptWhichMethod',
         expression: '15 − 3 × 4',
         methods: [
-          { label: 'Multiplication first', steps: ['15 − 3 × 4', '3 × 4 = 12', '15 − 12 = 3'], answer: 3, correct: true },
-          { label: 'Left → right', steps: ['15 − 3 × 4', '15 − 3 = 12', '12 × 4 = 48'], answer: 48, correct: false }
+          { label: 'methodMultiplicationFirst', steps: ['15 − 3 × 4', '3 × 4 = 12', '15 − 12 = 3'], answer: 3, correct: true },
+          { label: 'methodLeftToRight', steps: ['15 − 3 × 4', '15 − 3 = 12', '12 × 4 = 48'], answer: 48, correct: false }
         ],
-        okMsg: 'Correct! Always do × before −.',
-        wrongHint: 'Look for the × sign — it goes first!'
+        okMsg: 'okAlwaysMulBeforeSub',
+        wrongHint: 'hintLookForMul'
       }
     ],
-    completionMsg: 'Excellent! You\'ve mastered × Before −!',
+    completionMsg: 'lvl2Completion',
     next: '3.0'
   },
 
@@ -230,11 +244,11 @@ var CONTENT_PAGES = [
   {
     id: '3.0',
     type: 'l3-intro',
-    scenarioHtml: '<span style="color:#3BC6FF;font-weight:800">12 laddoos</span> are shared equally among <span style="color:#3BC6FF;font-weight:800">3 children</span>, and <span style="color:#3BC6FF;font-weight:800">5 more laddoos</span> are added.',
+    scenarioHtml: 'lvl3ScenarioHtml',
     expression: '12 ÷ 3 + 5',
-    question: 'How many laddoos in total? Which part do you solve first?',
-    questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many laddoos in total? Which part do you solve first?',
-    buttonLabel: '🔍 Let\'s Investigate!',
+    question: 'lvl3Question',
+    questionHtml: 'lvl3QuestionHtml',
+    buttonLabel: 'btnStartExploring',
     next: '3.1'
   },
 
@@ -281,15 +295,15 @@ var CONTENT_PAGES = [
   {
     id: '3.2',
     type: 'l3-reveal',
-    title: 'You Found the Rule!',
-    ruleText: 'When a sum has ÷ and + or −, solve ÷ first.',
+    title: 'revealTitle',
+    ruleText: 'lvl3RuleText',
     workedSteps: [
       { expr: '10 + 12 ÷ 3', hlTokens: ['12', '÷', '3'] },
       { expr: '= 10 + 4', hlTokens: ['4'] },
       { expr: '= 14', hlTokens: [] }
     ],
-    bodmasTag: 'Division is done before Addition and Subtraction.',
-    buttonLabel: 'Continue',
+    bodmasTag: 'lvl3BodmasTag',
+    buttonLabel: 'btnContinue',
     next: '3.3'
   },
 
@@ -300,35 +314,35 @@ var CONTENT_PAGES = [
     questions: [
       {
         kind: 'tap-operator',
-        prompt: 'Which operator do you calculate FIRST?',
+        prompt: 'promptWhichOpFirst',
         expression: '8 + 6 ÷ 2',
         tokens: ['+', '÷'],
         correctIndex: 1,
-        wrongHint: '÷ and × always go before + and − in BODMAS.',
-        okMsg: 'Correct! ÷ is solved before +.'
+        wrongHint: 'hintDivMulFirst',
+        okMsg: 'okDivBeforeAdd'
       },
       {
         kind: 'choose-rule',
-        prompt: 'Which rule applies here?',
+        prompt: 'promptWhichRule',
         expression: '5 + 9 ÷ 3',
-        options: ['÷ Before +', 'Left to Right'],
+        options: ['optDivBeforeAdd', 'optLeftToRight'],
         correctIndex: 0,
-        wrongHint: 'There\'s a ÷ here — does it go first?',
-        okMsg: 'Right! Division comes before Addition.'
+        wrongHint: 'hintDivHereFirst',
+        okMsg: 'okDivisionBeforeAddition'
       },
       {
         kind: 'which-method',
-        prompt: 'Which method is correct?',
+        prompt: 'promptWhichMethod',
         expression: '12 + 8 ÷ 4',
         methods: [
-          { label: '÷ first', steps: ['12 + 8 ÷ 4', '8 ÷ 4 = 2', '12 + 2 = 14'], answer: 14, correct: true },
-          { label: 'Left → right', steps: ['12 + 8 ÷ 4', '12 + 8 = 20', '20 ÷ 4 = 5'], answer: 5, correct: false }
+          { label: 'methodDivisionFirst', steps: ['12 + 8 ÷ 4', '8 ÷ 4 = 2', '12 + 2 = 14'], answer: 14, correct: true },
+          { label: 'methodLeftToRight', steps: ['12 + 8 ÷ 4', '12 + 8 = 20', '20 ÷ 4 = 5'], answer: 5, correct: false }
         ],
-        okMsg: 'Correct! Always do ÷ before +.',
-        wrongHint: 'Look for the ÷ sign — it goes first!'
+        okMsg: 'okAlwaysDivBeforeAdd',
+        wrongHint: 'hintLookForDiv'
       }
     ],
-    completionMsg: 'Excellent! You\'ve mastered ÷ Before + and −!',
+    completionMsg: 'lvl3Completion',
     next: '4.0'
   },
 
@@ -338,11 +352,11 @@ var CONTENT_PAGES = [
   {
     id: '4.0',
     type: 'l4-intro',
-    scenarioHtml: 'Riya has <span style="color:#18D6A0;font-weight:800">10 stickers</span>, gives away <span style="color:#18D6A0;font-weight:800">4</span>, then gets <span style="color:#18D6A0;font-weight:800">3 more</span>.',
+    scenarioHtml: 'lvl4ScenarioHtml',
     expression: '10 − 4 + 3',
-    question: 'How many stickers does Riya have now? Which part do you solve first?',
-    questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many stickers does Riya have now? Which part do you solve first?',
-    buttonLabel: '🔍 Let\'s Investigate!',
+    question: 'lvl4Question',
+    questionHtml: 'lvl4QuestionHtml',
+    buttonLabel: 'btnStartExploring',
     next: '4.1'
   },
 
@@ -389,14 +403,14 @@ var CONTENT_PAGES = [
   {
     id: '4.2',
     type: 'l4-reveal',
-    ruleTitle: 'You Found the Rule!',
-    ruleText: 'When a sum has + and −, solve from LEFT to RIGHT.',
+    ruleTitle: 'revealTitle',
+    ruleText: 'lvl4RuleText',
     workedSteps: [
       { expr: '10 − 4 + 3', hlTokens: ['10', '−', '4'] },
       { expr: '= 6 + 3', hlTokens: ['6'] },
       { expr: '= 9', hlTokens: [] }
     ],
-    bodmasTag: 'Addition and Subtraction are solved left to right.',
+    bodmasTag: 'lvl4BodmasTag',
     next: '4.3'
   },
 
@@ -407,35 +421,35 @@ var CONTENT_PAGES = [
     questions: [
       {
         kind: 'tap-operator',
-        prompt: 'Tap the operator you should solve FIRST.',
+        prompt: 'promptTapOpFirst',
         expression: '10 − 4 + 3',
         tokens: ['−', '+'],
         correctIndex: 0,
-        okMsg: 'Correct! The leftmost − is solved first.',
-        wrongHint: '+ and − have equal priority — solve left to right.'
+        okMsg: 'okLeftmostSubFirst',
+        wrongHint: 'hintAddSubEqualSolveLtr'
       },
       {
         kind: 'choose-rule',
-        prompt: 'Which rule applies here?',
+        prompt: 'promptWhichRule',
         expression: '8 − 3 + 5',
-        options: ['Left to Right', '+ Before −'],
+        options: ['optLeftToRight', 'optAddBeforeSub'],
         correctIndex: 0,
-        okMsg: 'Right! Addition and subtraction are solved left to right.',
-        wrongHint: 'When + and − appear together, no one has higher priority.'
+        okMsg: 'okAddSubLtr',
+        wrongHint: 'hintAddSubNoPriority'
       },
       {
         kind: 'which-method',
-        prompt: 'Which method is correct?',
+        prompt: 'promptWhichMethod',
         expression: '10 − 3 + 5',
         methods: [
-          { label: 'Left → right', steps: ['10 − 3 + 5', '10 − 3 = 7', '7 + 5 = 12'], answer: 12, correct: true },
-          { label: 'Addition first', steps: ['10 − 3 + 5', '3 + 5 = 8', '10 − 8 = 2'], answer: 2, correct: false }
+          { label: 'methodLeftToRight', steps: ['10 − 3 + 5', '10 − 3 = 7', '7 + 5 = 12'], answer: 12, correct: true },
+          { label: 'methodAdditionFirst', steps: ['10 − 3 + 5', '3 + 5 = 8', '10 − 8 = 2'], answer: 2, correct: false }
         ],
-        okMsg: 'Correct! Always solve + and − left to right.',
-        wrongHint: '+ and − have equal priority — go left to right!'
+        okMsg: 'okAlwaysAddSubLtr',
+        wrongHint: 'hintAddSubGoLtr'
       }
     ],
-    completionMsg: 'Excellent! You\'ve mastered + and − Left to Right!',
+    completionMsg: 'lvl4Completion',
     next: '5.0'
   },
 
@@ -445,11 +459,11 @@ var CONTENT_PAGES = [
   {
     id: '5.0',
     type: 'l5-intro',
-    scenarioHtml: '<span style="color:#6F8BFF;font-weight:800">12 chocolates</span> are divided into <span style="color:#6F8BFF;font-weight:800">2 groups</span>, then each group is tripled.',
+    scenarioHtml: 'lvl5ScenarioHtml',
     expression: '12 ÷ 2 × 3',
-    question: 'How many chocolates in total? Which part do you solve first?',
-    questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many chocolates in total? Which part do you solve first?',
-    buttonLabel: '🔍 Let\'s Investigate!',
+    question: 'lvl5Question',
+    questionHtml: 'lvl5QuestionHtml',
+    buttonLabel: 'btnStartExploring',
     next: '5.1'
   },
 
@@ -496,14 +510,14 @@ var CONTENT_PAGES = [
   {
     id: '5.2',
     type: 'l5-reveal',
-    ruleTitle: 'You Found the Rule!',
-    ruleText: 'When a sum has × and ÷, solve from LEFT to RIGHT.',
+    ruleTitle: 'revealTitle',
+    ruleText: 'lvl5RuleText',
     workedSteps: [
       { expr: '12 ÷ 2 × 3', hlTokens: ['12', '÷', '2'] },
       { expr: '= 6 × 3', hlTokens: ['6'] },
       { expr: '= 18', hlTokens: [] }
     ],
-    bodmasTag: 'Multiplication and Division are solved left to right.',
+    bodmasTag: 'lvl5BodmasTag',
     next: '5.3'
   },
 
@@ -514,35 +528,35 @@ var CONTENT_PAGES = [
     questions: [
       {
         kind: 'tap-operator',
-        prompt: 'Tap the operator you should solve FIRST.',
+        prompt: 'promptTapOpFirst',
         expression: '12 ÷ 4 × 3',
         tokens: ['÷', '×'],
         correctIndex: 0,
-        okMsg: 'Correct! The leftmost ÷ is solved first.',
-        wrongHint: '× and ÷ have equal priority — solve left to right.'
+        okMsg: 'okLeftmostDivFirst',
+        wrongHint: 'hintMulDivEqualSolveLtr'
       },
       {
         kind: 'choose-rule',
-        prompt: 'Which rule applies here?',
+        prompt: 'promptWhichRule',
         expression: '8 ÷ 2 × 3',
-        options: ['Left to Right', '× Before ÷'],
+        options: ['optLeftToRight', 'optMulBeforeDiv'],
         correctIndex: 0,
-        okMsg: 'Right! Multiplication and division are solved left to right.',
-        wrongHint: 'When × and ÷ appear together, no one has higher priority.'
+        okMsg: 'okMulDivLtr',
+        wrongHint: 'hintMulDivNoPriority'
       },
       {
         kind: 'which-method',
-        prompt: 'Which method is correct?',
+        prompt: 'promptWhichMethod',
         expression: '24 ÷ 4 × 2',
         methods: [
-          { label: 'Left → right', steps: ['24 ÷ 4 × 2', '24 ÷ 4 = 6', '6 × 2 = 12'], answer: 12, correct: true },
-          { label: 'Multiplication first', steps: ['24 ÷ 4 × 2', '4 × 2 = 8', '24 ÷ 8 = 3'], answer: 3, correct: false }
+          { label: 'methodLeftToRight', steps: ['24 ÷ 4 × 2', '24 ÷ 4 = 6', '6 × 2 = 12'], answer: 12, correct: true },
+          { label: 'methodMultiplicationFirst', steps: ['24 ÷ 4 × 2', '4 × 2 = 8', '24 ÷ 8 = 3'], answer: 3, correct: false }
         ],
-        okMsg: 'Correct! Always solve × and ÷ left to right.',
-        wrongHint: '× and ÷ have equal priority — go left to right!'
+        okMsg: 'okAlwaysMulDivLtr',
+        wrongHint: 'hintMulDivGoLtr'
       }
     ],
-    completionMsg: 'Excellent! You\'ve mastered × and ÷ Left to Right!',
+    completionMsg: 'lvl5Completion',
     next: '6.0'
   },
 
@@ -552,11 +566,11 @@ var CONTENT_PAGES = [
   {
     id: '6.0',
     type: 'l6-intro',
-    scenarioHtml: 'A teacher makes <span style="color:#FF6FA8;font-weight:800">3 groups</span>. Each group has <span style="color:#FF6FA8;font-weight:800">4 boys</span> and <span style="color:#FF6FA8;font-weight:800">2 girls</span>.',
+    scenarioHtml: 'lvl6ScenarioHtml',
     expression: '3 \xd7 (4 + 2)',
-    question: 'How many students in all? Which part do you solve first?',
-    questionHtml: '<img class="cp-l1i-question-icon" src="assets/face-emotions/Confused.webp" alt="" aria-hidden="true"> How many students in all? Which part do you solve first?',
-    buttonLabel: '🔍 Let\'s Investigate!',
+    question: 'lvl6Question',
+    questionHtml: 'lvl6QuestionHtml',
+    buttonLabel: 'btnStartExploring',
     next: '6.1'
   },
 
@@ -613,15 +627,15 @@ var CONTENT_PAGES = [
   {
     id: '6.2',
     type: 'l6-reveal',
-    ruleTitle: 'You Found the Rule!',
-    ruleText: 'When a sum has ( ), solve inside the ( ) first.',
+    ruleTitle: 'revealTitle',
+    ruleText: 'lvl6RuleText',
     workedSteps: [
       { expr: '(2 + 3) \xd7 4', hlTokens: ['(2', '+', '3)'] },
       { expr: '= 5 \xd7 4', hlTokens: ['5'] },
       { expr: '= 20', hlTokens: [] }
     ],
-    bodmasTag: 'Brackets are solved before everything else.',
-    buttonLabel: 'Continue',
+    bodmasTag: 'lvl6BodmasTag',
+    buttonLabel: 'btnContinue',
     next: '6.3'
   },
 
@@ -632,35 +646,35 @@ var CONTENT_PAGES = [
     questions: [
       {
         kind: 'tap-operator',
-        prompt: 'Which operator do you calculate FIRST?',
+        prompt: 'promptWhichOpFirst',
         expression: '(3 + 4) \xd7 2',
         tokens: ['+', '\xd7'],
         correctIndex: 0,
-        wrongHint: 'Brackets go first — solve what\'s inside ( ) before anything else.',
-        okMsg: 'Correct! The + inside ( ) is solved first.'
+        wrongHint: 'hintBracketsFirstSolveInside',
+        okMsg: 'okPlusInsideFirst'
       },
       {
         kind: 'choose-rule',
-        prompt: 'Which rule applies here?',
+        prompt: 'promptWhichRule',
         expression: '(5 + 1) \xd7 3',
-        options: ['( ) Brackets First', '\xd7 Before +'],
+        options: ['optBracketsFirst', 'optMulBeforeAdd'],
         correctIndex: 0,
-        wrongHint: 'See the brackets? Everything inside goes first.',
-        okMsg: 'Right! Brackets come before multiplication.'
+        wrongHint: 'hintSeeBrackets',
+        okMsg: 'okBracketsBeforeMul'
       },
       {
         kind: 'which-method',
-        prompt: 'Which method is correct?',
+        prompt: 'promptWhichMethod',
         expression: '(4 + 2) \xd7 3',
         methods: [
-          { label: 'Brackets first', steps: ['(4 + 2) \xd7 3', '4 + 2 = 6', '6 \xd7 3 = 18'], answer: 18, correct: true },
-          { label: 'Multiplication first', steps: ['(4 + 2) \xd7 3', '2 \xd7 3 = 6', '4 + 6 = 10'], answer: 10, correct: false }
+          { label: 'methodBracketsFirst', steps: ['(4 + 2) \xd7 3', '4 + 2 = 6', '6 \xd7 3 = 18'], answer: 18, correct: true },
+          { label: 'methodMultiplicationFirst', steps: ['(4 + 2) \xd7 3', '2 \xd7 3 = 6', '4 + 6 = 10'], answer: 10, correct: false }
         ],
-        okMsg: 'Correct! Always solve inside brackets first.',
-        wrongHint: 'Look for the brackets — they change what goes first!'
+        okMsg: 'okAlwaysBracketsFirst',
+        wrongHint: 'hintLookForBrackets'
       }
     ],
-    completionMsg: 'Excellent! You\'ve mastered Brackets First!',
+    completionMsg: 'lvl6Completion',
     next: '8.0'
   },
 
@@ -671,18 +685,18 @@ var CONTENT_PAGES = [
   {
     id: '8.0',
     type: 'l8-bodmas-ladder',
-    instruction: 'Arrange The Boxes in Corrent Sequence',
+    instruction: 'lvl8Instruction',
     tiles: [
-      { id: 'O', letter: 'O', word: 'Orders',         label: 'O — Orders',         colorKey: 'blue'   },
-      { id: 'B', letter: 'B', word: 'Brackets',       label: 'B — Brackets',       colorKey: 'orange' },
-      { id: 'S', letter: 'S', word: 'Subtraction',    label: 'S — Subtraction',    colorKey: 'teal'   },
-      { id: 'A', letter: 'A', word: 'Addition',       label: 'A — Addition',       colorKey: 'green'  },
-      { id: 'D', letter: 'D', word: 'Division',       label: 'D — Division',       colorKey: 'pink'   },
-      { id: 'M', letter: 'M', word: 'Multiplication', label: 'M — Multiplication', colorKey: 'purple' }
+      { id: 'O', letter: 'O', word: 'wordOrders',         label: 'tileLabelOrders',         colorKey: 'blue'   },
+      { id: 'B', letter: 'B', word: 'wordBrackets',       label: 'tileLabelBrackets',       colorKey: 'orange' },
+      { id: 'S', letter: 'S', word: 'wordSubtraction',    label: 'tileLabelSubtraction',    colorKey: 'teal'   },
+      { id: 'A', letter: 'A', word: 'wordAddition',       label: 'tileLabelAddition',       colorKey: 'green'  },
+      { id: 'D', letter: 'D', word: 'wordDivision',       label: 'tileLabelDivision',       colorKey: 'pink'   },
+      { id: 'M', letter: 'M', word: 'wordMultiplication', label: 'tileLabelMultiplication', colorKey: 'purple' }
     ],
     correctOrder: ['B', 'O', 'D', 'M', 'A', 'S'],
-    wrongHint: 'Not quite! Think about which operation comes first in BODMAS.',
-    completionMsg: '🎉 You discovered the order rule. Mathematicians call it BODMAS!',
+    wrongHint: 'lvl8WrongHint',
+    completionMsg: 'lvl8Completion',
     next: '9.0'
   },
 
@@ -693,14 +707,14 @@ var CONTENT_PAGES = [
   {
     id: '9.0',
     type: 'l9-nested-brackets',
-    instruction: 'Tap which operator to solve FIRST!',
-    hintInner: '🔍 Find the innermost ( ) brackets and tap the operator inside!',
-    hintMiddle: '✨ Inner brackets solved! Tap the next operator to use.',
-    hintLast: '🎯 Almost done — tap the last remaining operator!',
-    wrongHint: 'That\'s not inside the innermost brackets — look for the ( ) with no other ( ) inside it.',
+    instruction: 'lvl9NbInstruction',
+    hintInner: 'lvl9HintInner',
+    hintMiddle: 'lvl9HintMiddle',
+    hintLast: 'lvl9HintLast',
+    wrongHint: 'lvl9NbWrongHint',
     questions: [
       {
-        label: 'Question 1 of 2',
+        label: 'lvl9bQ1Label',
         expression: '( 2 + ( 3 × 4 ) ) − 5',
         steps: [
           {
@@ -720,7 +734,7 @@ var CONTENT_PAGES = [
         fullExpression: '(2 + (3 × 4)) − 5 = 9'
       },
       {
-        label: 'Question 2 of 2',
+        label: 'lvl9bQ2Label',
         expression: '3 × ( 2 + ( 8 ÷ 4 ) )',
         steps: [
           {
@@ -751,9 +765,9 @@ var CONTENT_PAGES = [
   {
     id: '9.1',
     type: 'l9-insert-brackets',
-    title: 'INSERT THE BRACKETS!',
-    instruction: 'Place the brackets to make it true!',
-    subInstruction: 'Tap where ( goes, then where ) goes.',
+    title: 'lvl9IbTitle',
+    instruction: 'lvl9IbInstruction',
+    subInstruction: 'lvl9IbSubInstruction',
     puzzles: [
       {
         id: 1, tokens: ['2', '+', '3', '×', '4'], target: 20,
@@ -783,46 +797,46 @@ var CONTENT_PAGES = [
   {
     id: '9.2',
     type: 'l9-bodmas-review',
-    title: 'FINAL BODMAS REVIEW',
+    title: 'lvl9BrTitle',
     questions: [
       {
-        n: 1, rule: '× before +', expr: '7 + 2 × 3', correctOp: '×', answer: 13,
-        okMsg: '✓ Correct! × is solved first → 7 + 6 = 13'
+        n: 1, rule: 'ruleMulBeforeAdd', expr: '7 + 2 × 3', correctOp: '×', answer: 13,
+        okMsg: 'lvl9BrQ1Ok'
       },
       {
-        n: 2, rule: '× before −', expr: '15 − 2 × 4', correctOp: '×', answer: 7,
-        okMsg: '✓ Correct! × is solved first → 15 − 8 = 7'
+        n: 2, rule: 'ruleMulBeforeSub', expr: '15 − 2 × 4', correctOp: '×', answer: 7,
+        okMsg: 'lvl9BrQ2Ok'
       },
       {
-        n: 3, rule: '÷ before + and −', expr: '5 + 12 ÷ 4', correctOp: '÷', answer: 8,
-        okMsg: '✓ Correct! ÷ is solved first → 5 + 3 = 8'
+        n: 3, rule: 'ruleDivBeforeAddSub', expr: '5 + 12 ÷ 4', correctOp: '÷', answer: 8,
+        okMsg: 'lvl9BrQ3Ok'
       },
       {
-        n: 4, rule: '+ and − left to right', expr: '11 − 4 + 2', correctOp: '−', answer: 9,
-        okMsg: '✓ Correct! Leftmost − is solved first → 7 + 2 = 9'
+        n: 4, rule: 'ruleAddSubLtr', expr: '11 − 4 + 2', correctOp: '−', answer: 9,
+        okMsg: 'lvl9BrQ4Ok'
       },
       {
-        n: 5, rule: '× and ÷ left to right', expr: '18 ÷ 3 × 2', correctOp: '÷', answer: 12,
-        okMsg: '✓ Correct! Leftmost ÷ is solved first → 6 × 2 = 12'
+        n: 5, rule: 'ruleMulDivLtr', expr: '18 ÷ 3 × 2', correctOp: '÷', answer: 12,
+        okMsg: 'lvl9BrQ5Ok'
       },
       {
-        n: 6, rule: 'Brackets ( ) come FIRST', expr: '( 5 + 3 ) × 4', correctOp: '+', answer: 32,
-        okMsg: '✓ Correct! + inside ( ) is solved first → 8 × 4 = 32'
+        n: 6, rule: 'ruleBracketsFirst', expr: '( 5 + 3 ) × 4', correctOp: '+', answer: 32,
+        okMsg: 'lvl9BrQ6Ok'
       }
     ],
     stepOrder: {
       n: 7,
-      label: 'Full BODMAS Challenge!',
+      label: 'lvl9StepOrderLabel',
       expression: '24 ÷ (6 − 2) + 3 × 2',
       steps: [
-        { id: 'brackets', label: 'Step: (6 − 2) = 4' },
-        { id: 'div', label: 'Step: 24 ÷ 4 = 6' },
-        { id: 'mul', label: 'Step: 3 × 2 = 6' },
-        { id: 'add', label: 'Step: 6 + 6 = 12' }
+        { id: 'brackets', label: 'lvl9Step1Label' },
+        { id: 'div', label: 'lvl9Step2Label' },
+        { id: 'mul', label: 'lvl9Step3Label' },
+        { id: 'add', label: 'lvl9Step4Label' }
       ],
       correctOrder: ['brackets', 'div', 'mul', 'add'],
-      wrongHint: 'Not quite — remember: brackets first, then × and ÷, then + and −.',
-      successMsg: '🎉 Perfect BODMAS order! You got it!'
+      wrongHint: 'lvl9StepWrongHint',
+      successMsg: 'lvl9StepSuccess'
     },
     animation: 'l9brEntrance',
     next: '9.3'
@@ -837,5 +851,4 @@ var CONTENT_PAGES = [
     type: 'l9-results',
     next: null
   }
-
 ];

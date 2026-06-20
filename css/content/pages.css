@@ -4478,6 +4478,39 @@ body.content-page-active .board-container {
   font-family: var(--font-secondary, 'Nunito', sans-serif);
 }
 
+/* ── Glow effects: primary / mission / intro CTA buttons ── */
+.cp-btn-primary:not(:disabled) {
+  filter: drop-shadow(0 0 10px rgba(99, 149, 255, 0.55));
+  transition: background var(--dur-fast), transform var(--dur-fast), box-shadow var(--dur-fast), filter 0.2s ease;
+}
+.cp-btn-primary:hover:not(:disabled) {
+  filter: drop-shadow(0 0 22px rgba(99, 149, 255, 0.88));
+}
+.cp-btn-primary:active:not(:disabled) {
+  filter: none;
+}
+.cp-btn-mission:not(:disabled) {
+  filter: drop-shadow(0 0 10px rgba(99, 149, 255, 0.55));
+  transition: background var(--dur-fast), transform var(--dur-fast), box-shadow var(--dur-fast), filter 0.2s ease;
+}
+.cp-btn-mission:hover:not(:disabled),
+.cp-btn-mission:focus-visible {
+  filter: drop-shadow(0 0 22px rgba(99, 149, 255, 0.88));
+}
+.cp-btn-mission:active:not(:disabled) {
+  filter: none;
+}
+.cp-btn-intro:not(:disabled) {
+  filter: drop-shadow(0 0 10px rgba(99, 149, 255, 0.55));
+}
+.cp-btn-intro:hover:not(:disabled),
+.cp-btn-intro:focus-visible {
+  filter: drop-shadow(0 0 22px rgba(99, 149, 255, 0.88));
+}
+.cp-btn-intro:active:not(:disabled) {
+  filter: none;
+}
+
 .cp-al-reset-btn:active {
   transform: translateY(3px);
   box-shadow: none;

@@ -35,6 +35,7 @@ css/
     frames.css
   content/
     pages.css
+    style.css
     responsive.css
 js/
   core/
