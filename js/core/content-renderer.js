@@ -19473,68 +19473,7 @@ var ContentRenderer = (function () {
       var keyEl = _el('div', cls);
       keyEl.textContent = k;
 
-      if (isDigit) {
-        keyEl.setAttribute('draggable', 'true');
-
-        /* HTML5 drag */
-        keyEl.addEventListener('dragstart', function (e) {
-          e.dataTransfer.effectAllowed = 'copy';
-          e.dataTransfer.setData('text/plain', k);
-          keyEl.classList.add('cp-l9nb-key--dragging');
-        });
-        keyEl.addEventListener('dragend', function () {
-          keyEl.classList.remove('cp-l9nb-key--dragging');
-        });
-
-        /* Touch drag */
-        var ghost = null;
-        var offX, offY;
-        keyEl.addEventListener('touchstart', function (e) {
-          e.preventDefault();
-          var t = e.touches[0];
-          var r = keyEl.getBoundingClientRect();
-          offX  = t.clientX - r.left;
-          offY  = t.clientY - r.top;
-          ghost = keyEl.cloneNode(true);
-          ghost.classList.add('cp-l9nb-key--ghost');
-          ghost.style.cssText = 'position:fixed;pointer-events:none;z-index:10000;width:' +
-            r.width + 'px;height:' + r.height + 'px;left:' + (t.clientX - offX) +
-            'px;top:' + (t.clientY - offY) + 'px;';
-          document.body.appendChild(ghost);
-          keyEl.classList.add('cp-l9nb-key--dragging');
-        }, { passive: false });
-
-        keyEl.addEventListener('touchmove', function (e) {
-          if (!ghost) return;
-          e.preventDefault();
-          var t = e.touches[0];
-          ghost.style.left = (t.clientX - offX) + 'px';
-          ghost.style.top  = (t.clientY - offY) + 'px';
-          ghost.style.display = 'none';
-          var el = document.elementFromPoint(t.clientX, t.clientY);
-          ghost.style.display = '';
-          if (el && el.closest('.cp-l9nb-drop-zone')) {
-            dropZone.classList.add('cp-l9nb-drop-zone--hover');
-          } else {
-            dropZone.classList.remove('cp-l9nb-drop-zone--hover');
-          }
-        }, { passive: false });
-
-        keyEl.addEventListener('touchend', function (e) {
-          if (!ghost) return;
-          var t = e.changedTouches[0];
-          ghost.style.display = 'none';
-          var el = document.elementFromPoint(t.clientX, t.clientY);
-          if (ghost.parentNode) ghost.parentNode.removeChild(ghost);
-          ghost = null;
-          keyEl.classList.remove('cp-l9nb-key--dragging');
-          dropZone.classList.remove('cp-l9nb-drop-zone--hover');
-          if (el && el.closest('.cp-l9nb-drop-zone')) {
-            currentVal += k;
-            _updateDrop();
-          }
-        });
-      }
+      /* Keys are tap/click only — fixed in place, not draggable. */
 
       keyEl.addEventListener('click', function () {
         if (k === 'C') {
@@ -19566,10 +19505,12 @@ var ContentRenderer = (function () {
 
     function _showPad() {
       floatPad.classList.remove('cp-l9nb-float-pad--hidden');
+      dropZone.classList.add('cp-l9nb-drop-zone--active');
       _positionPad();
     }
     function _hidePad() {
       floatPad.classList.add('cp-l9nb-float-pad--hidden');
+      dropZone.classList.remove('cp-l9nb-drop-zone--active');
     }
 
     function _onDocClick(e) {
