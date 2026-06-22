@@ -1,5 +1,9 @@
 ﻿/* content-renderer.js — Dispatches page data to type-specific renderers.
-   Depends on: CONTENT_PAGES, ContentAnimations */
+   Depends on: CONTENT_PAGES, ContentAnimations
+   Public API: ContentRenderer.renderPage(pageId) / getCurrentPageId().
+   Internals: shared helpers (_translatePageConfig, _findPage,
+   _sharedContentClasses, _el) and the _render<Type> builders, grouped by
+   page with banner comments. */
 
 var ContentRenderer = (function () {
 

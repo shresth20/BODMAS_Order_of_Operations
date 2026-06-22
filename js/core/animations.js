@@ -140,6 +140,8 @@ function animateScreenOut(el) {
   });
 }
 
+/* ── Explore-step expression animations ─────────────────────────────── */
+
 function animateExploreHighlight(exprEl, highlightText) {
   if (!exprEl || !highlightText) return animeFallback();
   var text = exprEl.textContent;
@@ -204,6 +206,8 @@ function animateExploreAnnotation(annoEl) {
     easing: 'easeOutQuad'
   });
 }
+
+/* ── Answer-card feedback (correct / wrong) ─────────────────────────── */
 
 function animateCorrectCard(cardEl) {
   if (!cardEl) return;

@@ -1,4 +1,8 @@
-/* audio.js - file-based sounds, zero-delay preloaded */
+/* audio.js — sound effects.
+   Two sources:
+     - preloaded <audio> files (click / correct / wrong / intro chime), zero-delay
+     - synthesized Web Audio tones (play* functions): short procedural chimes
+   AudioContext is created lazily on the first synthesized tone (initAudio). */
 
 var _audioCtx = null;
 var _sounds   = {};
@@ -60,9 +64,11 @@ function _playTone(freq, type, duration, gainVal) {
   } catch(e) {}
 }
 
+/* ── File-based effect playback ──────────────────────── */
 function playCorrect() { _playSound(_sounds.correct); }
 function playWrong()   { _playSound(_sounds.wrong); }
 
+/* ── Synthesized Web Audio tones (lazy AudioContext) ─── */
 function playStarPop() {
   if (!_audioCtx) initAudio();
   _playTone(880, 'triangle', 0.12, 0.15);
