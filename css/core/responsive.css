@@ -310,11 +310,6 @@
     height: var(--size-icon-md);
   }
 
-  /* Decorative math symbols — reduce visual weight on laptop */
-  .deco-symbol {
-    font-size: clamp(12px, 1.5vw, 16px);
-    opacity: 0.5;
-  }
 }
 
 

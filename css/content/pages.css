@@ -127,42 +127,6 @@ body.content-page-active .board-container {
   margin: 0;
 }
 
-/* Note ------------------------------------------------ */
-
-.cp-note {
-  font-family: var(--font-accent);
-  font-size: var(--font-base);
-  font-weight: 500;
-  font-style: italic;
-  color: rgba(27, 58, 107, 0.46);
-  line-height: 1.55;
-  max-width: 460px;
-  margin: 0;
-}
-
-/* Stepper --------------------------------------------- */
-
-.cp-stepper {
-  display: flex;
-  align-items: center;
-  gap: clamp(5px, 0.8vw, 9px);
-  justify-content: center;
-}
-
-.cp-stepper__dot {
-  display: inline-block;
-  width: clamp(26px, 3.2vw, 44px);
-  height: clamp(6px, 0.8vw, 9px);
-  border-radius: var(--radius-pill);
-  background: rgba(27, 58, 107, 0.16);
-  flex-shrink: 0;
-  transition: background 250ms ease;
-}
-
-.cp-stepper__dot.is-active {
-  background: var(--color-navy);
-}
-
 /* Primary CTA button ---------------------------------- */
 
 .cp-btn-primary {
@@ -681,27 +645,6 @@ body.content-page-active .board-container {
   max-width: 520px;
   font-style: italic;
   opacity: 0;
-}
-
-/* Progress dots */
-
-.cp-progress-dots {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  opacity: 0;
-}
-
-.cp-progress-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--ink-a18);
-  transition: background 300ms ease;
-}
-
-.cp-progress-dot--active {
-  background: var(--color-accent, #6337c8);
 }
 
 /* Let's Start button */
@@ -2898,13 +2841,6 @@ body.content-page-active .board-container {
    SECTION 10.2 — END SCREEN
    ═══════════════════════════════════════════════════════ */
 
-@keyframes cpBounceUp {
-  0%   { transform: translateY(80px); opacity: 0; }
-  60%  { transform: translateY(-12px); opacity: 1; }
-  80%  { transform: translateY(5px); }
-  100% { transform: translateY(0); opacity: 1; }
-}
-
 .cp-end-screen {
   display: flex;
   flex-direction: column;
@@ -4514,11 +4450,6 @@ body.content-page-active .board-container {
 .cp-al-reset-btn:active {
   transform: translateY(3px);
   box-shadow: none;
-}
-
-@keyframes cpAlAddBtnPulse {
-  0%, 100% { box-shadow: 0 4px 18px rgba(45, 90, 158, 0.28); }
-  50%       { box-shadow: 0 6px 28px rgba(45, 90, 158, 0.55); }
 }
 
 /* ─── Status message ────────────────── */
@@ -10650,11 +10581,6 @@ body.content-page-active .board-container {
 
 .cp-mba-cta:active {
   transform: scale(0.97);
-}
-
-.cp-mma-cta:focus-visible {
-  outline: 3px solid var(--ink-a45);
-  outline-offset: 3px;
 }
 
 .cp-mba-cta--pulse {

@@ -557,7 +557,6 @@ body:has(.cp-l6i-wrap) .content-deco--l6-5 { display: block; }
   transition: background var(--dur-normal), transform var(--dur-normal);
   flex-shrink: 0;
 }
-.dot--filled { background: var(--color-dot-active); }
 
 /* ── Loading screen ── */
 .loading-screen {
@@ -897,8 +896,6 @@ body:has(.cp-l6i-wrap) .content-deco--l6-5 { display: block; }
 #lang-confirm-view { text-align: center; }
 
 /* ── Game asset sizing utilities ── */
-.game-asset    { object-fit: contain; aspect-ratio: 16 / 10; width: 100%; }
-.bg-layer      { object-fit: cover; width: 100vw; height: 100vh; }
 .character-img { object-fit: contain; width: clamp(80px, 12vw, 160px); }
 
 /* ── Glow effects: submit button + header icon buttons ── */

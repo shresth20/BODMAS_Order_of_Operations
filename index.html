@@ -225,29 +225,71 @@
   <script src="js/content/validators.js"></script>
   <script src="js/content/voiceovers.js"></script>
 
-  <!-- ═══ DEV NAV — temporary skip buttons, remove before release ═══ -->
-  <div id="dev-nav" style="position:fixed;bottom:16px;right:16px;display:flex;gap:8px;z-index:9999;pointer-events:auto;">
-    <button id="dev-prev" title="Previous page" style="width:34px;height:34px;border-radius:10px;border:1.5px solid rgba(27,58,107,0.22);background:rgba(255,255,255,0.92);font-size:15px;font-weight:800;color:#1b3a6b;cursor:pointer;box-shadow:0 2px 8px rgba(27,58,107,0.12);">&lt;</button>
-    <button id="dev-next" title="Next page"     style="width:34px;height:34px;border-radius:10px;border:1.5px solid rgba(27,58,107,0.22);background:rgba(255,255,255,0.92);font-size:15px;font-weight:800;color:#1b3a6b;cursor:pointer;box-shadow:0 2px 8px rgba(27,58,107,0.12);">&gt;</button>
+  <!-- ════════════════════════════════════════════════════════════════════
+       TEMPORARY DEV SKIP NAV — testing only. REMOVE BEFORE PRODUCTION.
+       Steps through CONTENT_PAGES (prev/next) so any section can be reached
+       without playing through. Self-contained: delete this whole block to remove.
+  ═════════════════════════════════════════════════════════════════════ -->
+  <style>
+    .dev-skip{position:fixed;right:10px;bottom:10px;z-index:9990;display:flex;
+      align-items:center;gap:6px;padding:5px 7px;background:rgba(27,58,107,.92);
+      border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.28);
+      font-family:ui-monospace,Menlo,Consolas,monospace;user-select:none}
+    .dev-skip__btn{width:30px;height:30px;border:0;border-radius:50%;background:#fff;
+      color:#1b3a6b;font-size:17px;font-weight:700;line-height:1;cursor:pointer;padding:0;
+      display:flex;align-items:center;justify-content:center}
+    .dev-skip__btn:hover{background:#ffe08a}
+    .dev-skip__btn:active{transform:scale(.92)}
+    .dev-skip__label{min-width:72px;text-align:center;color:#fff;font-size:12px;font-weight:600;letter-spacing:.3px}
+  </style>
+  <div id="dev-skip" class="dev-skip">
+    <button type="button" id="dev-skip-prev" class="dev-skip__btn" title="Previous page" aria-label="Previous page">&lt;</button>
+    <span id="dev-skip-label" class="dev-skip__label">–</span>
+    <button type="button" id="dev-skip-next" class="dev-skip__btn" title="Next page" aria-label="Next page">&gt;</button>
   </div>
   <script>
-  (function () {
-    function devNav(dir) {
-      if (typeof ContentRenderer === 'undefined' || typeof CONTENT_PAGES === 'undefined') return;
-      var id = ContentRenderer.getCurrentPageId();
-      if (!id) return;
-      var idx = -1;
-      for (var i = 0; i < CONTENT_PAGES.length; i++) {
-        if (CONTENT_PAGES[i].id === id) { idx = i; break; }
+    /* TEMP dev skip nav — remove together with the block above */
+    (function () {
+      if (!window.CONTENT_MODE) return;
+      var prevBtn = document.getElementById('dev-skip-prev');
+      var nextBtn = document.getElementById('dev-skip-next');
+      var label   = document.getElementById('dev-skip-label');
+      if (!prevBtn || !nextBtn) return;
+
+      function pages() {
+        return (typeof CONTENT_PAGES !== 'undefined' && Array.isArray(CONTENT_PAGES)) ? CONTENT_PAGES : [];
       }
-      if (idx === -1) return;
-      var target = CONTENT_PAGES[idx + dir];
-      if (target) ContentRenderer.renderPage(target.id);
-    }
-    document.getElementById('dev-prev').addEventListener('click', function () { devNav(-1); });
-    document.getElementById('dev-next').addEventListener('click', function () { devNav(1); });
-  }());
+      function currentIndex() {
+        var list = pages();
+        var id = (typeof ContentRenderer !== 'undefined' && ContentRenderer.getCurrentPageId)
+          ? ContentRenderer.getCurrentPageId() : null;
+        for (var i = 0; i < list.length; i++) { if (list[i].id === id) return i; }
+        return -1;
+      }
+      function refresh() {
+        if (!label) return;
+        var list = pages(), idx = currentIndex();
+        label.textContent = idx === -1 ? '–' : (list[idx].id + ' · ' + (idx + 1) + '/' + list.length);
+      }
+      function go(delta) {
+        var list = pages();
+        if (!list.length || typeof ContentRenderer === 'undefined') return;
+        var idx = currentIndex();
+        var target = idx === -1 ? 0 : Math.min(list.length - 1, Math.max(0, idx + delta));
+        ContentRenderer.renderPage(list[target].id);
+        refresh();
+      }
+
+      prevBtn.addEventListener('click', function () { go(-1); });
+      nextBtn.addEventListener('click', function () { go(1); });
+
+      /* Keep the label current when pages change through normal gameplay too */
+      var area = document.getElementById('content-area');
+      if (area && window.MutationObserver) new MutationObserver(refresh).observe(area, { childList: true });
+      refresh();
+    }());
   </script>
+
 </body>
 
 </html>
