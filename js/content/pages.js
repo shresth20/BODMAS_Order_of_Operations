@@ -411,6 +411,7 @@ var CONTENT_PAGES = [
       { expr: '= 9', hlTokens: [] }
     ],
     bodmasTag: 'lvl4BodmasTag',
+    buttonLabel: 'btnContinue',
     next: '4.3'
   },
 
@@ -518,6 +519,7 @@ var CONTENT_PAGES = [
       { expr: '= 18', hlTokens: [] }
     ],
     bodmasTag: 'lvl5BodmasTag',
+    buttonLabel: 'btnContinue',
     next: '5.3'
   },
 

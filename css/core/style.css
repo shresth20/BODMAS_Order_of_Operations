@@ -757,6 +757,7 @@ body:has(.cp-l6i-wrap) .content-deco--l6-5 { display: block; }
   font-family: var(--font-accent);
   font-size: var(--font-sm); font-weight: var(--font-weight-body);
   color: #fff;
+  font-weight: 800;
 }
 .modal-step__text {
   font-family: var(--font-accent);

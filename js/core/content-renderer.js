@@ -931,7 +931,7 @@ var ContentRenderer = (function () {
     wrap.appendChild(ruleCard);
 
     var btn = _el('button', 'cp-btn-primary cp-colrev-btn');
-    btn.textContent = 'Continue →';
+    btn.textContent = I18n.t('btnContinue') + ' →';
     btn.style.display = 'none';
     btn.addEventListener('click', function () { renderPage(page.next); });
     wrap.appendChild(btn);
@@ -1228,7 +1228,7 @@ var ContentRenderer = (function () {
 
     /* Continue button — hidden until after correct answer + reveal */
     var btn = _el('button', 'cp-btn-primary');
-    btn.textContent = 'Continue →';
+    btn.textContent = I18n.t('btnContinue') + ' →';
     btn.style.display = 'none';
     var finalNext = _findTerminusNext(page.id) || page.next;
     btn.addEventListener('click', function () { renderPage(finalNext); });
@@ -2114,7 +2114,7 @@ var ContentRenderer = (function () {
     var continueBtn = null;
     if (page.resultLines && page.resultLines.length) {
       continueBtn = _el('button', 'cp-btn-primary cp-dar-continue');
-      continueBtn.textContent = 'Continue →';
+      continueBtn.textContent = I18n.t('btnContinue') + ' →';
       continueBtn.style.display = 'none';
       continueBtn.addEventListener('click', function () { renderPage(page.next); });
     }
@@ -4037,7 +4037,7 @@ var ContentRenderer = (function () {
 
     /* Continue button — pre-built, hidden until correct answer */
     var continueBtn = _el('button', 'cp-btn-primary cp-arl-continue');
-    continueBtn.textContent = 'Continue';
+    continueBtn.textContent = I18n.t('btnContinue');
     continueBtn.style.display = 'none';
     continueBtn.addEventListener('click', function () { renderPage(page.next); });
     wrap.appendChild(continueBtn);
@@ -4350,7 +4350,7 @@ var ContentRenderer = (function () {
     var actions = _el('div', 'cp-al-actions');
 
     var checkBtn = _el('button', 'cp-btn-primary cp-al-check-btn');
-    checkBtn.textContent = 'Check';
+    checkBtn.textContent = I18n.t('q8CheckBtn');
     checkBtn.style.display = 'none';
     actions.appendChild(checkBtn);
 
@@ -4360,7 +4360,7 @@ var ContentRenderer = (function () {
     actions.appendChild(addBtn);
 
     var resetBtn = _el('button', 'cp-al-reset-btn');
-    resetBtn.textContent = 'Reset';
+    resetBtn.textContent = I18n.t('resetTitle');
     resetBtn.style.display = 'none';
     actions.appendChild(resetBtn);
 
@@ -4912,7 +4912,7 @@ var ContentRenderer = (function () {
     var actions = _el('div', 'cp-al-actions');
 
     var checkBtn = _el('button', 'cp-btn-primary cp-al-check-btn');
-    checkBtn.textContent = 'Check';
+    checkBtn.textContent = I18n.t('q8CheckBtn');
     checkBtn.style.display = 'none';
     actions.appendChild(checkBtn);
 
@@ -4922,7 +4922,7 @@ var ContentRenderer = (function () {
     actions.appendChild(subtractBtn);
 
     var resetBtn = _el('button', 'cp-al-reset-btn');
-    resetBtn.textContent = 'Reset';
+    resetBtn.textContent = I18n.t('resetTitle');
     resetBtn.style.display = 'none';
     actions.appendChild(resetBtn);
 
@@ -5483,7 +5483,7 @@ var ContentRenderer = (function () {
     numpad.appendChild(padGrid);
 
     var submitBtn = _el('button', 'cp-acbc-submit-btn');
-    submitBtn.textContent = 'Submit';
+    submitBtn.textContent = I18n.t('submitButton');
     numpad.appendChild(submitBtn);
 
     body.appendChild(numpad);
@@ -9149,7 +9149,7 @@ var ContentRenderer = (function () {
     var actionsEl = _el('div', 'cp-ml-actions');
 
     var checkBtn = _el('button', 'cp-btn-primary cp-ml-check-btn');
-    checkBtn.textContent = 'Check';
+    checkBtn.textContent = I18n.t('q8CheckBtn');
     checkBtn.style.display = 'none';
     actionsEl.appendChild(checkBtn);
 
@@ -9164,7 +9164,7 @@ var ContentRenderer = (function () {
     actionsEl.appendChild(multiplyBtn);
 
     var resetBtn = _el('button', 'cp-ml-reset-btn');
-    resetBtn.textContent = 'Reset';
+    resetBtn.textContent = I18n.t('resetTitle');
     resetBtn.style.display = 'none';
     actionsEl.appendChild(resetBtn);
 
@@ -12788,7 +12788,7 @@ var ContentRenderer = (function () {
     /* ── Play Again ─────────────────────────────── */
     var playBtn = _el('button', 'cp-om-play-btn');
     playBtn.type = 'button';
-    playBtn.textContent = 'Play Again';
+    playBtn.textContent = I18n.t('playAgainButton');
     playBtn.addEventListener('click', function () {
       if (typeof anime !== 'undefined') {
         anime({ targets: wrap, opacity: 0, duration: 300, easing: 'easeInQuad',
@@ -19051,11 +19051,6 @@ var ContentRenderer = (function () {
     var checkBtn = _el('button', 'cp-l8bl-check-btn');
     checkBtn.textContent = I18n.t('btnCheckOrder');
     btnRow.appendChild(checkBtn);
-
-    var clearBtn = _el('button', 'cp-l8bl-clear-btn');
-    clearBtn.textContent = I18n.t('resetTitle');
-    clearBtn.style.display = 'none';
-    btnRow.appendChild(clearBtn);
     wrap.appendChild(btnRow);
 
     area.appendChild(wrap);
@@ -19220,7 +19215,19 @@ var ContentRenderer = (function () {
       }
       feedbackEl.textContent = '';
       feedbackEl.className   = 'cp-l8bl-feedback';
-      clearBtn.style.display = 'none';
+    }
+
+    /* ── Restore original shuffled order ── */
+    function _resetOrder() {
+      if (_currentPageId !== page.id) return;
+      page.tiles.forEach(function (td) {
+        var item = listEl.querySelector('.cp-l8bl-list-item[data-tile-id="' + td.id + '"]');
+        if (item) listEl.appendChild(item);
+      });
+      var allItems = listEl.querySelectorAll('.cp-l8bl-list-item');
+      for (var i = 0; i < allItems.length; i++) {
+        allItems[i].classList.remove('cp-l8bl-list-item--wrong');
+      }
     }
 
     /* ── Check button ── */
@@ -19257,25 +19264,10 @@ var ContentRenderer = (function () {
         if (typeof anime !== 'undefined') {
           anime({ targets: wrap, translateX: [0, -8, 8, -6, 6, 0], duration: 380, easing: 'easeInOutSine' });
         }
-        clearBtn.style.display = '';
+        /* Auto-reset to the original order after the wrong feedback is shown */
+        setTimeout(_resetOrder, 900);
       }
     }
-
-    /* ── Clear / Reset ── */
-    clearBtn.addEventListener('click', function () {
-      /* Restore original shuffled order from page.tiles */
-      page.tiles.forEach(function (td) {
-        var item = listEl.querySelector('.cp-l8bl-list-item[data-tile-id="' + td.id + '"]');
-        if (item) listEl.appendChild(item);
-      });
-      var allItems = listEl.querySelectorAll('.cp-l8bl-list-item');
-      for (var i = 0; i < allItems.length; i++) {
-        allItems[i].classList.remove('cp-l8bl-list-item--wrong');
-      }
-      feedbackEl.textContent = '';
-      feedbackEl.className   = 'cp-l8bl-feedback';
-      clearBtn.style.display = 'none';
-    });
 
     /* ── Success reveal ── */
     function _showSuccess() {
@@ -19418,7 +19410,7 @@ var ContentRenderer = (function () {
     subExprRow.appendChild(dropZone);
 
     var submitBtn = _el('button', 'cp-l9nb-submit-btn');
-    submitBtn.textContent = 'Submit';
+    submitBtn.textContent = I18n.t('submitButton');
 
     inputSection.appendChild(subExprRow);
     inputSection.appendChild(submitBtn);
@@ -19558,6 +19550,7 @@ var ContentRenderer = (function () {
         } else if (/^[+\-\xd7\xf7−×÷]$/.test(tok) || tok === '−' || tok === '×' || tok === '÷') {
           opCount++;
           var tile = _el('button', 'cp-l9nb-op-tile');
+          if (tok === '-' || tok === '−') tile.classList.add('cp-l9nb-op-tile--sub');
           tile.textContent = tok;
           tile.setAttribute('aria-label', I18n.t('ariaOperatorN', { n: tok }));
           (function (btn, operator) {
@@ -20149,6 +20142,7 @@ var ContentRenderer = (function () {
           } else if (isOp) {
             var localIdx = opIdx++;
             var opBtn = _el('button', 'cp-l9br-op-btn');
+            if (tok === '−' || tok === '-') opBtn.classList.add('cp-l9br-op-btn--sub');
             opBtn.textContent = tok;
             opBtn.setAttribute('aria-label', I18n.t('ariaOperatorN', { n: tok }));
             (function (btn, operator) {
@@ -20342,16 +20336,6 @@ var ContentRenderer = (function () {
     var wrap = _el('div', 'cp-l9rs-wrap');
     wrap.dataset.pageId = page.id;
 
-    /* Progress bar */
-    var barWrap = _el('div', 'cp-l9rs-bar-wrap');
-    var barLabel = _el('p', 'cp-l9rs-bar-label'); barLabel.textContent = I18n.t('resultsComplete');
-    var barEl   = _el('div', 'cp-l9rs-bar');
-    var fillEl  = _el('div', 'cp-l9rs-bar__fill');
-    barEl.appendChild(fillEl);
-    barWrap.appendChild(barLabel);
-    barWrap.appendChild(barEl);
-    wrap.appendChild(barWrap);
-
     /* Trophy */
     var trophy = _el('div', 'cp-l9rs-trophy'); trophy.textContent = '🏆';
     wrap.appendChild(trophy);
@@ -20381,7 +20365,7 @@ var ContentRenderer = (function () {
 
     /* Play again */
     var playBtn = _el('button', 'cp-l9rs-play-btn');
-    playBtn.textContent = '↺ Play Again from Start';
+    playBtn.textContent = '↺ ' + I18n.t('playAgainButton');
     playBtn.addEventListener('click', function () {
       renderPage('1.0');
     });
