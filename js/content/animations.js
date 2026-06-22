@@ -1,5 +1,7 @@
 /* animations.js - Anime.js animations for content pages.
-   Depends on: anime (vendor/anime.min.js) */
+   Depends on: anime (vendor/anime.min.js)
+   Public: ContentAnimations.run(name) invokes _map[name](); each _map entry
+   animates one page type and no-ops when anime is unavailable. */
 
 var ContentAnimations = (function () {
 

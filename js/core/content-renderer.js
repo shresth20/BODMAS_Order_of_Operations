@@ -1,5 +1,9 @@
 ﻿/* content-renderer.js — Dispatches page data to type-specific renderers.
-   Depends on: CONTENT_PAGES, ContentAnimations */
+   Depends on: CONTENT_PAGES, ContentAnimations
+   Public API: ContentRenderer.renderPage(pageId) / getCurrentPageId().
+   Internals: shared helpers (_translatePageConfig, _findPage,
+   _sharedContentClasses, _el) and the _render<Type> builders, grouped by
+   page with banner comments. */
 
 var ContentRenderer = (function () {
 
@@ -19715,6 +19719,7 @@ var ContentRenderer = (function () {
     var openGap    = null;
     var closeGap   = null;
     var phase      = 'place-open'; /* 'place-open' | 'place-close' */
+    var draggedBracket = null;     /* 'open' | 'close' — active drag payload */
 
     var wrap = _el('div', 'cp-l9ib-wrap');
     wrap.dataset.pageId = page.id;
@@ -19749,10 +19754,23 @@ var ContentRenderer = (function () {
     /* Expression row container */
     var exprBox = _el('div', 'cp-l9ib-expr-box');
 
+    /* Bracket tray — draggable ( and ) source tiles */
+    var trayEl    = _el('div', 'cp-l9ib-tray');
+    var trayHint  = _el('p',   'cp-l9ib-tray__hint');
+    trayHint.textContent = I18n.t('ibDragHint');
+    var trayTiles = _el('div', 'cp-l9ib-tray__tiles');
+    var openTile  = _makeBracketTile('open');
+    var closeTile = _makeBracketTile('close');
+    trayTiles.appendChild(openTile);
+    trayTiles.appendChild(closeTile);
+    trayEl.appendChild(trayHint);
+    trayEl.appendChild(trayTiles);
+
     /* Confirmation banner (hidden) */
     var confirmBanner = _el('div', 'cp-l9ib-confirm cp-l9ib-confirm--hidden');
 
     bodyEl.appendChild(exprBox);
+    bodyEl.appendChild(trayEl);
     bodyEl.appendChild(confirmBanner);
     cardEl.appendChild(labelEl);
     cardEl.appendChild(promptEl);
@@ -19809,10 +19827,26 @@ var ContentRenderer = (function () {
       for (var gi = 0, numGaps = tokens.length + 1; gi < numGaps; gi++) {
         (function (gapIdx) {
           var gap = _el('button', 'cp-l9ib-gap');
+          gap.dataset.gapIdx = gapIdx;
           if (gapIdx === openGap)  { gap.textContent = '('; gap.className = _sharedContentClasses('cp-l9ib-gap cp-l9ib-gap--open');  }
           if (gapIdx === closeGap) { gap.textContent = ')'; gap.className = _sharedContentClasses('cp-l9ib-gap cp-l9ib-gap--close'); }
           gap.setAttribute('aria-label', I18n.t('counterGapN', { n: gapIdx }));
+          /* Tap fallback (keyboard + mouse + touch): place open then close */
           gap.addEventListener('click', function () { _onGapTap(gapIdx); });
+          /* Drag-and-drop target (HTML5 / mouse) */
+          gap.addEventListener('dragover', function (e) {
+            if (phase !== 'place-open' && phase !== 'place-close') return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            gap.classList.add('cp-l9ib-gap--hover');
+          });
+          gap.addEventListener('dragleave', function () { gap.classList.remove('cp-l9ib-gap--hover'); });
+          gap.addEventListener('drop', function (e) {
+            e.preventDefault();
+            gap.classList.remove('cp-l9ib-gap--hover');
+            var which = e.dataTransfer.getData('text/plain') || draggedBracket;
+            if (which === 'open' || which === 'close') _placeBracket(which, gapIdx);
+          });
           row.appendChild(gap);
           if (gapIdx < tokens.length) {
             var tok = tokens[gapIdx];
@@ -19920,17 +19954,129 @@ var ContentRenderer = (function () {
       }
     }
 
+    /* Build a draggable bracket tile for the tray.
+       Mirrors the HTML5 + touch (ghost) drag pattern used by other DnD screens. */
+    function _makeBracketTile(which) {
+      var tile = _el('div', 'cp-l9ib-btile cp-l9ib-btile--' + which);
+      tile.textContent = which === 'open' ? '(' : ')';
+      tile.dataset.bracket = which;
+      tile.setAttribute('draggable', 'true');
+      tile.setAttribute('aria-label', I18n.t(which === 'open' ? 'ibBracketOpen' : 'ibBracketClose'));
+
+      /* HTML5 drag (mouse) */
+      tile.addEventListener('dragstart', function (e) {
+        if (phase !== 'place-open' && phase !== 'place-close') { e.preventDefault(); return; }
+        draggedBracket = which;
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', which);
+        tile.classList.add('cp-l9ib-btile--dragging');
+      });
+      tile.addEventListener('dragend', function () {
+        tile.classList.remove('cp-l9ib-btile--dragging');
+        draggedBracket = null;
+      });
+
+      /* Touch drag (ghost element follows finger) */
+      var ghost = null, offsetX = 0, offsetY = 0;
+
+      tile.addEventListener('touchstart', function (e) {
+        if (phase !== 'place-open' && phase !== 'place-close') return;
+        e.preventDefault();
+        var touch = e.touches[0];
+        var rect  = tile.getBoundingClientRect();
+        offsetX = touch.clientX - rect.left;
+        offsetY = touch.clientY - rect.top;
+        draggedBracket = which;
+
+        ghost = tile.cloneNode(true);
+        ghost.classList.add('cp-l9ib-btile--ghost');
+        ghost.style.position = 'fixed';
+        ghost.style.width    = rect.width  + 'px';
+        ghost.style.height   = rect.height + 'px';
+        ghost.style.left     = (touch.clientX - offsetX) + 'px';
+        ghost.style.top      = (touch.clientY - offsetY) + 'px';
+        ghost.style.zIndex   = '9990';
+        document.body.appendChild(ghost);
+        tile.classList.add('cp-l9ib-btile--dragging');
+      }, { passive: false });
+
+      tile.addEventListener('touchmove', function (e) {
+        if (!ghost) return;
+        e.preventDefault();
+        var touch = e.touches[0];
+        ghost.style.left = (touch.clientX - offsetX) + 'px';
+        ghost.style.top  = (touch.clientY - offsetY) + 'px';
+
+        ghost.style.display = 'none';
+        var el = document.elementFromPoint(touch.clientX, touch.clientY);
+        ghost.style.display = '';
+
+        exprBox.querySelectorAll('.cp-l9ib-gap').forEach(function (g) {
+          g.classList.remove('cp-l9ib-gap--hover');
+        });
+        var hovered = el && el.closest('.cp-l9ib-gap');
+        if (hovered) hovered.classList.add('cp-l9ib-gap--hover');
+      }, { passive: false });
+
+      tile.addEventListener('touchend', function (e) {
+        if (!ghost) return;
+        var touch = e.changedTouches[0];
+        ghost.style.display = 'none';
+        var el = document.elementFromPoint(touch.clientX, touch.clientY);
+        ghost.style.display = '';
+        document.body.removeChild(ghost);
+        ghost = null;
+        tile.classList.remove('cp-l9ib-btile--dragging');
+        exprBox.querySelectorAll('.cp-l9ib-gap').forEach(function (g) {
+          g.classList.remove('cp-l9ib-gap--hover');
+        });
+
+        var gap = el && el.closest('.cp-l9ib-gap');
+        if (gap && gap.dataset.gapIdx != null) {
+          _placeBracket(which, parseInt(gap.dataset.gapIdx, 10));
+        }
+        draggedBracket = null;
+      });
+
+      return tile;
+    }
+
+    /* Place a dragged bracket into a gap, then re-render / evaluate. */
+    function _placeBracket(which, gapIdx) {
+      if (phase !== 'place-open' && phase !== 'place-close') return;
+      if (which === 'open') {
+        if (gapIdx === closeGap) closeGap = null;
+        openGap = gapIdx;
+      } else {
+        if (gapIdx === openGap) openGap = null;
+        closeGap = gapIdx;
+      }
+      phase = (openGap === null) ? 'place-open' : 'place-close';
+      _updatePhaseEl();
+      _renderExpr();
+      _updateTray();
+      if (openGap !== null && closeGap !== null) _evaluate();
+    }
+
+    /* Reflect which brackets are currently placed on the tray tiles. */
+    function _updateTray() {
+      openTile.classList.toggle('cp-l9ib-btile--used',  openGap  !== null);
+      closeTile.classList.toggle('cp-l9ib-btile--used', closeGap !== null);
+    }
+
     function _onGapTap(gapIdx) {
       if (phase === 'place-open') {
         openGap = gapIdx;
         phase   = 'place-close';
         _updatePhaseEl();
         _renderExpr();
+        _updateTray();
       } else if (phase === 'place-close') {
         if (gapIdx === openGap) return;
         if (gapIdx < openGap) { var tmp = openGap; openGap = gapIdx; closeGap = tmp; }
         else closeGap = gapIdx;
         _renderExpr();
+        _updateTray();
         _evaluate();
       }
     }
@@ -19949,6 +20095,9 @@ var ContentRenderer = (function () {
       /* reducedTokens: tokens with bracketed part replaced by subVal */
       var reducedTokens = tokens.slice(0, openGap).concat([String(subVal)]).concat(tokens.slice(closeGap));
       var resultIdx = openGap; /* position of sub-result in reducedTokens */
+
+      /* Hide the bracket tray while the answer resolves */
+      trayEl.classList.add('cp-l9ib-tray--hidden');
 
       /* Phase 1 (0ms): green highlight on bracketed tokens */
       _renderBracketHighlight();
@@ -19987,10 +20136,12 @@ var ContentRenderer = (function () {
           closeGap = null;
           phase    = 'place-open';
           confirmBanner.className = _sharedContentClasses('cp-l9ib-confirm cp-l9ib-confirm--hidden');
+          trayEl.classList.remove('cp-l9ib-tray--hidden');
           _updateDots();
           _updatePhaseEl();
           labelEl.textContent = I18n.t('counterPuzzleNofTotal', { n: puzzleIdx + 1, total: puzzles.length });
           _renderExpr();
+          _updateTray();
         } else {
           if (page.next) renderPage(page.next);
         }
@@ -20016,6 +20167,7 @@ var ContentRenderer = (function () {
       phase    = 'place-open';
       _updatePhaseEl();
       _renderExpr();
+      _updateTray();
     }
 
     function _updatePhaseEl() {
@@ -20029,6 +20181,7 @@ var ContentRenderer = (function () {
     _updatePhaseEl();
     labelEl.textContent = I18n.t('counterPuzzleNofTotal', { n: 1, total: puzzles.length });
     _renderExpr();
+    _updateTray();
   }
 
   /* ══════════════════════════════════════════════════════

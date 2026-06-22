@@ -9,6 +9,11 @@ var HandNudge = (function () {
   var _hideTimer = null;
   var _observer  = null;
 
+  /* px offset applied to the target centre so the hand image sits naturally
+     on the element (≈ half the hand-image footprint) */
+  var HAND_OFFSET_X = 35;
+  var HAND_OFFSET_Y = 16;
+
   /* ── Selectors ───────────────────────────────────────────────────────── */
 
   var SEL_L8_TILE = '.cp-l8bl-tile';
@@ -101,8 +106,8 @@ var HandNudge = (function () {
 
     var hand = _getImg();
     hand.style.opacity = '';
-    hand.style.left    = (rect.left + rect.width  * 0.5 - 35) + 'px';
-    hand.style.top     = (rect.top  + rect.height * 0.5 - 16) + 'px';
+    hand.style.left    = (rect.left + rect.width  * 0.5 - HAND_OFFSET_X) + 'px';
+    hand.style.top     = (rect.top  + rect.height * 0.5 - HAND_OFFSET_Y) + 'px';
     hand.className     = 'hand-nudge hand-nudge--tap';
 
     _hideTimer = setTimeout(hide, 4600);
@@ -121,10 +126,10 @@ var HandNudge = (function () {
     if (typeof anime === 'undefined') { showTap(fromEl); return; }
 
     var hand = _getImg();
-    var sx = fR.left + fR.width  * 0.5 - 35;
-    var sy = fR.top  + fR.height * 0.5 - 16;
-    var ex = tR.left + tR.width  * 0.5 - 35;
-    var ey = tR.top  + tR.height * 0.5 - 16;
+    var sx = fR.left + fR.width  * 0.5 - HAND_OFFSET_X;
+    var sy = fR.top  + fR.height * 0.5 - HAND_OFFSET_Y;
+    var ex = tR.left + tR.width  * 0.5 - HAND_OFFSET_X;
+    var ey = tR.top  + tR.height * 0.5 - HAND_OFFSET_Y;
 
     hand.className     = 'hand-nudge hand-nudge--drag';
     hand.style.left    = sx + 'px';
