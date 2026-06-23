@@ -1,295 +1,588 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BODMAS rule to do complex arithmetic operations</title>
+    <link rel="icon" type="image/webp" href="assets/images/logo.webp" />
+    <link rel="stylesheet" href="css/core/style.css" />
+    <link rel="stylesheet" href="css/core/animations.css" />
+    <link rel="stylesheet" href="css/core/responsive.css" />
+    <link rel="stylesheet" href="css/core/frames.css" />
+    <link rel="stylesheet" href="css/content/pages.css" />
+    <link rel="stylesheet" href="css/content/responsive.css" />
+    <link rel="stylesheet" href="css/content/style.css" />
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BODMAS rule to do complex arithmetic operations</title>
-  <link rel="icon" type="image/webp" href="assets/images/logo.webp">
-  <link rel="stylesheet" href="css/core/style.css">
-  <link rel="stylesheet" href="css/core/animations.css">
-  <link rel="stylesheet" href="css/core/responsive.css">
-  <link rel="stylesheet" href="css/core/frames.css">
-  <link rel="stylesheet" href="css/content/pages.css">
-  <link rel="stylesheet" href="css/content/responsive.css">
-  <link rel="stylesheet" href="css/content/style.css">
-</head>
-
-<body>
-
-  <!-- ═══ LAYER 5: Header (persistent) ═══ -->
-  <header id="header" class="header" role="banner">
-
-    <!-- LEFT: Progress bar -->
-    <div class="header__left">
-      <div class="progress-track">
-        <div class="progress-dots" id="progress-dots" role="progressbar" aria-label="Question progress"
-          data-i18n-aria="questionProgressLabel" aria-valuenow="0" aria-valuemax="6" aria-valuetext="0 of 6">
-          <!-- dots injected by app.js -->
+  <body>
+    <!-- ═══ LAYER 5: Header (persistent) ═══ -->
+    <header id="header" class="header" role="banner">
+      <!-- LEFT: Progress bar -->
+      <div class="header__left">
+        <div class="progress-track">
+          <div
+            class="progress-dots"
+            id="progress-dots"
+            role="progressbar"
+            aria-label="Question progress"
+            data-i18n-aria="questionProgressLabel"
+            aria-valuenow="0"
+            aria-valuemax="6"
+            aria-valuetext="0 of 6"
+          >
+            <!-- dots injected by app.js -->
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- RIGHT: Reset + Info + Language + Fullscreen -->
-    <div class="header__right">
-      <button class="icon-btn" id="btn-reset" aria-label="Reset" title="Reset">
-        <img src="assets/icons/Reset_icon.svg" alt="" draggable="false">
-      </button>
-      <button class="icon-btn" id="btn-info" aria-label="Info" title="How To Play">
-        <img src="assets/icons/Info_icon.svg" alt="" draggable="false">
-      </button>
-      <button class="icon-btn" id="btn-globe" aria-label="Change language" title="Select Language">
-        <img src="assets/icons/Language_icon.svg" alt="" draggable="false">
-      </button>
-      <button class="icon-btn" id="btn-fullscreen" aria-label="Toggle fullscreen" title="Enter Fullscreen">
-        <img src="assets/icons/Fullscreen_icon.svg" alt="" draggable="false">
-      </button>
-    </div>
-
-  </header>
-
-  <!-- ═══ LAYER 2: Board container ═══ -->
-  <div id="board-container" class="board-container">
-
-    <!-- Primary board -->
-    <main id="board" class="board" role="main">
-
-      <!-- ═══ LAYER 4: Active content (replaced per screen) ═══ -->
-      <section id="content-area" aria-live="polite" aria-atomic="true" aria-label="Game content"
-        data-i18n-aria="gameContentLabel">
-        <!-- Populated by app.js renderScreen() -->
-      </section>
-
-    </main>
-
-    <!-- ═══ LAYER 3.5: Page-specific content decorations (z-index 35, inside board-container stacking context) ═══ -->
-    <div id="content-deco-layer" class="layer-content-deco" aria-hidden="true">
-      <div class="content-deco content-deco--l1-1"><img src="assets/images/L1-1.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l1-2"><img src="assets/images/L1-2.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l1-3"><img src="assets/images/L1-3.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l1-4"><img src="assets/images/L1-4.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l2-1"><img src="assets/images/L2-1.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l2-2"><img src="assets/images/L2-2.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l2-3"><img src="assets/images/L2-3.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l2-4"><img src="assets/images/L2-4.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l3-1"><img src="assets/images/L3-1.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l3-2"><img src="assets/images/L3-2.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l3-3"><img src="assets/images/L3-3.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l3-4"><img src="assets/images/L3-4.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l3-5"><img src="assets/images/L3-5.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l4-1"><img src="assets/images/L4-1.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l4-2"><img src="assets/images/L4-2.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l4-3"><img src="assets/images/L4-3.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l4-4"><img src="assets/images/L4-4.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l5-1"><img src="assets/images/L5-1.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l5-2"><img src="assets/images/L5-2.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l5-3"><img src="assets/images/L5-3.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l5-4"><img src="assets/images/L5-4.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l6-1"><img src="assets/images/L6-1.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l6-2"><img src="assets/images/L6-2.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l6-3"><img src="assets/images/L6-2.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l6-4"><img src="assets/images/L6-2.webp" alt="" draggable="false"></div>
-      <div class="content-deco content-deco--l6-5"><img src="assets/images/L6-3.webp" alt="" draggable="false"></div>
-    </div>
-
-  </div>
-
-  <!-- ═══ LAYER 6: Feedback (fixed, above all board layers) ═══ -->
-  <div id="feedback-overlay" class="feedback-overlay" hidden aria-live="polite" aria-atomic="true">
-    <div class="feedback-toast" id="feedback-toast"></div>
-    <img class="feedback-char-gif" id="feedback-char-gif" src="" alt="" draggable="false">
-  </div>
-
-  <!-- ═══ LAYER 3: Decorative assets — fixed positions, no animation ═══ -->
-  <div id="deco-layer" class="layer-deco" aria-hidden="true">
-
-    <!-- ── Top-left cluster ── -->
-    <div class="deco deco--times3-tl"><img src="assets/icons/×3.svg" alt="" draggable="false"></div>
-    <div class="deco deco--pencil">
-      <img src="assets/icons/Pencil.svg" alt="" draggable="false">
-    </div>
-    <div class="deco deco--times-grn-l"><img src="assets/icons/×.svg" alt="" draggable="false"></div>
-    <div class="deco deco--eq-red-l"><img src="assets/icons/=.svg" alt="" draggable="false"></div>
-    <div class="deco deco--half-l"><img src="assets/icons/½.svg" alt="" draggable="false"></div>
-
-    <!-- ── Top-right cluster ── -->
-    <div class="deco deco--half-r"><img src="assets/icons/½.svg" alt="" draggable="false"></div>
-    <div class="deco deco--bodmas"><img src="assets/icons/Group.svg" alt="" draggable="false"></div>
-    <div class="deco deco--times-grn"><img src="assets/icons/×.svg" alt="" draggable="false"></div>
-    <div class="deco deco--eq-red-r"><img src="assets/icons/=.svg" alt="" draggable="false"></div>
-    <div class="deco deco--times3-tr"><img src="assets/icons/×3.svg" alt="" draggable="false"></div>
-
-    <!-- ── Bottom-right cluster ── -->
-    <div class="deco deco--calc"><img src="assets/images/Calculator.webp" alt="" draggable="false"></div>
-    <div class="deco deco--plus-br"><img src="assets/icons/+.svg" alt="" draggable="false"></div>
-    <div class="deco deco--vector-br"><img src="assets/icons/Vector.svg" alt="" draggable="false"></div>
-    <div class="deco deco--pi-br"><img src="assets/icons/π.svg" alt="" draggable="false"></div>
-
-    <!-- ── Bottom-left cluster ── -->
-    <div class="deco deco--equaction">
-      <img src="assets/icons/Equaction.svg" alt="" draggable="false">
-    </div>
-
-  </div>
-
-  <!-- ═══ LAYER 5: Footer (persistent) ═══ -->
-  <footer id="footer" class="footer" role="contentinfo">
-    <button class="btn-submit" id="btn-submit" disabled aria-disabled="true" data-i18n="submitButton">
-      Submit
-    </button>
-  </footer>
-
-  <!-- ═══ Loader Overlay ═══ -->
-  <div id="loader-overlay" class="loader-overlay" aria-label="Loading" data-i18n-aria="loadingMessage">
-    <img class="loader-overlay__gif" src="assets/GIFs/loader.webp" alt="Loading..." data-i18n-alt="loadingMessage">
-  </div>
-
-  <!-- ═══ How to Play Modal ═══ -->
-  <div id="htp-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true"
-    aria-labelledby="htp-title">
-    <div class="modal-card" id="htp-card">
-      <button class="modal-close" id="modal-close" aria-label="Close How to Play" data-i18n-aria="closeHelpLabel">
-        <img src="assets/icons/close_popup.svg" alt="" draggable="false">
-      </button>
-      <h2 class="modal-title" id="htp-title" data-i18n="helpTitle">How to Play</h2>
-      <p class="modal-subtitle" id="htp-subtitle"></p>
-      <ol class="modal-steps" id="htp-steps"></ol>
-      <img class="modal-character" src="assets/images/Swiftee-right.webp" alt="" aria-hidden="true" draggable="false">
-    </div>
-  </div>
-
-  <!-- ═══ Language Modal ═══ -->
-  <div id="lang-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true"
-    aria-labelledby="lang-title">
-    <div class="modal-card" id="lang-card">
-      <!-- Select view -->
-      <div id="lang-select-view">
-        <button class="modal-close" id="lang-close" aria-label="Close language selector"
-          data-i18n-aria="closeLanguageLabel">
-          <img src="assets/icons/close_popup.svg" alt="" draggable="false">
+      <!-- RIGHT: Reset + Info + Language + Fullscreen -->
+      <div class="header__right">
+        <button
+          class="icon-btn"
+          id="btn-reset"
+          aria-label="Reset"
+          title="Reset"
+        >
+          <img src="assets/icons/Reset_icon.svg" alt="" draggable="false" />
         </button>
-        <h2 class="modal-title" id="lang-title">Choose Your Language</h2>
-        <p class="modal-subtitle" id="lang-subtitle">Select the language you want to use in the game.</p>
-        <div class="lang-dropdown" id="lang-dropdown">
-          <button class="lang-trigger" id="lang-trigger" aria-expanded="false" aria-haspopup="listbox">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
-              <path
-                d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
-                stroke="currentColor" stroke-width="2" />
-            </svg>
-            <span id="lang-current-text">English</span>
-            <svg class="lang-chevron" width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
-              <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            </svg>
-          </button>
-          <ul class="lang-list" id="lang-list" role="listbox" aria-label="Language options"
-            data-i18n-aria="languageOptionsLabel" hidden>
-          </ul>
-        </div>
-        <div class="lang-actions">
-          <button class="btn-lang-cancel" id="btn-lang-cancel" data-i18n="cancelButton">Cancel</button>
-          <button class="btn-lang-apply" id="btn-lang-apply" data-i18n="applyButton">Apply</button>
-        </div>
+        <button
+          class="icon-btn"
+          id="btn-info"
+          aria-label="Info"
+          title="How To Play"
+        >
+          <img src="assets/icons/Info_icon.svg" alt="" draggable="false" />
+        </button>
+        <button
+          class="icon-btn"
+          id="btn-globe"
+          aria-label="Change language"
+          title="Select Language"
+        >
+          <img src="assets/icons/Language_icon.svg" alt="" draggable="false" />
+        </button>
+        <button
+          class="icon-btn"
+          id="btn-fullscreen"
+          aria-label="Toggle fullscreen"
+          title="Enter Fullscreen"
+        >
+          <img
+            src="assets/icons/Fullscreen_icon.svg"
+            alt=""
+            draggable="false"
+          />
+        </button>
       </div>
-      <!-- Confirm view (shown after Apply) -->
-      <div id="lang-confirm-view" hidden>
-        <h2 class="modal-title" id="lang-confirm-title">Language Selected!</h2>
-        <p class="modal-subtitle-confirm" id="lang-confirm-msg">Your app is now in <strong id="lang-confirm-name"
-            class="lang-highlight">English</strong>.<br><span id="lang-confirm-end">Let's get started!</span></p>
+    </header>
+
+    <!-- ═══ LAYER 2: Board container ═══ -->
+    <div id="board-container" class="board-container">
+      <!-- Primary board -->
+      <main id="board" class="board" role="main">
+        <!-- ═══ LAYER 4: Active content (replaced per screen) ═══ -->
+        <section
+          id="content-area"
+          aria-live="polite"
+          aria-atomic="true"
+          aria-label="Game content"
+          data-i18n-aria="gameContentLabel"
+        >
+          <!-- Populated by app.js renderScreen() -->
+        </section>
+      </main>
+
+      <!-- ═══ LAYER 3.5: Page-specific content decorations (z-index 35, inside board-container stacking context) ═══ -->
+      <div
+        id="content-deco-layer"
+        class="layer-content-deco"
+        aria-hidden="true"
+      >
+        <div class="content-deco content-deco--l1-1">
+          <img src="assets/images/L1-1.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l1-2">
+          <img src="assets/images/L1-2.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l1-3">
+          <img src="assets/images/L1-3.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l1-4">
+          <img src="assets/images/L1-4.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l2-1">
+          <img src="assets/images/L2-1.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l2-2">
+          <img src="assets/images/L2-2.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l2-3">
+          <img src="assets/images/L2-3.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l2-4">
+          <img src="assets/images/L2-4.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l3-1">
+          <img src="assets/images/L3-1.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l3-2">
+          <img src="assets/images/L3-2.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l3-3">
+          <img src="assets/images/L3-3.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l3-4">
+          <img src="assets/images/L3-4.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l3-5">
+          <img src="assets/images/L3-5.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l4-1">
+          <img src="assets/images/L4-1.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l4-2">
+          <img src="assets/images/L4-2.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l4-3">
+          <img src="assets/images/L4-3.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l4-4">
+          <img src="assets/images/L4-4.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l5-1">
+          <img src="assets/images/L5-1.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l5-2">
+          <img src="assets/images/L5-2.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l5-3">
+          <img src="assets/images/L5-3.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l5-4">
+          <img src="assets/images/L5-4.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l6-1">
+          <img src="assets/images/L6-1.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l6-2">
+          <img src="assets/images/L6-2.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l6-3">
+          <img src="assets/images/L6-2.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l6-4">
+          <img src="assets/images/L6-2.webp" alt="" draggable="false" />
+        </div>
+        <div class="content-deco content-deco--l6-5">
+          <img src="assets/images/L6-3.webp" alt="" draggable="false" />
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- PixiJS (used by division-lab canvas board) -->
-  <script src="js/vendor/pixi.min.js"></script>
-  <!-- Anime.js (local) -->
-  <script src="js/vendor/anime.min.js"></script>
+    <!-- ═══ LAYER 6: Feedback (fixed, above all board layers) ═══ -->
+    <div
+      id="feedback-overlay"
+      class="feedback-overlay"
+      hidden
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <div class="feedback-toast" id="feedback-toast"></div>
+      <img
+        class="feedback-char-gif"
+        id="feedback-char-gif"
+        src=""
+        alt=""
+        draggable="false"
+      />
+    </div>
 
-  <!-- App modules — load order matters -->
-  <script src="js/core/utils.js"></script>
-  <script src="js/core/state.js"></script>
-  <script src="js/core/animations.js"></script>
-  <script src="js/core/audio.js"></script>
-  <script src="js/core/i18n.js"></script>
-  <script src="js/core/frames.js"></script>
-  <script src="js/core/app.js"></script>
-  <script src="js/core/hand-nudge.js"></script>
+    <!-- ═══ LAYER 3: Decorative assets — fixed positions, no animation ═══ -->
+    <div id="deco-layer" class="layer-deco" aria-hidden="true">
+      <!-- ── Top-left cluster ── -->
+      <div class="deco deco--times3-tl">
+        <img src="assets/icons/×3.svg" alt="" draggable="false" />
+      </div>
+      <div class="deco deco--pencil">
+        <img src="assets/icons/Pencil.svg" alt="" draggable="false" />
+      </div>
+      <div class="deco deco--times-grn-l">
+        <img src="assets/icons/×.svg" alt="" draggable="false" />
+      </div>
+      <div class="deco deco--eq-red-l">
+        <img src="assets/icons/=.svg" alt="" draggable="false" />
+      </div>
+      <div class="deco deco--half-l">
+        <img src="assets/icons/½.svg" alt="" draggable="false" />
+      </div>
 
-  <!-- Content pages system (loaded after game shell) -->
-  <script>window.CONTENT_MODE = true;</script>
-  <script src="js/content/pages.js"></script>
-  <script src="js/content/speech_bubble.js"></script>
-  <script src="js/core/content-renderer.js"></script>
-  <script src="js/content/animations.js"></script>
-  <script src="js/content/validators.js"></script>
-  <script src="js/content/voiceovers.js"></script>
+      <!-- ── Top-right cluster ── -->
+      <div class="deco deco--half-r">
+        <img src="assets/icons/½.svg" alt="" draggable="false" />
+      </div>
+      <div class="deco deco--bodmas">
+        <img src="assets/icons/Group.svg" alt="" draggable="false" />
+      </div>
+      <div class="deco deco--times-grn">
+        <img src="assets/icons/×.svg" alt="" draggable="false" />
+      </div>
+      <div class="deco deco--eq-red-r">
+        <img src="assets/icons/=.svg" alt="" draggable="false" />
+      </div>
+      <div class="deco deco--times3-tr">
+        <img src="assets/icons/×3.svg" alt="" draggable="false" />
+      </div>
 
-  <!-- ════════════════════════════════════════════════════════════════════
+      <!-- ── Bottom-right cluster ── -->
+      <div class="deco deco--calc">
+        <img src="assets/images/Calculator.webp" alt="" draggable="false" />
+      </div>
+      <div class="deco deco--plus-br">
+        <img src="assets/icons/+.svg" alt="" draggable="false" />
+      </div>
+      <div class="deco deco--vector-br">
+        <img src="assets/icons/Vector.svg" alt="" draggable="false" />
+      </div>
+      <div class="deco deco--pi-br">
+        <img src="assets/icons/π.svg" alt="" draggable="false" />
+      </div>
+
+      <!-- ── Bottom-left cluster ── -->
+      <div class="deco deco--equaction">
+        <img src="assets/icons/Equaction.svg" alt="" draggable="false" />
+      </div>
+    </div>
+
+    <!-- ═══ LAYER 5: Footer (persistent) ═══ -->
+    <footer id="footer" class="footer" role="contentinfo">
+      <button
+        class="btn-submit"
+        id="btn-submit"
+        disabled
+        aria-disabled="true"
+        data-i18n="submitButton"
+      >
+        Submit
+      </button>
+    </footer>
+
+    <!-- ═══ Loader Overlay ═══ -->
+    <div
+      id="loader-overlay"
+      class="loader-overlay"
+      aria-label="Loading"
+      data-i18n-aria="loadingMessage"
+    >
+      <img
+        class="loader-overlay__gif"
+        src="assets/GIFs/loader.webp"
+        alt="Loading..."
+        data-i18n-alt="loadingMessage"
+      />
+    </div>
+
+    <!-- ═══ How to Play Modal ═══ -->
+    <div
+      id="htp-modal"
+      class="modal-overlay"
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="htp-title"
+    >
+      <div class="modal-card" id="htp-card">
+        <button
+          class="modal-close"
+          id="modal-close"
+          aria-label="Close How to Play"
+          data-i18n-aria="closeHelpLabel"
+        >
+          <img src="assets/icons/close_popup.svg" alt="" draggable="false" />
+        </button>
+        <h2 class="modal-title" id="htp-title" data-i18n="helpTitle">
+          How to Play
+        </h2>
+        <p class="modal-subtitle" id="htp-subtitle"></p>
+        <ol class="modal-steps" id="htp-steps"></ol>
+        <img
+          class="modal-character"
+          src="assets/images/Swiftee-right.webp"
+          alt=""
+          aria-hidden="true"
+          draggable="false"
+        />
+      </div>
+    </div>
+
+    <!-- ═══ Language Modal ═══ -->
+    <div
+      id="lang-modal"
+      class="modal-overlay"
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="lang-title"
+    >
+      <div class="modal-card" id="lang-card">
+        <!-- Select view -->
+        <div id="lang-select-view">
+          <button
+            class="modal-close"
+            id="lang-close"
+            aria-label="Close language selector"
+            data-i18n-aria="closeLanguageLabel"
+          >
+            <img src="assets/icons/close_popup.svg" alt="" draggable="false" />
+          </button>
+          <h2 class="modal-title" id="lang-title">Choose Your Language</h2>
+          <p class="modal-subtitle" id="lang-subtitle">
+            Select the language you want to use in the game.
+          </p>
+          <div class="lang-dropdown" id="lang-dropdown">
+            <button
+              class="lang-trigger"
+              id="lang-trigger"
+              aria-expanded="false"
+              aria-haspopup="listbox"
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <path
+                  d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+              </svg>
+              <span id="lang-current-text">English</span>
+              <svg
+                class="lang-chevron"
+                width="12"
+                height="8"
+                viewBox="0 0 12 8"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M1 1.5L6 6.5L11 1.5"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+            <ul
+              class="lang-list"
+              id="lang-list"
+              role="listbox"
+              aria-label="Language options"
+              data-i18n-aria="languageOptionsLabel"
+              hidden
+            ></ul>
+          </div>
+          <div class="lang-actions">
+            <button
+              class="btn-lang-cancel"
+              id="btn-lang-cancel"
+              data-i18n="cancelButton"
+            >
+              Cancel
+            </button>
+            <button
+              class="btn-lang-apply"
+              id="btn-lang-apply"
+              data-i18n="applyButton"
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+        <!-- Confirm view (shown after Apply) -->
+        <div id="lang-confirm-view" hidden>
+          <h2 class="modal-title" id="lang-confirm-title">
+            Language Selected!
+          </h2>
+          <p class="modal-subtitle-confirm" id="lang-confirm-msg">
+            Your app is now in
+            <strong id="lang-confirm-name" class="lang-highlight"
+              >English</strong
+            >.<br /><span id="lang-confirm-end">Let's get started!</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PixiJS (used by division-lab canvas board) -->
+    <script src="js/vendor/pixi.min.js"></script>
+    <!-- Anime.js (local) -->
+    <script src="js/vendor/anime.min.js"></script>
+
+    <!-- App modules — load order matters -->
+    <script src="js/core/utils.js"></script>
+    <script src="js/core/state.js"></script>
+    <script src="js/core/animations.js"></script>
+    <script src="js/core/audio.js"></script>
+    <script src="js/core/i18n.js"></script>
+    <script src="js/core/frames.js"></script>
+    <script src="js/core/app.js"></script>
+    <script src="js/core/hand-nudge.js"></script>
+
+    <!-- Content pages system (loaded after game shell) -->
+    <script>
+      window.CONTENT_MODE = true;
+    </script>
+    <script src="js/content/pages.js"></script>
+    <script src="js/content/speech_bubble.js"></script>
+    <script src="js/core/content-renderer.js"></script>
+    <script src="js/content/animations.js"></script>
+    <script src="js/content/validators.js"></script>
+    <script src="js/content/voiceovers.js"></script>
+
+    <!-- ════════════════════════════════════════════════════════════════════
        TEMPORARY DEV SKIP NAV — testing only. REMOVE BEFORE PRODUCTION.
        Steps through CONTENT_PAGES (prev/next) so any section can be reached
        without playing through. Self-contained: delete this whole block to remove.
   ═════════════════════════════════════════════════════════════════════ -->
-  <style>
-    .dev-skip{position:fixed;right:10px;bottom:10px;z-index:9990;display:flex;
-      align-items:center;gap:6px;padding:5px 7px;background:rgba(27,58,107,.92);
-      border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.28);
-      font-family:ui-monospace,Menlo,Consolas,monospace;user-select:none}
-    .dev-skip__btn{width:30px;height:30px;border:0;border-radius:50%;background:#fff;
-      color:#1b3a6b;font-size:17px;font-weight:700;line-height:1;cursor:pointer;padding:0;
-      display:flex;align-items:center;justify-content:center}
-    .dev-skip__btn:hover{background:#ffe08a}
-    .dev-skip__btn:active{transform:scale(.92)}
-    .dev-skip__label{min-width:72px;text-align:center;color:#fff;font-size:12px;font-weight:600;letter-spacing:.3px}
-  </style>
-  <div id="dev-skip" class="dev-skip">
-    <button type="button" id="dev-skip-prev" class="dev-skip__btn" title="Previous page" aria-label="Previous page">&lt;</button>
-    <span id="dev-skip-label" class="dev-skip__label">–</span>
-    <button type="button" id="dev-skip-next" class="dev-skip__btn" title="Next page" aria-label="Next page">&gt;</button>
-  </div>
-  <script>
-    /* TEMP dev skip nav — remove together with the block above */
-    (function () {
-      if (!window.CONTENT_MODE) return;
-      var prevBtn = document.getElementById('dev-skip-prev');
-      var nextBtn = document.getElementById('dev-skip-next');
-      var label   = document.getElementById('dev-skip-label');
-      if (!prevBtn || !nextBtn) return;
+    <style>
+      .dev-skip {
+        position: fixed;
+        right: 10px;
+        bottom: 10px;
+        z-index: 9990;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 7px;
+        background: rgba(27, 58, 107, 0);
+        border-radius: 999px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        user-select: none;
+      }
+      .dev-skip__btn {
+        width: 30px;
+        height: 30px;
+        border: 0;
+        border-radius: 50%;
+        background: #ffffff00;
+        color: #1b3a6b;
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .dev-skip__btn:hover {
+        background: #ffe08a;
+      }
+      .dev-skip__btn:active {
+        transform: scale(0.92);
+      }
+      .dev-skip__label {
+        min-width: 72px;
+        text-align: center;
+        color: #1b3a6b;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+      }
+    </style>
+    <div id="dev-skip" class="dev-skip">
+      <button
+        type="button"
+        id="dev-skip-prev"
+        class="dev-skip__btn"
+        title="Previous page"
+        aria-label="Previous page"
+      >
+        &lt;
+      </button>
+      <span id="dev-skip-label" class="dev-skip__label">–</span>
+      <button
+        type="button"
+        id="dev-skip-next"
+        class="dev-skip__btn"
+        title="Next page"
+        aria-label="Next page"
+      >
+        &gt;
+      </button>
+    </div>
+    <script>
+      /* TEMP dev skip nav — remove together with the block above */
+      (function () {
+        if (!window.CONTENT_MODE) return;
+        var prevBtn = document.getElementById("dev-skip-prev");
+        var nextBtn = document.getElementById("dev-skip-next");
+        var label = document.getElementById("dev-skip-label");
+        if (!prevBtn || !nextBtn) return;
 
-      function pages() {
-        return (typeof CONTENT_PAGES !== 'undefined' && Array.isArray(CONTENT_PAGES)) ? CONTENT_PAGES : [];
-      }
-      function currentIndex() {
-        var list = pages();
-        var id = (typeof ContentRenderer !== 'undefined' && ContentRenderer.getCurrentPageId)
-          ? ContentRenderer.getCurrentPageId() : null;
-        for (var i = 0; i < list.length; i++) { if (list[i].id === id) return i; }
-        return -1;
-      }
-      function refresh() {
-        if (!label) return;
-        var list = pages(), idx = currentIndex();
-        label.textContent = idx === -1 ? '–' : (list[idx].id + ' · ' + (idx + 1) + '/' + list.length);
-      }
-      function go(delta) {
-        var list = pages();
-        if (!list.length || typeof ContentRenderer === 'undefined') return;
-        var idx = currentIndex();
-        var target = idx === -1 ? 0 : Math.min(list.length - 1, Math.max(0, idx + delta));
-        ContentRenderer.renderPage(list[target].id);
+        function pages() {
+          return typeof CONTENT_PAGES !== "undefined" &&
+            Array.isArray(CONTENT_PAGES)
+            ? CONTENT_PAGES
+            : [];
+        }
+        function currentIndex() {
+          var list = pages();
+          var id =
+            typeof ContentRenderer !== "undefined" &&
+            ContentRenderer.getCurrentPageId
+              ? ContentRenderer.getCurrentPageId()
+              : null;
+          for (var i = 0; i < list.length; i++) {
+            if (list[i].id === id) return i;
+          }
+          return -1;
+        }
+        function refresh() {
+          if (!label) return;
+          var list = pages(),
+            idx = currentIndex();
+          label.textContent =
+            idx === -1
+              ? "–"
+              : list[idx].id + " · " + (idx + 1) + "/" + list.length;
+        }
+        function go(delta) {
+          var list = pages();
+          if (!list.length || typeof ContentRenderer === "undefined") return;
+          var idx = currentIndex();
+          var target =
+            idx === -1
+              ? 0
+              : Math.min(list.length - 1, Math.max(0, idx + delta));
+          ContentRenderer.renderPage(list[target].id);
+          refresh();
+        }
+
+        prevBtn.addEventListener("click", function () {
+          go(-1);
+        });
+        nextBtn.addEventListener("click", function () {
+          go(1);
+        });
+
+        /* Keep the label current when pages change through normal gameplay too */
+        var area = document.getElementById("content-area");
+        if (area && window.MutationObserver)
+          new MutationObserver(refresh).observe(area, { childList: true });
         refresh();
-      }
-
-      prevBtn.addEventListener('click', function () { go(-1); });
-      nextBtn.addEventListener('click', function () { go(1); });
-
-      /* Keep the label current when pages change through normal gameplay too */
-      var area = document.getElementById('content-area');
-      if (area && window.MutationObserver) new MutationObserver(refresh).observe(area, { childList: true });
-      refresh();
-    }());
-  </script>
-
-</body>
-
+      })();
+    </script>
+  </body>
 </html>

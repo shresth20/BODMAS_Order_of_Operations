@@ -13299,13 +13299,13 @@ var ContentRenderer = (function () {
           easing: 'easeOutBack',
           complete: function () {
             _spawnStars(ansTile);
-            if (typeof launchConfetti === 'function') launchConfetti();
+            if (roundIdx === rounds.length - 1 && typeof launchConfetti === 'function') launchConfetti();
             _afterRoundComplete(round);
           }
         });
       } else {
         _spawnStars(ansTile);
-        if (typeof launchConfetti === 'function') launchConfetti();
+        if (roundIdx === rounds.length - 1 && typeof launchConfetti === 'function') launchConfetti();
         _afterRoundComplete(round);
       }
 
@@ -13812,8 +13812,6 @@ var ContentRenderer = (function () {
       });
     }, 820);
 
-    /* Confetti fires at 400ms regardless of animation state */
-    setTimeout(function () { if (typeof launchConfetti === 'function') launchConfetti(); }, 400);
   }
 
   function _renderL1Practice(page, area) {
@@ -14504,13 +14502,13 @@ var ContentRenderer = (function () {
           easing: 'easeOutBack',
           complete: function () {
             _spawnStars2(ansTile);
-            if (typeof launchConfetti === 'function') launchConfetti();
+            if (roundIdx === rounds.length - 1 && typeof launchConfetti === 'function') launchConfetti();
             _afterRoundComplete2(round);
           }
         });
       } else {
         _spawnStars2(ansTile);
-        if (typeof launchConfetti === 'function') launchConfetti();
+        if (roundIdx === rounds.length - 1 && typeof launchConfetti === 'function') launchConfetti();
         _afterRoundComplete2(round);
       }
 
@@ -14939,8 +14937,6 @@ var ContentRenderer = (function () {
         }
       });
     }, 820);
-
-    setTimeout(function () { if (typeof launchConfetti === 'function') launchConfetti(); }, 400);
   }
 
   /* ══════════════════════════════════════════════════════
@@ -15641,13 +15637,13 @@ var ContentRenderer = (function () {
           easing: 'easeOutBack',
           complete: function () {
             _spawnStars3(ansTile);
-            if (typeof launchConfetti === 'function') launchConfetti();
+            if (roundIdx === rounds.length - 1 && typeof launchConfetti === 'function') launchConfetti();
             _afterRoundComplete3(round);
           }
         });
       } else {
         _spawnStars3(ansTile);
-        if (typeof launchConfetti === 'function') launchConfetti();
+        if (roundIdx === rounds.length - 1 && typeof launchConfetti === 'function') launchConfetti();
         _afterRoundComplete3(round);
       }
 
@@ -16544,13 +16540,13 @@ var ContentRenderer = (function () {
           easing: 'easeOutBack',
           complete: function () {
             _spawnStars4(ansTile);
-            if (typeof launchConfetti === 'function') launchConfetti();
+            if (roundIdx === rounds.length - 1 && typeof launchConfetti === 'function') launchConfetti();
             _afterRoundComplete4(round);
           }
         });
       } else {
         _spawnStars4(ansTile);
-        if (typeof launchConfetti === 'function') launchConfetti();
+        if (roundIdx === rounds.length - 1 && typeof launchConfetti === 'function') launchConfetti();
         _afterRoundComplete4(round);
       }
       if (typeof playStarPop === 'function') playStarPop();
@@ -17415,13 +17411,13 @@ var ContentRenderer = (function () {
           easing: 'easeOutBack',
           complete: function () {
             _spawnStars5(ansTile);
-            if (typeof launchConfetti === 'function') launchConfetti();
+            if (roundIdx === rounds.length - 1 && typeof launchConfetti === 'function') launchConfetti();
             _afterRoundComplete5(round);
           }
         });
       } else {
         _spawnStars5(ansTile);
-        if (typeof launchConfetti === 'function') launchConfetti();
+        if (roundIdx === rounds.length - 1 && typeof launchConfetti === 'function') launchConfetti();
         _afterRoundComplete5(round);
       }
       if (typeof playStarPop === 'function') playStarPop();
@@ -18287,13 +18283,13 @@ var ContentRenderer = (function () {
           easing: 'easeOutBack',
           complete: function () {
             _spawnStars6(ansTile);
-            if (typeof launchConfetti === 'function') launchConfetti();
+            if (roundIdx === rounds.length - 1 && typeof launchConfetti === 'function') launchConfetti();
             _afterRoundComplete6(round);
           }
         });
       } else {
         _spawnStars6(ansTile);
-        if (typeof launchConfetti === 'function') launchConfetti();
+        if (roundIdx === rounds.length - 1 && typeof launchConfetti === 'function') launchConfetti();
         _afterRoundComplete6(round);
       }
       if (typeof playStarPop === 'function') playStarPop();
@@ -19666,6 +19662,7 @@ var ContentRenderer = (function () {
           _loadStep();
         }, 3000);
       } else {
+        if (typeof launchConfetti === 'function') launchConfetti();
         setTimeout(function () {
           if (_currentPageId === page.id && page.next) renderPage(page.next);
         }, 3000);
@@ -20125,6 +20122,7 @@ var ContentRenderer = (function () {
         }
         var dots = dotsRow.querySelectorAll('.cp-l9ib-dot');
         if (dots[puzzleIdx]) dots[puzzleIdx].className = _sharedContentClasses('cp-l9ib-dot cp-l9ib-dot--done');
+        if (puzzleIdx === puzzles.length - 1 && typeof launchConfetti === 'function') launchConfetti();
       }, 2600);
 
       /* Advance (4300ms) */
@@ -20190,8 +20188,7 @@ var ContentRenderer = (function () {
 
   function _renderL9BodmasReview(page, area) {
     var questions  = page.questions || [];
-    var stepOrder  = page.stepOrder;
-    var total      = questions.length + (stepOrder ? 1 : 0);
+    var total      = questions.length;
     var qIdx       = 0;
     var answered   = false;
 
@@ -20255,6 +20252,11 @@ var ContentRenderer = (function () {
     }
 
     function _advanceQuestion() {
+      /* Last question answered — no more questions, go to results */
+      if (qIdx + 1 >= total) {
+        if (page.next) renderPage(page.next);
+        return;
+      }
       var go = function () {
         qIdx++;
         answered = false;
@@ -20327,149 +20329,6 @@ var ContentRenderer = (function () {
           }
         });
         bodyEl.appendChild(stripEl);
-
-      } else if (stepOrder) {
-        /* Question 7 — step ordering */
-        counterEl.textContent  = I18n.t('counterQuestionCapsNofTotal', { n: stepOrder.n, total: total });
-        ruleBanner.textContent = stepOrder.label || 'Full BODMAS Challenge!';
-        ruleBanner.className   = _sharedContentClasses('cp-l9br-rule-banner cp-l9br-rule-banner--challenge');
-        promptEl.textContent   = '';
-
-        var exprTitle = _el('p', 'cp-l9br-step-expr');
-        exprTitle.textContent = I18n.t('stepOrderSolve', { expr: stepOrder.expression });
-        var stepInst = _el('p', 'cp-l9br-step-inst');
-        stepInst.textContent = I18n.t('stepOrderInstruction');
-        bodyEl.appendChild(exprTitle);
-        bodyEl.appendChild(stepInst);
-
-        /* Two columns */
-        var cols    = _el('div', 'cp-l9br-step-cols');
-        var srcCol  = _el('div', 'cp-l9br-step-src');
-        var srcHdr  = _el('p', 'cp-l9br-step-col-hdr'); srcHdr.textContent = I18n.t('stepOrderDragHeader');
-        var srcList = _el('div', 'cp-l9br-step-list');
-        srcCol.appendChild(srcHdr);
-        srcCol.appendChild(srcList);
-        var tgtCol  = _el('div', 'cp-l9br-step-tgt');
-        var tgtHdr  = _el('p', 'cp-l9br-step-col-hdr'); tgtHdr.textContent = I18n.t('stepOrderCorrectHeader');
-        var tgtList = _el('div', 'cp-l9br-step-list');
-        var tgtPlaceholder = _el('p', 'cp-l9br-step-placeholder');
-        tgtPlaceholder.textContent = I18n.t('stepOrderPlaceholder');
-        tgtList.appendChild(tgtPlaceholder);
-        tgtCol.appendChild(tgtHdr);
-        tgtCol.appendChild(tgtList);
-        cols.appendChild(srcCol);
-        cols.appendChild(tgtCol);
-        bodyEl.appendChild(cols);
-
-        var tryBtn = _el('button', 'cp-l9br-try-btn');
-        tryBtn.textContent = I18n.t('btnTryAgain');
-        bodyEl.appendChild(tryBtn);
-
-        /* Shuffle steps for display order */
-        var shuffled = stepOrder.steps.slice().sort(function () { return Math.random() - 0.5; });
-        var placed   = []; /* ordered placed step ids */
-
-        function _buildSrc() {
-          srcList.innerHTML = '';
-          var remaining = shuffled.filter(function (s) {
-            return placed.indexOf(s.id) === -1;
-          });
-          /* keep original order in source */
-          remaining.forEach(function (step) {
-            var tile = _el('button', 'cp-l9br-step-tile');
-            tile.textContent = step.label;
-            tile.dataset.stepId = step.id;
-            tile.addEventListener('click', function () {
-              placed.push(step.id);
-              _buildSrc();
-              _buildTgt();
-              if (placed.length === stepOrder.steps.length) {
-                setTimeout(_validateOrder, 200);
-              }
-            });
-            srcList.appendChild(tile);
-          });
-          if (!remaining.length) {
-            var done = _el('p', 'cp-l9br-step-src-done');
-            done.textContent = I18n.t('stepOrderAllPlaced');
-            srcList.appendChild(done);
-          }
-        }
-
-        function _buildTgt() {
-          tgtList.innerHTML = '';
-          if (!placed.length) {
-            tgtList.appendChild(tgtPlaceholder);
-            return;
-          }
-          placed.forEach(function (id) {
-            var step = stepOrder.steps.filter(function (s) { return s.id === id; })[0];
-            if (!step) return;
-            var tile = _el('button', 'cp-l9br-step-tile cp-l9br-step-tile--placed');
-            tile.textContent = step.label;
-            tile.addEventListener('click', function () {
-              placed = placed.filter(function (pid) { return pid !== id; });
-              _buildSrc();
-              _buildTgt();
-            });
-            tgtList.appendChild(tile);
-          });
-        }
-
-        function _validateOrder() {
-          /* Accept div/mul in either order at positions 1 and 2 */
-          var correct = stepOrder.correctOrder;
-          var ok = placed[0] === correct[0] &&
-                   placed[3] === correct[3] &&
-                   (placed[1] === 'div' || placed[1] === 'mul') &&
-                   (placed[2] === 'div' || placed[2] === 'mul') &&
-                   placed[1] !== placed[2];
-          if (ok) {
-            /* green */
-            tgtList.querySelectorAll('.cp-l9br-step-tile').forEach(function (t) {
-              t.classList.add('cp-l9br-step-tile--correct');
-            });
-            feedbackEl.textContent = stepOrder.successMsg || 'Perfect BODMAS order!';
-            feedbackEl.className   = _sharedContentClasses('cp-l9br-feedback cp-l9br-feedback--correct');
-            if (typeof playCorrect === 'function') playCorrect();
-            if (typeof launchConfetti === 'function') launchConfetti();
-            var resultsBtn = _el('button', 'cp-l9br-results-btn');
-            resultsBtn.textContent = I18n.t('btnSeeResults');
-            resultsBtn.addEventListener('click', function () {
-              if (page.next) renderPage(page.next);
-            });
-            feedbackEl.appendChild(resultsBtn);
-          } else {
-            if (typeof playWrong === 'function') playWrong();
-            tgtList.querySelectorAll('.cp-l9br-step-tile').forEach(function (t) {
-              t.classList.add('cp-l9br-step-tile--wrong');
-            });
-            if (typeof anime !== 'undefined') {
-              anime({ targets: tgtCol, translateX: [0, -8, 8, -6, 6, 0], duration: 360, easing: 'easeInOutSine' });
-            }
-            feedbackEl.textContent = stepOrder.wrongHint || 'Not quite!';
-            feedbackEl.className   = _sharedContentClasses('cp-l9br-feedback cp-l9br-feedback--wrong');
-            setTimeout(function () {
-              placed = [];
-              tgtList.querySelectorAll('.cp-l9br-step-tile').forEach(function (t) {
-                t.classList.remove('cp-l9br-step-tile--wrong');
-              });
-              feedbackEl.textContent = '';
-              _buildSrc();
-              _buildTgt();
-            }, 900);
-          }
-        }
-
-        tryBtn.addEventListener('click', function () {
-          placed = [];
-          feedbackEl.textContent = '';
-          feedbackEl.className   = _sharedContentClasses('cp-l9br-feedback');
-          _buildSrc();
-          _buildTgt();
-        });
-
-        _buildSrc();
       }
 
       if (typeof anime !== 'undefined') {

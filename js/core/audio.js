@@ -11,9 +11,10 @@ var _sounds   = {};
 (function() {
   try {
     var files = {
-      click:   { src: 'assets/sounds/button-click.ogg',      vol: 1.0 },
-      correct: { src: 'assets/sounds/correct-answer.ogg',    vol: 1.0 },
-      wrong:   { src: 'assets/sounds/incorrect-answer.ogg',  vol: 1.0 },
+      click:    { src: 'assets/sounds/button-click.ogg',     vol: 1.0 },
+      correct:  { src: 'assets/sounds/correct-answer.ogg',   vol: 1.0 },
+      wrong:    { src: 'assets/sounds/incorrect-answer.ogg', vol: 1.0 },
+      confetti: { src: 'assets/sounds/confetti-sound.ogg',   vol: 1.0 },
       /* ── Section 1.0 background audio ── */
       s1_chime: { src: 'assets/sounds/intro-chime.ogg',      vol: 0.18 }
     };
@@ -65,8 +66,10 @@ function _playTone(freq, type, duration, gainVal) {
 }
 
 /* ── File-based effect playback ──────────────────────── */
-function playCorrect() { _playSound(_sounds.correct); }
-function playWrong()   { _playSound(_sounds.wrong); }
+function playCorrect()  { _playSound(_sounds.correct); }
+function playWrong()    { _playSound(_sounds.wrong); }
+/* Confetti cheer — call only when confetti is actually shown (see launchConfetti) */
+function playConfetti() { _playSound(_sounds.confetti); }
 
 /* ── Synthesized Web Audio tones (lazy AudioContext) ─── */
 function playStarPop() {
