@@ -826,20 +826,6 @@ var CONTENT_PAGES = [
         okMsg: 'lvl9BrQ6Ok'
       }
     ],
-    stepOrder: {
-      n: 7,
-      label: 'lvl9StepOrderLabel',
-      expression: '24 ÷ (6 − 2) + 3 × 2',
-      steps: [
-        { id: 'brackets', label: 'lvl9Step1Label' },
-        { id: 'div', label: 'lvl9Step2Label' },
-        { id: 'mul', label: 'lvl9Step3Label' },
-        { id: 'add', label: 'lvl9Step4Label' }
-      ],
-      correctOrder: ['brackets', 'div', 'mul', 'add'],
-      wrongHint: 'lvl9StepWrongHint',
-      successMsg: 'lvl9StepSuccess'
-    },
     animation: 'l9brEntrance',
     next: '9.3'
   },

@@ -198,6 +198,9 @@ function launchConfetti() {
     return;
   }
 
+  /* Confetti is actually appearing now — play its dedicated cheer */
+  if (typeof playConfetti === 'function') playConfetti();
+
   var el = document.createElement('div');
   el.className = 'celebration';
 

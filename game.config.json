@@ -1,1 +1,12 @@
-{}
+{
+  "skillCode": "MT06A01_L01_S07",
+  "microSkills": [
+    { "code": "MS01", "description": "Simplify: only × and (+ or −), left to right" },
+    { "code": "MS02", "description": "Simplify: only ÷ and (+ or −), left to right" },
+    { "code": "MS03", "description": "Simplify: only + and −, left to right" },
+    { "code": "MS04", "description": "Simplify: only × and ÷, left to right" },
+    { "code": "MS05", "description": "Full BODMAS order and simplify brackets innermost first" },
+    { "code": "MS06", "description": "Simplify complex multi-operation expression" },
+    { "code": "MS07", "description": "Insert brackets to make given equation true" }
+  ]
+}
