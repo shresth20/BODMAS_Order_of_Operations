@@ -589,14 +589,18 @@ body:has(.cp-l6i-wrap) .content-deco--l6-5 { display: block; }
 .loader-overlay.loader--tap-ready {
   cursor: pointer;
 }
+.loader-overlay:focus,
+.loader-overlay:focus-visible {
+  outline: none;
+}
 .loader-overlay.loader--tap-ready::after {
   content: var(--i18n-tap-to-begin, 'Tap to Begin');
   position: absolute;
-  bottom: 36%;
+  bottom: 34%;
   left: 50%;
   transform: translateX(-50%);
-  font-size: clamp(0.9rem, 2.5vw, 1.1rem);
-  font-weight: 600;
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 700;
   color: rgba(255, 255, 255, 0.9);
   letter-spacing: 0.06em;
   white-space: nowrap;
