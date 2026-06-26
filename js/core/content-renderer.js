@@ -12857,6 +12857,30 @@ var ContentRenderer = (function () {
 
     area.appendChild(wrap);
 
+    /* ── Narration: keep the Start button HIDDEN until the clip ends, then
+       reveal it with a pop-in. Played synchronously so the FIRST clip stays in
+       the How-to-Play close gesture chain (iOS autoplay unlock). Safe fallbacks
+       still fire onEnded, so the button always appears. ── */
+    function _revealStartBtn() {
+      btn.style.display = '';   /* inline beats the class's display:inline-flex */
+      if (typeof anime !== 'undefined') {
+        anime.set(btn, { opacity: 0, translateY: 14, scale: 0.9 });
+        anime({
+          targets: btn, opacity: 1, translateY: 0, scale: 1,
+          duration: 450, easing: 'easeOutBack',
+          complete: function () { btn.style.transform = ''; }
+        });
+      } else {
+        btn.style.opacity = '1';   /* class default is opacity:0 — show it */
+      }
+    }
+    btn.style.display = 'none';
+    if (typeof Narration !== 'undefined') {
+      Narration.playScreen(page.id, { next: page.next, onEnded: _revealStartBtn });
+    } else {
+      _revealStartBtn();
+    }
+
     if (typeof anime !== 'undefined') {
       var tokenEls = exprEl.querySelectorAll('.cp-l1i-token');
 
@@ -12864,7 +12888,6 @@ var ContentRenderer = (function () {
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
       anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
-      anime.set(btn,        { opacity: 0, translateY: 14 });
 
       // 1. Scenario slides in
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
@@ -12899,13 +12922,7 @@ var ContentRenderer = (function () {
       // 3. Question fades in after box appears
       anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
 
-      // 4. Button slides in, then gets CSS pulse class to invite a tap
-      anime({
-        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
-        complete: function () {
-          btn.style.transform = '';   // clear inline transform left by anime so CSS :active works
-        }
-      });
+      // 4. Button is revealed by _revealStartBtn() once narration ends — not here.
     }
   }
 
@@ -13553,6 +13570,8 @@ var ContentRenderer = (function () {
     }
 
     /* ── Boot ── */
+    /* Narration plays as a spoken intro; tile interactions stay usable. */
+    if (typeof Narration !== 'undefined') Narration.playScreen(page.id, { next: page.next });
     _loadRound(0);
   }
 
@@ -13663,7 +13682,7 @@ var ContentRenderer = (function () {
     /* -- CTA button -- */
     var btn = _el('button', 'cp-l1r-btn');
     btn.textContent = page.buttonLabel || 'Continue';
-    btn.disabled = true;
+    btn.style.display = 'none';   /* inline beats the class's display:inline-flex */
     btn.addEventListener('click', function () {
       if (typeof playStartWhoosh === 'function') playStartWhoosh();
       _wipeLeftTo(page.next);
@@ -13672,6 +13691,34 @@ var ContentRenderer = (function () {
 
     area.appendChild(wrap);
 
+    /* ── Gate: keep Continue HIDDEN, then reveal it with a pop-in only when
+       BOTH the worked-step animation has finished AND the narration has ended
+       (whichever lands last). ── */
+    var _narrDone = false, _animDone = false, _revealed = false;
+    function _maybeRevealRevealBtn() {
+      if (_revealed || !_narrDone || !_animDone) return;
+      _revealed = true;
+      btn.style.display = '';   /* inline beats the class's display:inline-flex */
+      if (typeof anime !== 'undefined') {
+        anime.set(btn, { opacity: 0, scale: 0.75, translateY: 10 });
+        anime({
+          targets: btn, opacity: [0, 1], scale: [0.75, 1], translateY: [10, 0],
+          duration: 420, easing: 'easeOutBack',
+          complete: function () { btn.style.transform = ''; }
+        });
+      } else {
+        btn.style.opacity = '1';
+      }
+    }
+    if (typeof Narration !== 'undefined') {
+      Narration.playScreen(page.id, {
+        next: page.next,
+        onEnded: function () { _narrDone = true; _maybeRevealRevealBtn(); }
+      });
+    } else {
+      _narrDone = true;
+    }
+
     /* -- Animation helpers -- */
     if (typeof anime === 'undefined') {
       /* Fallback: show everything immediately without animation */
@@ -13679,11 +13726,11 @@ var ContentRenderer = (function () {
         el.style.opacity = '1';
         if (el.dataset.tw) el.textContent = el.dataset.tw;
       });
-      btn.disabled = false;
+      _animDone = true; _maybeRevealRevealBtn();
       return;
     }
 
-    anime.set([titleEl, box, tagEl, btn], { opacity: 0, translateY: 28 });
+    anime.set([titleEl, box, tagEl], { opacity: 0, translateY: 28 });
     var divider = null; /* divider removed in new layout */
 
     /* Typewriter: reveal characters one by one */
@@ -13791,15 +13838,10 @@ var ContentRenderer = (function () {
                           targets: tagEl, opacity: [0, 1], translateY: [10, 0],
                           duration: 380, easing: 'easeOutQuad'
                         });
-                        /* 4. Button pops in */
+                        /* 4. Mark the animation done; the button is revealed by
+                           _maybeRevealRevealBtn() once narration has also ended. */
                         setTimeout(function () {
-                          btn.disabled = false;
-                          anime({
-                            targets: btn, opacity: [0, 1],
-                            scale: [0.75, 1], translateY: [10, 0],
-                            duration: 420, easing: 'easeOutBack',
-                            complete: function () { btn.style.transform = ''; }
-                          });
+                          _animDone = true; _maybeRevealRevealBtn();
                         }, 420);
                       });
                     }, 200);
@@ -14048,6 +14090,8 @@ var ContentRenderer = (function () {
       }
     }
 
+    /* Narration plays as a spoken intro; answer interactions stay usable. */
+    if (typeof Narration !== 'undefined') Narration.playScreen(page.id, { next: page.next });
     _loadQuestion(questions[0], 0);
   }
 
@@ -19751,6 +19795,64 @@ var ContentRenderer = (function () {
     /* Expression row container */
     var exprBox = _el('div', 'cp-l9ib-expr-box');
 
+    /* Only the gap nearest the pointer opens up, so room is made beside one
+       number at a time instead of between every number. Gaps stay zero-width
+       in the layout, so their centre is still a valid X position to measure. */
+    function _nearestGap(clientX) {
+      var best = null, bestD = Infinity;
+      exprBox.querySelectorAll('.cp-l9ib-gap').forEach(function (g) {
+        var r = g.getBoundingClientRect();
+        var d = Math.abs(clientX - (r.left + r.width / 2));
+        if (d < bestD) { bestD = d; best = g; }
+      });
+      return best;
+    }
+    function _highlightNearestGap(clientX) {
+      var near = _nearestGap(clientX);
+      exprBox.querySelectorAll('.cp-l9ib-gap').forEach(function (g) {
+        g.classList.toggle('cp-l9ib-gap--hover', g === near);
+      });
+      return near;
+    }
+    function _clearGapHover() {
+      exprBox.querySelectorAll('.cp-l9ib-gap--hover').forEach(function (g) {
+        g.classList.remove('cp-l9ib-gap--hover');
+      });
+    }
+    /* Is the point over the expression box (with a little slack so a finger
+       just above/below a slot still counts)? Used to cancel a touch drop
+       released away from the equation. */
+    function _overExprBox(x, y) {
+      var r = exprBox.getBoundingClientRect();
+      var pad = 40;
+      return x >= r.left - pad && x <= r.right + pad &&
+             y >= r.top  - pad && y <= r.bottom + pad;
+    }
+    function _placingActive() { return phase === 'place-open' || phase === 'place-close'; }
+
+    /* Slots open only while a bracket is actually being dragged over the
+       equation (HTML5 drag below, touch drag in _makeBracketTile) — never on a
+       plain mouse hover, so the equation stays a clean line until a drag. */
+    exprBox.addEventListener('dragover', function (e) {
+      if (!_placingActive()) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      _highlightNearestGap(e.clientX);
+    });
+    exprBox.addEventListener('dragleave', function (e) {
+      if (e.relatedTarget && exprBox.contains(e.relatedTarget)) return;
+      _clearGapHover();
+    });
+    exprBox.addEventListener('drop', function (e) {
+      e.preventDefault();
+      var near = _nearestGap(e.clientX);
+      _clearGapHover();
+      var which = e.dataTransfer.getData('text/plain') || draggedBracket;
+      if ((which === 'open' || which === 'close') && near && near.dataset.gapIdx != null) {
+        _placeBracket(which, parseInt(near.dataset.gapIdx, 10));
+      }
+    });
+
     /* Bracket tray — draggable ( and ) source tiles */
     var trayEl    = _el('div', 'cp-l9ib-tray');
     var trayHint  = _el('p',   'cp-l9ib-tray__hint');
@@ -19828,22 +19930,10 @@ var ContentRenderer = (function () {
           if (gapIdx === openGap)  { gap.textContent = '('; gap.className = _sharedContentClasses('cp-l9ib-gap cp-l9ib-gap--open');  }
           if (gapIdx === closeGap) { gap.textContent = ')'; gap.className = _sharedContentClasses('cp-l9ib-gap cp-l9ib-gap--close'); }
           gap.setAttribute('aria-label', I18n.t('counterGapN', { n: gapIdx }));
-          /* Tap fallback (keyboard + mouse + touch): place open then close */
+          /* Tap fallback (keyboard + mouse + touch): place open then close.
+             Drag-and-drop is handled at the exprBox level so only the slot
+             nearest the pointer opens — see _highlightNearestGap. */
           gap.addEventListener('click', function () { _onGapTap(gapIdx); });
-          /* Drag-and-drop target (HTML5 / mouse) */
-          gap.addEventListener('dragover', function (e) {
-            if (phase !== 'place-open' && phase !== 'place-close') return;
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            gap.classList.add('cp-l9ib-gap--hover');
-          });
-          gap.addEventListener('dragleave', function () { gap.classList.remove('cp-l9ib-gap--hover'); });
-          gap.addEventListener('drop', function (e) {
-            e.preventDefault();
-            gap.classList.remove('cp-l9ib-gap--hover');
-            var which = e.dataTransfer.getData('text/plain') || draggedBracket;
-            if (which === 'open' || which === 'close') _placeBracket(which, gapIdx);
-          });
           row.appendChild(gap);
           if (gapIdx < tokens.length) {
             var tok = tokens[gapIdx];
@@ -19970,6 +20060,7 @@ var ContentRenderer = (function () {
       });
       tile.addEventListener('dragend', function () {
         tile.classList.remove('cp-l9ib-btile--dragging');
+        _clearGapHover();
         draggedBracket = null;
       });
 
@@ -20003,34 +20094,25 @@ var ContentRenderer = (function () {
         var touch = e.touches[0];
         ghost.style.left = (touch.clientX - offsetX) + 'px';
         ghost.style.top  = (touch.clientY - offsetY) + 'px';
-
-        ghost.style.display = 'none';
-        var el = document.elementFromPoint(touch.clientX, touch.clientY);
-        ghost.style.display = '';
-
-        exprBox.querySelectorAll('.cp-l9ib-gap').forEach(function (g) {
-          g.classList.remove('cp-l9ib-gap--hover');
-        });
-        var hovered = el && el.closest('.cp-l9ib-gap');
-        if (hovered) hovered.classList.add('cp-l9ib-gap--hover');
+        /* Open only the slot nearest the finger's X position, and only while
+           the finger is over the equation. */
+        if (_overExprBox(touch.clientX, touch.clientY)) _highlightNearestGap(touch.clientX);
+        else _clearGapHover();
       }, { passive: false });
 
       tile.addEventListener('touchend', function (e) {
         if (!ghost) return;
         var touch = e.changedTouches[0];
-        ghost.style.display = 'none';
-        var el = document.elementFromPoint(touch.clientX, touch.clientY);
-        ghost.style.display = '';
         document.body.removeChild(ghost);
         ghost = null;
         tile.classList.remove('cp-l9ib-btile--dragging');
-        exprBox.querySelectorAll('.cp-l9ib-gap').forEach(function (g) {
-          g.classList.remove('cp-l9ib-gap--hover');
-        });
+        _clearGapHover();
 
-        var gap = el && el.closest('.cp-l9ib-gap');
-        if (gap && gap.dataset.gapIdx != null) {
-          _placeBracket(which, parseInt(gap.dataset.gapIdx, 10));
+        if (_overExprBox(touch.clientX, touch.clientY)) {
+          var gap = _nearestGap(touch.clientX);
+          if (gap && gap.dataset.gapIdx != null) {
+            _placeBracket(which, parseInt(gap.dataset.gapIdx, 10));
+          }
         }
         draggedBracket = null;
       });

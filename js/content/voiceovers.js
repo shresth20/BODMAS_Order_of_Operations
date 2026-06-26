@@ -84,6 +84,7 @@ var Narration = (function () {
   function stop() {
     _clearTimers();
     _stopCurrent();
+    _stopScreen();
     _pendingKey = null;
     _gen++;
   }
@@ -150,5 +151,152 @@ var Narration = (function () {
 
   function speak() {}
 
-  return { play: play, stop: stop, schedule: schedule, speak: speak };
+  /* ══════════════════════════════════════════════════════
+     PER-SCREEN NARRATION  (one audio clip per content page)
+     ──────────────────────────────────────────────────────
+     Maps a page id (e.g. '1.0') to a single narration file. The clip
+     auto-plays when the screen is shown; callers gate a forward button on
+     the natural 'ended' event via the onEnded callback. Safe fallbacks
+     (autoplay-block, load/play error, and a duration-based timeout) all
+     resolve through the same onEnded so a bad file can never trap the user.
+  ══════════════════════════════════════════════════════ */
+
+  /* Single source of truth: screen id -> audio file. Editable / extensible —
+     screens with no entry simply get no narration (button enabled normally). */
+  var _screenSrcs = {
+    '1.0': 'assets/voiceover/screen-1.0.mp3',
+    '1.1': 'assets/voiceover/screen-1.1.mp3',
+    '1.2': 'assets/voiceover/screen-1.2.mp3',
+    '1.3': 'assets/voiceover/screen-1.3.mp3'
+    /* ── Sections 2–9: add files here as they arrive ── */
+  };
+
+  var _screenCache   = {};   /* pageId -> preloaded Audio (prefetch) */
+  var _playedScreens = {};   /* pageId -> true (no auto-replay on revisit) */
+  var _screenAudio   = null; /* currently-playing screen narration */
+  var _screenTimer   = null; /* safety-timeout handle */
+
+  function _stopScreen() {
+    if (_screenAudio) {
+      try { _screenAudio.pause(); _screenAudio.currentTime = 0; } catch (e) {}
+      _screenAudio = null;
+    }
+    if (_screenTimer) { clearTimeout(_screenTimer); _screenTimer = null; }
+  }
+
+  /* Warm the browser cache for a screen's clip so playback starts instantly. */
+  function _prefetch(pageId) {
+    var src = _screenSrcs[pageId];
+    if (!src || _screenCache[pageId]) return;
+    try {
+      var a = new Audio(src);
+      a.preload = 'auto';
+      a.load();
+      _screenCache[pageId] = a;
+    } catch (e) {}
+  }
+
+  /* Play a screen's narration. opts: { onEnded, next }.
+     onEnded fires exactly once — on natural end, error, autoplay-block, or
+     the safety timeout — and is the caller's cue to enable the gated button. */
+  function playScreen(pageId, opts) {
+    opts = opts || {};
+    var done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      if (_screenTimer) { clearTimeout(_screenTimer); _screenTimer = null; }
+      if (typeof opts.onEnded === 'function') opts.onEnded();
+    }
+
+    var src = _screenSrcs[pageId];
+
+    /* No clip mapped, or already heard this screen → enable immediately. */
+    if (!src || _playedScreens[pageId]) { finish(); return; }
+
+    _stopScreen();
+    var myGen = ++_gen;
+    _playedScreens[pageId] = true;
+    if (opts.next) _prefetch(opts.next);
+
+    var audio = _screenCache[pageId] || new Audio(src);
+    _screenCache[pageId] = audio;
+    _screenAudio = audio;
+    try { audio.currentTime = 0; } catch (e) {}
+
+    audio.addEventListener('ended', function () {
+      if (_gen !== myGen) return;   /* navigated away — abort */
+      finish();
+    }, { once: true });
+
+    audio.addEventListener('error', function () {
+      if (_gen !== myGen) return;
+      console.warn('[Narration] audio error for screen ' + pageId + ' (' + src + ')');
+      finish();
+    }, { once: true });
+
+    /* Safety timeout (fallback only): clip duration + buffer, or a hard cap
+       if metadata never loads. Never the primary trigger — 'ended' is. */
+    function _armTimeout() {
+      if (_screenTimer) clearTimeout(_screenTimer);
+      var ms = (isFinite(audio.duration) && audio.duration > 0)
+        ? (audio.duration * 1000 + 1500)
+        : 20000;
+      _screenTimer = setTimeout(function () {
+        if (_gen !== myGen) return;
+        console.warn('[Narration] safety timeout for screen ' + pageId);
+        finish();
+      }, ms);
+    }
+    if (isFinite(audio.duration) && audio.duration > 0) {
+      _armTimeout();
+    } else {
+      _armTimeout(); /* provisional 20s cap until metadata refines it */
+      audio.addEventListener('loadedmetadata', function () {
+        if (_gen !== myGen || done) return;
+        _armTimeout();
+      }, { once: true });
+    }
+
+    try {
+      var p = audio.play();
+      if (p && typeof p.catch === 'function') {
+        p.catch(function () {
+          if (_gen !== myGen) return;
+          console.warn('[Narration] playback blocked/failed for screen ' + pageId);
+          finish();                         /* never trap the student behind a blocked clip */
+          _armScreenRetry(pageId, myGen);   /* still try to play it on the next gesture */
+        });
+      }
+    } catch (e) {
+      if (_gen === myGen) {
+        console.warn('[Narration] play() threw for screen ' + pageId, e);
+        finish();
+        _armScreenRetry(pageId, myGen);
+      }
+    }
+  }
+
+  /* If the first clip was autoplay-blocked, replay it on the next user gesture
+     (the button is already enabled, so this only restores the missed audio). */
+  function _armScreenRetry(pageId, gen) {
+    var fn = function () {
+      document.removeEventListener('click',      fn, true);
+      document.removeEventListener('touchstart', fn, true);
+      if (_gen !== gen) return;             /* navigated away — drop it */
+      var a = _screenCache[pageId];
+      if (!a) return;
+      try { a.currentTime = 0; _screenAudio = a; a.play().catch(function () {}); } catch (e) {}
+    };
+    document.addEventListener('click',      fn, true);
+    document.addEventListener('touchstart', fn, { capture: true, passive: true });
+  }
+
+  /* Eagerly warm the very first screen so it starts the instant 1.0 renders. */
+  _prefetch('1.0');
+
+  return {
+    play: play, stop: stop, schedule: schedule, speak: speak,
+    playScreen: playScreen
+  };
 }());

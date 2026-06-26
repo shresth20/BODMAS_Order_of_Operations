@@ -9217,26 +9217,55 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(8px, 1.5vw, 18px);
+  gap: 0;
   flex-wrap: nowrap;
 }
 
-/* ── Gap slots — UNCHANGED ── */
+/* ── Gap slots ──
+   Collapsed by default so the equation reads as a plain "2 + 3 × 4 = 20".
+   They expand to create drop space only while the learner is placing a
+   bracket (drag/touch/keyboard) — or to hold a bracket that's been placed. */
 .cp-l9ib-gap {
-  width: 32px;
+  width: 0;
+  min-width: 0;
   height: 48px;
+  margin: 0;
   border: 2px dashed #CBD5E1;
+  border-width: 0;
   border-radius: 8px;
   background: transparent;
   cursor: pointer;
   font-size: 1.3rem;
   font-weight: 800;
   color: transparent;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.15s, background 0.15s;
+  transition: width 0.18s ease, border-width 0.18s ease, margin 0.18s ease,
+              opacity 0.18s ease, border-color 0.15s, background 0.15s;
 }
+/* Reveal: only the slot nearest the pointer (--hover, set while dragging or
+   hovering), every slot while keyboard-focused (so all targets are reachable),
+   or a slot that already holds a bracket. Slots that aren't the active target
+   stay collapsed, so dropping near "2" makes room beside 2 alone. */
+.cp-l9ib-gap--hover,
+.cp-l9ib-gap--demo,
+.cp-l9ib-expr-box:focus-within .cp-l9ib-gap,
+.cp-l9ib-gap--open,
+.cp-l9ib-gap--close {
+  width: 32px;
+  margin: 0 4px;
+  border-width: 2px;
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Hand-nudge preview slot — shows where a bracket goes but is NOT a real
+   target: it must not be clickable, so a bracket can only be inserted by an
+   actual drag, never by clicking the demo space. */
+.cp-l9ib-gap--demo { pointer-events: none; }
 .cp-l9ib-gap:hover  { border-color: #F59E0B; background: #FFFBEB; }
 .cp-l9ib-gap--open  { border-color: #F59E0B; background: #FFFBEB; color: #D97706; }
 .cp-l9ib-gap--close { border-color: #F59E0B; background: #FFFBEB; color: #D97706; }
@@ -9306,6 +9335,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  margin: 0 clamp(4px, 0.7vw, 9px);
   font-family: var(--font-primary);
   font-size: clamp(36px, 4.3vw, 62px);
   line-height: 1;
@@ -9317,6 +9347,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  margin: 0 clamp(4px, 0.7vw, 9px);
   font-family: var(--font-primary);
   font-size: clamp(36px, 4.3vw, 62px);
   line-height: 1;
@@ -9324,12 +9355,13 @@
   text-shadow: 0 3px 0 var(--ink-a08);
 }
 
-.cp-l9ib-equals { font-size: 1.3rem; font-weight: 700; color: #475569; margin: 0 6px; }
+.cp-l9ib-equals { font-size: 1.3rem; font-weight: 700; color: #475569; margin: 0 clamp(4px, 0.7vw, 9px); }
 
 .cp-l9ib-target {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  margin: 0 clamp(4px, 0.7vw, 9px);
   font-family: var(--font-primary);
   font-size: clamp(36px, 4.3vw, 62px);
   line-height: 1;
@@ -9376,6 +9408,7 @@
   font-size: clamp(36px, 4.3vw, 62px);
   font-weight: 900;
   color: #F59E0B;
+  margin: 0 clamp(4px, 0.7vw, 9px);
   padding: 0 2px;
   line-height: 1;
   align-self: center;
@@ -9422,7 +9455,7 @@
     padding: 7px 10px;
     gap: clamp(4px, 1.8vw, 10px);
   }
-  .cp-l9ib-expr-row { gap: clamp(4px, 1.8vw, 12px); }
+  .cp-l9ib-expr-row { gap: 0; }
   .cp-l9ib-tok-num,
   .cp-l9ib-tok-op,
   .cp-l9ib-target { font-size: clamp(20px, 6vw, 30px); }
@@ -9825,7 +9858,12 @@
   .cp-l9ib-tok-op,
   .cp-l9ib-target { font-size: clamp(24px, 7vw, 34px); }
   .cp-l9ib-bracket-placed { font-size: clamp(24px, 7vw, 34px); }
-  .cp-l9ib-gap { width: 26px; height: 40px; }
+  .cp-l9ib-gap { height: 40px; }
+  .cp-l9ib-gap--hover,
+  .cp-l9ib-gap--demo,
+  .cp-l9ib-expr-box:focus-within .cp-l9ib-gap,
+  .cp-l9ib-gap--open,
+  .cp-l9ib-gap--close { width: 26px; }
   .cp-l9br-step-cols { flex-direction: column; }
   .cp-l9rs-grid { grid-template-columns: repeat(2, 1fr); }
 }
@@ -9964,7 +10002,7 @@
 .cp-l9nb-op-tile:hover { filter: drop-shadow(0 0 16px rgba(255, 169, 58, 0.78)); }
 
 /* ── Insert-brackets gaps ── */
-.cp-l9ib-gap { transition: border-color 0.14s, background 0.14s, box-shadow 0.14s, filter 0.14s, color 0.14s; }
+.cp-l9ib-gap { transition: width 0.18s ease, border-width 0.18s ease, margin 0.18s ease, opacity 0.18s ease, border-color 0.14s, background 0.14s, box-shadow 0.14s, filter 0.14s, color 0.14s; }
 .cp-l9ib-gap:hover  { filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.75)); }
 .cp-l9ib-gap--open,
 .cp-l9ib-gap--close { filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.65)); }
