@@ -1,8 +1,8 @@
 /* App orchestrator — rendering, event handling, screen transitions */
 
 var _htpShownOnce = false;
-var _htpIsIntro   = false;
 var _feedbackTimeout = null;
+var _loaderStarted = false;
 
 /* ── Init ──────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', function() {
@@ -147,7 +147,7 @@ function transitionToScreen(screenName) {
       if (screenName === 'loading') {
         var loaderOv = qs('#loader-overlay');
         if (loaderOv) loaderOv.classList.remove('loader--hidden');
-        scheduleAutoAdvanceFromLoading();
+        enableTapToBegin();
       }
     });
   });
@@ -233,17 +233,47 @@ function launchConfetti() {
   setTimeout(function() { if (el.parentNode) el.remove(); }, 8000);
 }
 
-/* ── Loading auto-advance ──────────────────────────── */
-function scheduleAutoAdvanceFromLoading() {
+/* ── Loader "Tap to Begin" ─────────────────────────── */
+function enableTapToBegin() {
+  var overlay = qs('#loader-overlay');
+  if (!overlay) return;
+
+  /* Brief delay so the loader GIF is visibly seen before the prompt appears. */
   setTimeout(function() {
-    if (window.CONTENT_MODE) {
-      var overlay = qs('#loader-overlay');
-      if (overlay) overlay.classList.add('loader--hidden');
-      document.body.classList.add('content-page-active');
-      _htpIsIntro = true;
-      openHowToPlay();
-    }
-  }, 2200);
+    if (_loaderStarted) return;
+    overlay.classList.add('loader--tap-ready');
+    overlay.setAttribute('role', 'button');
+    overlay.setAttribute('tabindex', '0');
+    overlay.setAttribute('aria-label', I18n.t('tapToBegin'));
+    overlay.addEventListener('click', startFromLoader);
+    overlay.addEventListener('keydown', handleLoaderKeydown);
+    overlay.focus();
+  }, 700);
+}
+
+function handleLoaderKeydown(e) {
+  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+    e.preventDefault();
+    startFromLoader();
+  }
+}
+
+function startFromLoader() {
+  if (_loaderStarted) return;
+  _loaderStarted = true;
+
+  var overlay = qs('#loader-overlay');
+  if (overlay) {
+    overlay.removeEventListener('click', startFromLoader);
+    overlay.removeEventListener('keydown', handleLoaderKeydown);
+    overlay.classList.remove('loader--tap-ready');
+    overlay.classList.add('loader--hidden');
+    overlay.removeAttribute('role');
+    overlay.removeAttribute('tabindex');
+  }
+
+  document.body.classList.add('content-page-active');
+  if (typeof ContentRenderer !== 'undefined') ContentRenderer.renderPage('1.0');
 }
 
 /* ── Helpers ───────────────────────────────────────── */
@@ -300,12 +330,6 @@ function closeHowToPlay() {
   modal.classList.remove('modal--open');
   modal.setAttribute('aria-hidden', 'true');
   document.removeEventListener('keydown', handleModalKeydown);
-
-  if (_htpIsIntro) {
-    _htpIsIntro = false;
-    if (typeof ContentRenderer !== 'undefined') ContentRenderer.renderPage('1.0');
-    return;
-  }
 
   var btnInfo = qs('#btn-info');
   if (btnInfo) btnInfo.focus();

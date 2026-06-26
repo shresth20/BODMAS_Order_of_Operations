@@ -31,6 +31,12 @@ var ContentRenderer = (function () {
     return (typeof I18n !== 'undefined' && typeof key === 'string') ? I18n.t(key) : key;
   }
 
+  /* Custom celebration artwork shown in place of the 🎉 emoji. */
+  var TADA_SVG = 'assets/icons/tada.svg';
+  function _tadaImg() {
+    return '<img class="emoji-tada" src="' + TADA_SVG + '" alt="" aria-hidden="true" draggable="false">';
+  }
+
   function _translateNode(node) {
     if (Array.isArray(node)) {
       return node.map(function (item) { return _translateNode(item); });
@@ -3903,7 +3909,8 @@ var ContentRenderer = (function () {
 
       var card = _el('div', 'cp-ar-success');
       var icon = _el('div', 'cp-ar-success__icon');
-      icon.textContent = page.successIcon || '🎉';
+      if (page.successIcon) icon.textContent = page.successIcon;
+      else icon.innerHTML = _tadaImg();
       var title = _el('div', 'cp-ar-success__title');
       title.textContent = page.successTitle || "You've got the rule!";
       card.appendChild(icon);
@@ -13585,7 +13592,7 @@ var ContentRenderer = (function () {
 
     /* -- Title -- */
     var titleEl = _el('h2', 'cp-l1r-title');
-    titleEl.innerHTML = '🎉 ' + (page.title || 'You Found the Rule!') + ' 🎉';
+    titleEl.innerHTML = _tadaImg() + ' ' + (page.title || 'You Found the Rule!') + ' ' + _tadaImg();
     wrap.appendChild(titleEl);
 
     /* -- Combined box: rule explanation + worked example merged -- */
@@ -14794,7 +14801,7 @@ var ContentRenderer = (function () {
 
     /* -- Title -- */
     var titleEl = _el('h2', pfx + '-title');
-    titleEl.innerHTML = '🎉 ' + (page.title || page.ruleTitle || 'You Found the Rule!') + ' 🎉';
+    titleEl.innerHTML = _tadaImg() + ' ' + (page.title || page.ruleTitle || 'You Found the Rule!') + ' ' + _tadaImg();
     wrap.appendChild(titleEl);
 
     /* -- Combined box: rule row + worked step rows -- */
@@ -19360,7 +19367,7 @@ var ContentRenderer = (function () {
 
       /* Celebration message */
       var msgEl = _el('p', 'cp-l8bl-success-msg');
-      msgEl.textContent = page.completionMsg || 'You discovered the order rule. Mathematicians call it BODMAS!';
+      msgEl.innerHTML = _tadaImg() + ' ' + (page.completionMsg || 'You discovered the order rule. Mathematicians call it BODMAS!');
       wrap.appendChild(msgEl);
 
       /* Animate */
