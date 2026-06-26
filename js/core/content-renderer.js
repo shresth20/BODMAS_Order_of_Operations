@@ -12857,6 +12857,30 @@ var ContentRenderer = (function () {
 
     area.appendChild(wrap);
 
+    /* ── Narration: keep the Start button HIDDEN until the clip ends, then
+       reveal it with a pop-in. Played synchronously so the FIRST clip stays in
+       the How-to-Play close gesture chain (iOS autoplay unlock). Safe fallbacks
+       still fire onEnded, so the button always appears. ── */
+    function _revealStartBtn() {
+      btn.style.display = '';   /* inline beats the class's display:inline-flex */
+      if (typeof anime !== 'undefined') {
+        anime.set(btn, { opacity: 0, translateY: 14, scale: 0.9 });
+        anime({
+          targets: btn, opacity: 1, translateY: 0, scale: 1,
+          duration: 450, easing: 'easeOutBack',
+          complete: function () { btn.style.transform = ''; }
+        });
+      } else {
+        btn.style.opacity = '1';   /* class default is opacity:0 — show it */
+      }
+    }
+    btn.style.display = 'none';
+    if (typeof Narration !== 'undefined') {
+      Narration.playScreen(page.id, { next: page.next, onEnded: _revealStartBtn });
+    } else {
+      _revealStartBtn();
+    }
+
     if (typeof anime !== 'undefined') {
       var tokenEls = exprEl.querySelectorAll('.cp-l1i-token');
 
@@ -12864,7 +12888,6 @@ var ContentRenderer = (function () {
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
       anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
-      anime.set(btn,        { opacity: 0, translateY: 14 });
 
       // 1. Scenario slides in
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
@@ -12899,13 +12922,7 @@ var ContentRenderer = (function () {
       // 3. Question fades in after box appears
       anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
 
-      // 4. Button slides in, then gets CSS pulse class to invite a tap
-      anime({
-        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
-        complete: function () {
-          btn.style.transform = '';   // clear inline transform left by anime so CSS :active works
-        }
-      });
+      // 4. Button is revealed by _revealStartBtn() once narration ends — not here.
     }
   }
 
@@ -13553,6 +13570,8 @@ var ContentRenderer = (function () {
     }
 
     /* ── Boot ── */
+    /* Narration plays as a spoken intro; tile interactions stay usable. */
+    if (typeof Narration !== 'undefined') Narration.playScreen(page.id, { next: page.next });
     _loadRound(0);
   }
 
@@ -13663,7 +13682,7 @@ var ContentRenderer = (function () {
     /* -- CTA button -- */
     var btn = _el('button', 'cp-l1r-btn');
     btn.textContent = page.buttonLabel || 'Continue';
-    btn.disabled = true;
+    btn.style.display = 'none';   /* inline beats the class's display:inline-flex */
     btn.addEventListener('click', function () {
       if (typeof playStartWhoosh === 'function') playStartWhoosh();
       _wipeLeftTo(page.next);
@@ -13672,6 +13691,34 @@ var ContentRenderer = (function () {
 
     area.appendChild(wrap);
 
+    /* ── Gate: keep Continue HIDDEN, then reveal it with a pop-in only when
+       BOTH the worked-step animation has finished AND the narration has ended
+       (whichever lands last). ── */
+    var _narrDone = false, _animDone = false, _revealed = false;
+    function _maybeRevealRevealBtn() {
+      if (_revealed || !_narrDone || !_animDone) return;
+      _revealed = true;
+      btn.style.display = '';   /* inline beats the class's display:inline-flex */
+      if (typeof anime !== 'undefined') {
+        anime.set(btn, { opacity: 0, scale: 0.75, translateY: 10 });
+        anime({
+          targets: btn, opacity: [0, 1], scale: [0.75, 1], translateY: [10, 0],
+          duration: 420, easing: 'easeOutBack',
+          complete: function () { btn.style.transform = ''; }
+        });
+      } else {
+        btn.style.opacity = '1';
+      }
+    }
+    if (typeof Narration !== 'undefined') {
+      Narration.playScreen(page.id, {
+        next: page.next,
+        onEnded: function () { _narrDone = true; _maybeRevealRevealBtn(); }
+      });
+    } else {
+      _narrDone = true;
+    }
+
     /* -- Animation helpers -- */
     if (typeof anime === 'undefined') {
       /* Fallback: show everything immediately without animation */
@@ -13679,11 +13726,11 @@ var ContentRenderer = (function () {
         el.style.opacity = '1';
         if (el.dataset.tw) el.textContent = el.dataset.tw;
       });
-      btn.disabled = false;
+      _animDone = true; _maybeRevealRevealBtn();
       return;
     }
 
-    anime.set([titleEl, box, tagEl, btn], { opacity: 0, translateY: 28 });
+    anime.set([titleEl, box, tagEl], { opacity: 0, translateY: 28 });
     var divider = null; /* divider removed in new layout */
 
     /* Typewriter: reveal characters one by one */
@@ -13791,15 +13838,10 @@ var ContentRenderer = (function () {
                           targets: tagEl, opacity: [0, 1], translateY: [10, 0],
                           duration: 380, easing: 'easeOutQuad'
                         });
-                        /* 4. Button pops in */
+                        /* 4. Mark the animation done; the button is revealed by
+                           _maybeRevealRevealBtn() once narration has also ended. */
                         setTimeout(function () {
-                          btn.disabled = false;
-                          anime({
-                            targets: btn, opacity: [0, 1],
-                            scale: [0.75, 1], translateY: [10, 0],
-                            duration: 420, easing: 'easeOutBack',
-                            complete: function () { btn.style.transform = ''; }
-                          });
+                          _animDone = true; _maybeRevealRevealBtn();
                         }, 420);
                       });
                     }, 200);
@@ -14048,6 +14090,8 @@ var ContentRenderer = (function () {
       }
     }
 
+    /* Narration plays as a spoken intro; answer interactions stay usable. */
+    if (typeof Narration !== 'undefined') Narration.playScreen(page.id, { next: page.next });
     _loadQuestion(questions[0], 0);
   }
 
