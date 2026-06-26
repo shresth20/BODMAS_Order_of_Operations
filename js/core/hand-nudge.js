@@ -4,10 +4,12 @@
 var HandNudge = (function () {
   'use strict';
 
-  var _img       = null;
-  var _showTimer = null;
-  var _hideTimer = null;
-  var _observer  = null;
+  var _img         = null;
+  var _showTimer   = null;
+  var _hideTimer   = null;
+  var _revealTimer = null;
+  var _revealedGap = null;   /* gap opened by the drag nudge, restored on hide */
+  var _observer    = null;
 
   /* px offset applied to the target centre so the hand image sits naturally
      on the element (≈ half the hand-image footprint) */
@@ -49,7 +51,6 @@ var HandNudge = (function () {
   /* All other tappable / clickable interactive elements */
   var SEL_TAPPABLE = [
     '[class*="l-tiles"] > button:not(:disabled)',
-    '.cp-l9ib-gap',
     '.cp-digit-col--tappable',
     '.cp-hook-card:not(:disabled)',
     '.cp-rt-card:not(:disabled)',
@@ -84,6 +85,11 @@ var HandNudge = (function () {
 
   function hide() {
     clearTimeout(_hideTimer);
+    clearTimeout(_revealTimer);
+    if (_revealedGap) {
+      _revealedGap.classList.remove('cp-l9ib-gap--demo');
+      _revealedGap = null;
+    }
     if (_img) {
       _img.className = 'hand-nudge'; /* strips animation class → opacity:0 */
       _img.style.opacity = '0';
@@ -120,7 +126,9 @@ var HandNudge = (function () {
     if (!fromEl || !toEl) return;
     var fR = fromEl.getBoundingClientRect();
     var tR = toEl.getBoundingClientRect();
-    if (!fR.width || !tR.width) return;
+    /* Target may be a collapsed (zero-width) slot — its centre is still valid
+       as long as it is laid out, so only bail when it has no box at all. */
+    if (!fR.width || (!tR.width && !tR.height)) return;
 
     /* Fall back to tap if anime is unavailable */
     if (typeof anime === 'undefined') { showTap(fromEl); return; }
@@ -174,14 +182,35 @@ var HandNudge = (function () {
       return;
     }
 
-    /* 3. Priority operator (the specific op the student must tap first) */
+    /* 3. Insert-the-brackets — drag a bracket tile from the tray into a slot.
+          Demonstrates the mechanic on the first slot only (no answer reveal);
+          the slot opens as the hand arrives, mirroring the real drop. */
+    var ibTile = area.querySelector('.cp-l9ib-btile--open') ||
+                 area.querySelector('.cp-l9ib-btile');
+    var ibGaps = area.querySelectorAll('.cp-l9ib-gap');
+    /* Use an interior slot (between numbers) rather than the leading slot, so
+       the motion reads as "drop into the equation" without echoing puzzle 1's
+       answer (which opens at the leading slot). */
+    var ibGap  = ibGaps[1] || ibGaps[0];
+    if (ibTile && ibGap) {
+      showDrag(ibTile, ibGap);
+      _revealTimer = setTimeout(function () {
+        /* --demo opens the slot visually but is NOT clickable, so the demo
+           space can't be used to insert a bracket — only a real drag can. */
+        ibGap.classList.add('cp-l9ib-gap--demo');
+        _revealedGap = ibGap;
+      }, 1150); /* ≈ when the hand reaches the slot in showDrag's timeline */
+      return;
+    }
+
+    /* 4. Priority operator (the specific op the student must tap first) */
     var opTile = area.querySelector(SEL_PRIORITY_OP);
     if (opTile) {
       showTap(opTile);
       return;
     }
 
-    /* 4. Any other tappable element */
+    /* 5. Any other tappable element */
     var tap = area.querySelector(SEL_TAPPABLE);
     if (tap) showTap(tap);
   }
