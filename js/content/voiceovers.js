@@ -1,36 +1,147 @@
-/* voiceovers.js - File-based audio narration for content pages. */
+/* voiceovers.js - File-based audio narration for content pages.
+   Cue keys, file names and triggers come from VO-narration.md (repo root):
+   one MP3 per cue, all files in assets/sounds/vo/<cueId>.mp3. */
 
 var Narration = (function () {
 
-  /* ── Source paths — fresh Audio created on every play ── */
-  var _srcs = {
-    'line_1_0_1':      'assets/voiceovers/1.0_Line_1.ogg',
-    'line_1_0_2':      'assets/voiceovers/1.0_Line_2.ogg',
-    'line_1_0_3':      'assets/voiceovers/1.0_Line_3.ogg',
-    'line_1_0_4':      'assets/voiceovers/1.0_Line_4.ogg',
-    /* ── Section 2 ── */
+  var VO_DIR = 'assets/sounds/vo/';
 
-  };
-
-  /* ── Preload hint — asks browser to cache files now ── */
-  (function () {
-    Object.keys(_srcs).forEach(function (k) {
-      try {
-        var a = new Audio(_srcs[k]);
-        a.preload = 'auto';
-        a.load();
-      } catch (e) {}
+  /* ── Cue keys — must match VO-narration.md exactly ─── */
+  var _keys = (function () {
+    var k = [];
+    ['1', '2', '3', '4', '5', '6'].forEach(function (L) {
+      /* SX.0 — intro */
+      ['scenario', 'question'].forEach(function (s) { k.push('s' + L + '_0_' + s); });
+      /* SX.1 — math lab */
+      ['intro', 'wrong_tap', 'correct_tap', 'tap_finish', 'compare', 'next_round', 'complete']
+        .forEach(function (s) { k.push('s' + L + '_1_' + s); });
+      /* SX.2 — rule reveal */
+      ['rule', 'worked', 'bodmas_tag'].forEach(function (s) { k.push('s' + L + '_2_' + s); });
+      /* SX.3 — practice */
+      ['q1', 'q1_correct', 'q1_wrong', 'q2', 'q2_correct', 'q2_wrong', 'q3', 'q3_correct', 'q3_wrong', 'complete']
+        .forEach(function (s) { k.push('s' + L + '_3_' + s); });
     });
+    /* S8.0 — BODMAS ladder */
+    ['intro', 'wrong', 'correct', 'recite'].forEach(function (s) { k.push('s8_0_' + s); });
+    /* S9.0 — nested brackets */
+    ['intro', 'hint_middle', 'hint_last', 'wrong', 'step_correct', 'q_complete', 'next_q', 'complete']
+      .forEach(function (s) { k.push('s9_0_' + s); });
+    /* S9.1 — insert the brackets */
+    ['intro', 'tap_close', 'wrong', 'correct', 'next', 'complete']
+      .forEach(function (s) { k.push('s9_1_' + s); });
+    /* S9.2 — final BODMAS review */
+    ['intro', 'q1_correct', 'q2_correct', 'q3_correct', 'q4_correct', 'q5_correct', 'q6_correct', 'wrong', 'complete']
+      .forEach(function (s) { k.push('s9_2_' + s); });
+    /* S9.3 — champion results */
+    ['champion', 'recap'].forEach(function (s) { k.push('s9_3_' + s); });
+    return k;
   }());
 
-  var _current    = null;
-  var _timers     = [];
-  var _pendingKey = null;
-  var _gen        = 0;   /* incremented on stop/play to cancel in-flight afterPrev chains */
+  var _srcs = {};
+  _keys.forEach(function (k) { _srcs[k] = VO_DIR + k + '.mp3'; });
 
-  function _clearTimers() {
-    _timers.forEach(function (t) { clearTimeout(t); });
-    _timers = [];
+  var _cache        = {};   /* key -> preloaded Audio */
+  var _current      = null;
+  var _pendingKey   = null;
+  var _gen          = 0;    /* incremented on stop/play to cancel in-flight chains */
+  var _playedMounts = {};   /* pageId -> true (mount cues fire on fresh entry only) */
+  var _queued       = [];   /* keys waiting for the current clip/chain to end */
+  var _mountActive  = false;/* a playMount chain is in progress */
+  var _idleCbs      = [];   /* callbacks waiting for narration to go idle */
+
+  /* ── Input gate: while narration speaks, user input is paused ───────────
+     A transparent overlay swallows pointer input and Enter/Space activation
+     until the current clip (and anything queued) finishes. It is released on
+     ended/error/autoplay-block/stop, plus a watchdog, so a bad file can never
+     lock the learner out. The narration itself stays supplementary — a muted
+     device just sees the gate lift almost immediately (no audio => idle). */
+  var _gateEl    = null;
+  var _gateTimer = null;
+  var _gateSince = 0;
+
+  function _isIdle() {
+    return !_mountActive && _queued.length === 0 &&
+           (!_current || _current.paused || _current.ended);
+  }
+
+  function _gateKeydown(e) {
+    if (_gateEl && _gateEl.parentNode && (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar')) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  function _gateShow() {
+    if (!_gateEl) {
+      _gateEl = document.createElement('div');
+      _gateEl.id = 'vo-input-gate';
+      _gateEl.setAttribute('aria-hidden', 'true');
+      _gateEl.style.cssText =
+        'position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483000;' +
+        'background:transparent;cursor:default;';
+      document.addEventListener('keydown', _gateKeydown, true);
+    }
+    if (!_gateEl.parentNode) {
+      document.body.appendChild(_gateEl);
+      _gateSince = Date.now();
+    }
+    if (!_gateTimer) _gateTimer = setInterval(_syncGate, 400);
+  }
+
+  function _gateHide() {
+    if (_gateEl && _gateEl.parentNode) _gateEl.parentNode.removeChild(_gateEl);
+    if (_gateTimer) { clearInterval(_gateTimer); _gateTimer = null; }
+  }
+
+  /* Recompute gate + flush idle callbacks. Called after every state change
+     and by the watchdog interval while the gate is up. */
+  function _syncGate() {
+    if (_isIdle()) {
+      _gateHide();
+      if (_idleCbs.length) {
+        var cbs = _idleCbs;
+        _idleCbs = [];
+        cbs.forEach(function (cb) { try { cb(); } catch (e) {} });
+      }
+    } else {
+      /* Watchdog: no clip in this module exceeds ~15s — a gate up for 25s
+         means a wedged element. Release everything rather than trap input. */
+      if (_gateEl && _gateEl.parentNode && Date.now() - _gateSince > 25000) {
+        console.warn('[Narration] input gate watchdog fired — releasing');
+        stop();
+        return;
+      }
+      _gateShow();
+    }
+  }
+
+  /* Run cb once narration is fully idle (current clip + queue + mount chain
+     all done). Fires immediately if nothing is speaking. */
+  function onIdle(cb) {
+    if (typeof cb !== 'function') return;
+    if (_isIdle()) { cb(); return; }
+    _idleCbs.push(cb);
+  }
+
+  /* Warm the browser cache for one cue so playback starts instantly. */
+  function _prefetch(key) {
+    var src = _srcs[key];
+    if (!src || _cache[key]) return;
+    try {
+      var a = new Audio(src);
+      a.preload = 'auto';
+      a.load();
+      _cache[key] = a;
+    } catch (e) {}
+  }
+
+  /* Prefetch every cue belonging to one page id (e.g. '1.1' -> s1_1_*). */
+  function prefetchPage(pageId) {
+    if (!pageId) return;
+    var prefix = 's' + String(pageId).replace('.', '_') + '_';
+    _keys.forEach(function (k) {
+      if (k.indexOf(prefix) === 0) _prefetch(k);
+    });
   }
 
   function _stopCurrent() {
@@ -40,31 +151,50 @@ var Narration = (function () {
     }
   }
 
-  /* Always creates a fresh Audio element to avoid stale element failures.
-     When called synchronously from a click handler it is within the
-     user-gesture chain and browser autoplay policy always permits it. */
+  /* Play the next queued cue, if any (see queue()). */
+  function _drainQueue(myGen) {
+    if (_gen !== myGen || !_queued.length) return;
+    _tryPlay(_queued.shift());
+  }
+
+  /* Always creates/reuses an Audio element. When called synchronously from a
+     click handler it is within the user-gesture chain and browser autoplay
+     policy always permits it. */
   function _tryPlay(key) {
     _stopCurrent();
     var src = _srcs[key];
     if (!src) return;
-    var audio = new Audio(src);
+    var audio = _cache[key] || new Audio(src);
+    _cache[key] = audio;
     _current = audio;
+    var myGen = _gen;
+    audio.addEventListener('ended', function () { _drainQueue(myGen); _syncGate(); }, { once: true });
+    audio.addEventListener('error', function () {
+      if (_current === audio) _current = null;
+      _drainQueue(myGen);
+      _syncGate();
+    }, { once: true });
     try {
+      audio.currentTime = 0;
       var p = audio.play();
       if (p && typeof p.catch === 'function') {
         p.catch(function () {
-          _current = null;
+          if (_current === audio) _current = null;
           if (_pendingKey === null) _pendingKey = key;
+          _drainQueue(myGen);
+          _syncGate();
         });
       }
+      _syncGate();
     } catch (e) {
       _current = null;
       if (_pendingKey === null) _pendingKey = key;
+      _drainQueue(myGen);
+      _syncGate();
     }
   }
 
-  /* First user interaction (capture phase) — replays a pending blocked key
-     only if no game interaction (onTap) has already cleared it. */
+  /* First user interaction (capture phase) — replays a pending blocked key. */
   function _onFirstInteraction() {
     document.removeEventListener('click',      _onFirstInteraction, true);
     document.removeEventListener('touchstart', _onFirstInteraction, true);
@@ -82,221 +212,158 @@ var Narration = (function () {
   /* ── Public API ─────────────────────────────────────── */
 
   function stop() {
-    _clearTimers();
     _stopCurrent();
-    _stopScreen();
     _pendingKey = null;
+    _queued = [];
+    _mountActive = false;
     _gen++;
+    _syncGate();
   }
 
-  /* Explicit one-shot play (wrong-tap, reveal, etc.). Cancels any schedule. */
+  /* Explicit one-shot play (wrong tap, correct tap, reveal, etc.).
+     Interrupts whatever is speaking — feedback beats narration. */
   function play(key) {
     stop();
     _tryPlay(key);
   }
 
-  /*
-   * Schedule a sequence of voiceover entries:
-   *
-   *   { delay: 0,        file: 'key' }  — play immediately (synchronous; stays in gesture chain)
-   *   { delay: N,        file: 'key' }  — play N ms after schedule() is called
-   *   { afterPrev: N,    file: 'key' }  — play N ms after the PREVIOUS entry's audio ends
-   *                                        (use this to chain narration without knowing durations)
-   */
-  function schedule(entries) {
-    stop();
-    var myGen    = _gen;
-    var prevAudio = null;
-
-    entries.forEach(function (entry) {
-      var fileKey = entry.file;
-
-      if (entry.afterPrev !== undefined) {
-        /* Chain off previous audio's ended event */
-        var gap  = entry.afterPrev;
-        var prev = prevAudio;
-        if (prev) {
-          prev.addEventListener('ended', function () {
-            if (_gen !== myGen) return;          /* stop() was called — abort */
-            var t = setTimeout(function () {
-              if (_gen !== myGen) return;
-              _tryPlay(fileKey);
-            }, gap);
-            _timers.push(t);
-          });
-        } else {
-          /* No previous audio — fall back to treating gap as absolute delay */
-          var t = setTimeout(function () {
-            if (_gen !== myGen) return;
-            _tryPlay(fileKey);
-          }, gap);
-          _timers.push(t);
-        }
-        prevAudio = null;
-
-      } else if (entry.delay === 0) {
-        _tryPlay(fileKey);               /* synchronous — stays in gesture chain */
-        prevAudio = _current;            /* capture so next afterPrev can chain off it */
-
-      } else {
-        var t = setTimeout(function () {
-          if (_gen !== myGen) return;
-          _tryPlay(fileKey);
-        }, entry.delay);
-        _timers.push(t);
-        prevAudio = null;
-      }
-    });
-  }
-
-  function speak() {}
-
-  /* ══════════════════════════════════════════════════════
-     PER-SCREEN NARRATION  (one audio clip per content page)
-     ──────────────────────────────────────────────────────
-     Maps a page id (e.g. '1.0') to a single narration file. The clip
-     auto-plays when the screen is shown; callers gate a forward button on
-     the natural 'ended' event via the onEnded callback. Safe fallbacks
-     (autoplay-block, load/play error, and a duration-based timeout) all
-     resolve through the same onEnded so a bad file can never trap the user.
-  ══════════════════════════════════════════════════════ */
-
-  /* Single source of truth: screen id -> audio file. Editable / extensible —
-     screens with no entry simply get no narration (button enabled normally). */
-  var _screenSrcs = {
-    '1.0': 'assets/voiceover/screen-1.0.mp3',
-    '1.1': 'assets/voiceover/screen-1.1.mp3',
-    '1.2': 'assets/voiceover/screen-1.2.mp3',
-    '1.3': 'assets/voiceover/screen-1.3.mp3'
-    /* ── Sections 2–9: add files here as they arrive ── */
-  };
-
-  var _screenCache   = {};   /* pageId -> preloaded Audio (prefetch) */
-  var _playedScreens = {};   /* pageId -> true (no auto-replay on revisit) */
-  var _screenAudio   = null; /* currently-playing screen narration */
-  var _screenTimer   = null; /* safety-timeout handle */
-
-  function _stopScreen() {
-    if (_screenAudio) {
-      try { _screenAudio.pause(); _screenAudio.currentTime = 0; } catch (e) {}
-      _screenAudio = null;
+  /* Play after the current clip (and anything already queued) ends, or
+     immediately if idle. Use for chained reveal cues that must not cut off
+     the clip before them. stop()/play() discards the queue. */
+  function queue(key) {
+    if (!_srcs[key]) return;
+    if (_current && !_current.paused && !_current.ended) {
+      _queued.push(key);
+    } else {
+      _tryPlay(key);
     }
-    if (_screenTimer) { clearTimeout(_screenTimer); _screenTimer = null; }
   }
 
-  /* Warm the browser cache for a screen's clip so playback starts instantly. */
-  function _prefetch(pageId) {
-    var src = _screenSrcs[pageId];
-    if (!src || _screenCache[pageId]) return;
-    try {
-      var a = new Audio(src);
-      a.preload = 'auto';
-      a.load();
-      _screenCache[pageId] = a;
-    } catch (e) {}
-  }
-
-  /* Play a screen's narration. opts: { onEnded, next }.
-     onEnded fires exactly once — on natural end, error, autoplay-block, or
-     the safety timeout — and is the caller's cue to enable the gated button. */
-  function playScreen(pageId, opts) {
+  /*
+   * Play a screen's mount cue chain (one or more clips back to back).
+   * Fires on fresh entry only — re-renders/revisits skip straight to onEnded.
+   * opts: { onEnded, next }.
+   * onEnded fires exactly once — after the last clip's natural end, or on
+   * error / autoplay-block / safety timeout — so callers can gate a button
+   * on it without ever trapping the learner behind a bad file.
+   */
+  function playMount(pageId, keys, opts) {
     opts = opts || {};
-    var done = false;
+    var done  = false;
+    var timer = null;
+
     function finish() {
       if (done) return;
       done = true;
-      if (_screenTimer) { clearTimeout(_screenTimer); _screenTimer = null; }
+      _mountActive = false;
+      if (timer) { clearTimeout(timer); timer = null; }
       if (typeof opts.onEnded === 'function') opts.onEnded();
+      _drainQueue(_gen);   /* cues queued while the chain spoke play now */
+      _syncGate();
     }
 
-    var src = _screenSrcs[pageId];
+    if (_playedMounts[pageId] || !keys || !keys.length) { finish(); return; }
+    _playedMounts[pageId] = true;
 
-    /* No clip mapped, or already heard this screen → enable immediately. */
-    if (!src || _playedScreens[pageId]) { finish(); return; }
+    prefetchPage(pageId);
+    if (opts.next) prefetchPage(opts.next);
 
-    _stopScreen();
-    var myGen = ++_gen;
-    _playedScreens[pageId] = true;
-    if (opts.next) _prefetch(opts.next);
-
-    var audio = _screenCache[pageId] || new Audio(src);
-    _screenCache[pageId] = audio;
-    _screenAudio = audio;
-    try { audio.currentTime = 0; } catch (e) {}
-
-    audio.addEventListener('ended', function () {
-      if (_gen !== myGen) return;   /* navigated away — abort */
-      finish();
-    }, { once: true });
-
-    audio.addEventListener('error', function () {
-      if (_gen !== myGen) return;
-      console.warn('[Narration] audio error for screen ' + pageId + ' (' + src + ')');
-      finish();
-    }, { once: true });
+    stop();
+    _mountActive = true;   /* gate input across the whole chain, incl. gaps */
+    _syncGate();
+    var myGen = _gen;
+    var idx   = 0;
 
     /* Safety timeout (fallback only): clip duration + buffer, or a hard cap
        if metadata never loads. Never the primary trigger — 'ended' is. */
-    function _armTimeout() {
-      if (_screenTimer) clearTimeout(_screenTimer);
+    function _armTimeout(audio) {
+      if (timer) clearTimeout(timer);
       var ms = (isFinite(audio.duration) && audio.duration > 0)
         ? (audio.duration * 1000 + 1500)
         : 20000;
-      _screenTimer = setTimeout(function () {
-        if (_gen !== myGen) return;
-        console.warn('[Narration] safety timeout for screen ' + pageId);
-        finish();
+      timer = setTimeout(function () {
+        if (_gen !== myGen || done) return;
+        console.warn('[Narration] safety timeout in mount chain for page ' + pageId);
+        _playNext();
       }, ms);
-    }
-    if (isFinite(audio.duration) && audio.duration > 0) {
-      _armTimeout();
-    } else {
-      _armTimeout(); /* provisional 20s cap until metadata refines it */
       audio.addEventListener('loadedmetadata', function () {
         if (_gen !== myGen || done) return;
-        _armTimeout();
+        _armTimeout(audio);
       }, { once: true });
     }
 
-    try {
-      var p = audio.play();
-      if (p && typeof p.catch === 'function') {
-        p.catch(function () {
-          if (_gen !== myGen) return;
-          console.warn('[Narration] playback blocked/failed for screen ' + pageId);
-          finish();                         /* never trap the student behind a blocked clip */
-          _armScreenRetry(pageId, myGen);   /* still try to play it on the next gesture */
-        });
-      }
-    } catch (e) {
-      if (_gen === myGen) {
-        console.warn('[Narration] play() threw for screen ' + pageId, e);
-        finish();
-        _armScreenRetry(pageId, myGen);
+    function _playNext() {
+      if (_gen !== myGen || done) return;
+      if (idx >= keys.length) { finish(); return; }
+      var key = keys[idx++];
+      var src = _srcs[key];
+      if (!src) { _playNext(); return; }
+
+      var audio = _cache[key] || new Audio(src);
+      _cache[key] = audio;
+      _stopCurrent();
+      _current = audio;
+      try { audio.currentTime = 0; } catch (e) {}
+
+      audio.addEventListener('ended', function () {
+        if (_gen !== myGen) return;   /* navigated away — abort */
+        _playNext();
+      }, { once: true });
+
+      audio.addEventListener('error', function () {
+        if (_gen !== myGen) return;
+        console.warn('[Narration] audio error for cue ' + key + ' (' + src + ')');
+        _playNext();
+      }, { once: true });
+
+      _armTimeout(audio);
+
+      try {
+        var p = audio.play();
+        if (p && typeof p.catch === 'function') {
+          p.catch(function () {
+            if (_gen !== myGen) return;
+            console.warn('[Narration] playback blocked/failed for cue ' + key);
+            var resumeFrom = idx - 1;   /* this key's index in the chain */
+            finish();   /* never trap the student behind a blocked clip */
+            _armMountRetry(keys, resumeFrom, myGen);
+          });
+        }
+      } catch (e) {
+        if (_gen === myGen) {
+          console.warn('[Narration] play() threw for cue ' + key, e);
+          var resumeFrom2 = idx - 1;
+          finish();
+          _armMountRetry(keys, resumeFrom2, myGen);
+        }
       }
     }
+
+    _playNext();
   }
 
-  /* If the first clip was autoplay-blocked, replay it on the next user gesture
-     (the button is already enabled, so this only restores the missed audio). */
-  function _armScreenRetry(pageId, gen) {
+  /* If a mount chain was autoplay-blocked, replay it from the blocked clip on
+     the next user gesture (any gated button is already enabled, so this only
+     restores the missed audio). The rest of the chain rides the drain queue. */
+  function _armMountRetry(keys, fromIdx, gen) {
     var fn = function () {
       document.removeEventListener('click',      fn, true);
       document.removeEventListener('touchstart', fn, true);
-      if (_gen !== gen) return;             /* navigated away — drop it */
-      var a = _screenCache[pageId];
-      if (!a) return;
-      try { a.currentTime = 0; _screenAudio = a; a.play().catch(function () {}); } catch (e) {}
+      if (_gen !== gen) return;   /* navigated away or new audio started — drop it */
+      _queued = keys.slice(fromIdx + 1).concat(_queued);
+      _tryPlay(keys[fromIdx]);
     };
     document.addEventListener('click',      fn, true);
     document.addEventListener('touchstart', fn, { capture: true, passive: true });
   }
 
+  function speak() {}
+
   /* Eagerly warm the very first screen so it starts the instant 1.0 renders. */
-  _prefetch('1.0');
+  prefetchPage('1.0');
 
   return {
-    play: play, stop: stop, schedule: schedule, speak: speak,
-    playScreen: playScreen
+    play: play, stop: stop, queue: queue, speak: speak,
+    playMount: playMount, prefetchPage: prefetchPage, onIdle: onIdle
   };
 }());

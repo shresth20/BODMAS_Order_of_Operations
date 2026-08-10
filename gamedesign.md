@@ -681,4 +681,267 @@ Global keyframes live in `css/core/animations.css`; component ones in `css/conte
 
 ---
 
-*Generated from `css/core/style.css` (`:root`, lines 38–181) and `css/content/style.css` (shared tokens, lines 11–22), with component recipes drawn from `css/core/style.css` and `css/content/pages.css`. Values transcribed verbatim; component blocks are reference recipes, not byte-for-byte copies of every line.*
+## 13. Game decoration
+
+Decoration is the ambient, **non-interactive** art that gives a screen personality — floating math symbols, themed illustrations (crayons, bananas, laddoos), background characters. It is **purely cosmetic**: it must never receive input, never carry meaning that a screen reader needs, and never sit on top of anything the learner has to read or tap.
+
+This game ships **two distinct decoration layers**. Pick the right one for what you are adding:
+
+| | **Template decoration** | **Content decoration** |
+|---|---|---|
+| Class | `.layer-deco` / `.deco` | `.layer-content-deco` / `.content-deco` |
+| Container in `index.html` | `#deco-layer` | `#content-deco-layer` |
+| CSS home | `css/core/style.css` (§ "Layer 3") | `css/core/style.css` (§ "Layer 3.5") |
+| Positioning root | `position: fixed; inset: 0` → **viewport** | `position: absolute; inset: 0` → **`.board-container`** |
+| z-index | `--z-deco: 30` | `35` (literal, between deco and content) |
+| Scope | Global chrome — same on every generic screen | Per-level, per-page (L1–L6 intros) |
+| Visibility | On by default; hidden per screen | `display: none` by default; shown per screen |
+| Animation | None (static) | Stagger fade-in on appear, fade-out on exit |
+| Typical asset | Small SVG symbols + a few WebP props | Large themed WebP illustrations |
+
+**The golden rule — content always wins.** Both layers live *below* `--z-content: 40`. Decoration may frame the board and bleed into the margins, but content, chrome, feedback, and overlays always render on top. Never give a decoration a z-index ≥ 40.
+
+---
+
+### 13.1 The z-index contract
+
+Decoration occupies two fixed rungs of the global stack (from [§8](#8-z-index-layers--motion)):
+
+```text
+--z-bg        1     ← page background
+--z-board     20    ← the white board surface
+--z-deco      30    ← TEMPLATE decoration      (ambient symbols, fixed to viewport)
+              35    ← CONTENT decoration        (themed art, scoped to the board)
+--z-content   40    ← learner-facing content   ← everything above must stay below this
+--z-chrome    99    ← header / footer / progress
+--z-feedback  100   ← correct/wrong toasts
+--z-popups    9998  ← modals
+--z-overlay   9999  ← loader / backdrop
+```
+
+Rules for authors:
+
+- **Use the token, not a number.** Template decoration inherits `z-index: var(--z-deco)` from `.layer-deco`; never override it on an individual `.deco`.
+- **The `35` gap is deliberate.** Content decoration sits *just* under content so themed art can crowd the board edges yet never occlude a question, tile, or button. Keep it at `35`; do not promote it.
+- **Never cross 40.** If a "decoration" needs to sit above content (e.g. a celebratory character that must overlap the board), it is no longer decoration — it belongs in the content or feedback layer and must be built there with real semantics.
+- **Within a layer, DOM order breaks ties.** All `.deco` share z-index 30, so later siblings paint over earlier ones. Order the markup so larger props sit behind smaller symbols if they overlap.
+
+---
+
+### 13.2 Template decoration — the ambient layer
+
+The always-present cosmetic frame: math symbols (`×3`, `=`, `½`, `π`, `+`), a pencil, a calculator, a BODMAS card. Defined once, shown on every generic screen.
+
+**Container (`index.html`):**
+
+```html
+<!-- LAYER 3: fixed to viewport, purely decorative -->
+<div id="deco-layer" class="layer-deco" aria-hidden="true">
+  <div class="deco deco--pencil">
+    <img src="assets/icons/Pencil.svg" alt="" draggable="false" />
+  </div>
+  <!-- …clusters: top-left, top-right, bottom-right, bottom-left… -->
+</div>
+```
+
+**Layer + item base (`css/core/style.css`):**
+
+```css
+.layer-deco {
+  position: fixed;            /* anchored to the viewport, not the board */
+  inset: 0;
+  pointer-events: none;       /* never intercepts taps/drags */
+  z-index: var(--z-deco);     /* 30 — below content */
+  overflow: hidden;           /* symbols that bleed off-screen are clipped */
+}
+.deco {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  line-height: 1;
+}
+```
+
+**Positioning strategy — viewport-relative clusters.** Each item is placed with `vh`/`vw` offsets from an edge, grouped into four corner clusters so the center stays clear for content:
+
+```css
+/* Top-left cluster */
+.deco--pencil    { top: 15.5vh; left: 2vw; }
+.deco--pencil img{ width: clamp(130px, 7vw, 200px); display: block; }
+/* Bottom-right cluster */
+.deco--calc      { top: 65vh; right: 1vw; }
+.deco--calc img  { width: clamp(150px, 12vw, 200px); display: block; }
+```
+
+- **Anchor to the nearest edge** (`left`/`right`, `top` in `vh`) so items hug corners at any aspect ratio.
+- **Size with `clamp(min, vw, max)`** on the child `<img>`, never a fixed width — symbols scale with the viewport but never collapse or explode.
+- **Text-style symbols** (the small `×3`, `½`) can be pure CSS text (`font-size: clamp(...); font-weight: 700; opacity: .55`) or swapped for an SVG; both are sized the same clamp way.
+
+**Turning the layer off per screen.** Some screens supply their own art, so template decoration is suppressed with `:has()` — no JS, no per-screen markup:
+
+```css
+/* Labs and intros replace ambient deco with bespoke assets */
+body:has(.cp-l1l-wrap) .layer-deco,
+body:has(.cp-l1i-wrap) .layer-deco { opacity: 0; }
+```
+
+Use `opacity: 0` (not `display: none`) here so the fixed layer keeps its box and nothing reflows.
+
+---
+
+### 13.3 Content decoration — the per-level themed layer
+
+Level-specific illustrations that tell each level's story: L1 crayons, L2 bananas, L3 laddoos, L4 stickers, L5 chocolates, L6 classroom characters. Scoped to the board and animated.
+
+**Container (`index.html`)** — every level's art is pre-declared once; CSS decides what shows:
+
+```html
+<!-- LAYER 3.5: absolute inside .board-container, z-index 35 -->
+<div id="content-deco-layer" class="layer-content-deco" aria-hidden="true">
+  <div class="content-deco content-deco--l1-1">
+    <img src="assets/images/L1-1.webp" alt="" draggable="false" />
+  </div>
+  <!-- …l1-2 … l6-5… -->
+</div>
+```
+
+**Layer + item base:**
+
+```css
+.layer-content-deco {
+  position: absolute;         /* scoped to .board-container's stacking context */
+  inset: 0;
+  pointer-events: none;
+  z-index: 35;                /* between deco (30) and content (40) */
+  overflow: visible;          /* art may bleed past the board edge */
+}
+.content-deco {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  line-height: 1;
+  display: none;              /* hidden until a matching screen mounts */
+}
+```
+
+Note the two deliberate differences from the template layer: `position: absolute` (so art tracks the board, not the viewport) and `overflow: visible` (so a banana bunch can spill past the board edge for a natural framed look).
+
+**Show the right set per page — `:has()` again:**
+
+```css
+/* Only L1 intro reveals the crayon set */
+body:has(.cp-l1i-wrap) .content-deco--l1-1,
+body:has(.cp-l1i-wrap) .content-deco--l1-2,
+body:has(.cp-l1i-wrap) .content-deco--l1-3,
+body:has(.cp-l1i-wrap) .content-deco--l1-4 { display: block; }
+```
+
+**Positioning strategy — board-relative clusters.** Same clamp discipline as the template layer, but offsets are relative to the board and named by their role for maintainability:
+
+```css
+/* L1 crayon positions — comment each one's intended spot */
+.content-deco--l1-1     { top: -2vh; left: 10.5vw; }        /* top crayon, bleeds above board */
+.content-deco--l1-1 img { width: clamp(140px, 12vw, 210px); display: block; }
+.content-deco--l1-4     { top: 20vh; right: 1vw; }          /* tall character, right edge */
+.content-deco--l1-4 img { width: clamp(210px, 25vw, 280px); display: block; }
+```
+
+Always leave a comment describing what each numbered item is and where it belongs — the class names (`--l3-4`) are otherwise opaque.
+
+**Animation — driven by state, not timing.** A `MutationObserver` on `#content-area` (in `js/core/animations.js`) watches for page swaps. When `:has()` flips new `.content-deco` items to `display: block`, the observer:
+
+1. sets them to `opacity: 0`, slightly scaled/offset (`scale: 0.86`, `translateY: 16`) *before the next paint* — no flash;
+2. stagger-fades them in (`easeOutBack`, 90 ms stagger, 500 ms each).
+
+On exit, `content-renderer.js` fades and shrinks the currently-visible decos out alongside the outgoing content, then clears the inline styles synchronously so `:has()` can re-evaluate cleanly. **The appearance is tied to the CSS visibility state, never to a raw timer** — this satisfies the "no animation/validation race" rule in `CLAUDE.md §2`. Reduced motion collapses the transform and shortens the duration:
+
+```js
+scale:      _reducedMotion ? 1 : 0.86,
+translateY: _reducedMotion ? 0 : 16,
+duration:   _reducedMotion ? 280 : 500,
+easing:     _reducedMotion ? 'linear' : 'easeOutBack'
+```
+
+---
+
+### 13.4 Responsiveness — decoration is the first thing to drop
+
+Decoration is cosmetic, so on small or cramped viewports it yields real estate to content. All of this lives in `css/core/responsive.css`; **content decoration is never made responsive by hiding it selectively — it appears only on generous intro screens, and the whole board scales.** Template decoration carries the responsive burden:
+
+| Condition | Rule |
+|-----------|------|
+| `≤600px` + portrait | `.deco { display: none; }` — hide the whole ambient layer |
+| Narrow portrait | `.deco { display: none; }` |
+| Portrait (any tablet) | Hide only the bulky image props: `.deco--pencil, .deco--calc, .deco--equaction, .deco--bodmas { display: none; }` (small symbols stay) |
+| Landscape `max-height:520px` | Hide the bulky image props |
+| Smallest landscape | `.deco { display: none; }` — content first |
+| Foldables (enough height) | Re-enable the props that portrait hid |
+
+```css
+@media (max-width: 600px) and (orientation: portrait) {
+  .deco { display: none; }                 /* reclaim every pixel for content */
+}
+@media (orientation: portrait) {
+  .deco--pencil, .deco--calc,
+  .deco--equaction, .deco--bodmas { display: none; }   /* drop only the big props */
+}
+```
+
+Guidance for new decoration:
+
+- **Tier your removal.** Big illustrative props go first (they clip content), tiny corner symbols last. Reach `.deco { display: none }` only on the tightest phones.
+- **Never let decoration force a scroll or overlap a control.** If a prop collides with content at a breakpoint, hide it there — do not shrink content to make room.
+- **Prefer `clamp()` scaling over breakpoint-specific pixel sizes.** Only pin a fixed `px` width in a media query for the most extreme small-landscape case, mirroring the existing `.deco--calc img { width: 72px; }` overrides.
+
+---
+
+### 13.5 Sizing strategy (both layers)
+
+- **The wrapper is positioned; the child `<img>` is sized.** `.deco--x { top/left }` and `.deco--x img { width: clamp(...) }` — keep the two concerns on separate selectors, as the codebase does.
+- **Always `clamp(min, vw, max)` on width, `height: auto`.** `min` guarantees legibility on small tablets, `max` stops props dominating large screens, `vw` scales fluidly between. Example spread in use: symbols `clamp(11px,1.3vw,15px)`, mid props `clamp(130px,7–12vw,200px)`, hero characters `clamp(280px,22vw,500px)`.
+- **`display: block`** on every decoration `<img>` to kill inline-image whitespace.
+- **Match the axis you constrain to the asset shape** — wide symbols constrain `width`, tall/short glyphs sometimes constrain `height` (see the `deco--half-* img { height: clamp(...) }` overrides).
+
+---
+
+### 13.6 Assets used in decoration
+
+| Kind | Format | Location | Used for |
+|------|--------|----------|----------|
+| Math symbols / line art | **SVG** | `assets/icons/` (`×3.svg`, `=.svg`, `½.svg`, `π.svg`, `+.svg`, `Pencil.svg`, `Group.svg`, `Vector.svg`, `Equaction.svg`) | Template layer symbols — crisp at any scale, tiny file size |
+| Illustrations / props / characters | **WebP** | `assets/images/` (`Calculator.webp`, `L1-1.webp` … `L6-5.webp`) | Content layer themed art + a few template props |
+
+Asset rules (aligned with `CLAUDE.md §5`):
+
+- **All assets are local — no CDN.** Decoration must render fully offline.
+- **SVG for anything vector** (symbols, glyphs, line props): infinitely scalable, smallest payload, no raster blur.
+- **WebP for photographic/painterly illustrations**: keep them optimized; these are the heaviest decoration cost, so compress and avoid oversized dimensions beyond the `clamp()` `max`.
+- **Every decorative `<img>` gets `alt=""` and `draggable="false"`.** Empty `alt` hides it from the accessibility tree (it carries no learning meaning); `draggable="false"` stops accidental drag-ghosts on touch/mouse.
+- **The layer wrapper gets `aria-hidden="true"`** so the entire decoration tree is skipped by screen readers.
+- Content-deco images are declared **once** in `index.html` and reused across pages via CSS; do not inject decoration DOM per screen.
+
+---
+
+### 13.7 Implementation checklist — adding a decoration
+
+**Ambient symbol/prop (template layer):**
+
+1. Add the asset to `assets/icons/` (SVG) or `assets/images/` (WebP).
+2. Add a `<div class="deco deco--yourname"><img … alt="" draggable="false"></div>` inside `#deco-layer`, in the correct corner cluster.
+3. In `css/core/style.css`, add `.deco--yourname { top/left/right: …vh/vw }` and `.deco--yourname img { width: clamp(min,vw,max); display: block }`.
+4. In `css/core/responsive.css`, decide its removal tier (bulky prop → hide in portrait + small landscape; small symbol → hide only on tightest phones).
+5. Confirm it inherits `pointer-events: none` and z-index 30 — do **not** set z-index on the item.
+
+**Themed art (content layer):**
+
+1. Add the WebP to `assets/images/` (naming `L<level>-<n>.webp`).
+2. Add `<div class="content-deco content-deco--lX-N"><img … alt="" draggable="false"></div>` inside `#content-deco-layer`.
+3. In `css/core/style.css`, add the `body:has(.cp-lXi-wrap) .content-deco--lX-N { display: block }` reveal rule and the positioning + `img` clamp rule, with a comment naming the item.
+4. No JS needed — the `MutationObserver` picks it up and fades it in automatically.
+5. Verify it stays below content (z-index 35) and never blocks a control.
+
+**Always verify:** taps pass through decoration (`pointer-events: none`), screen readers skip it (`aria-hidden` + `alt=""`), reduced-motion still works, and nothing overflows or clips content at the `≤600px`, portrait, and small-landscape breakpoints.
+
+---
+
+*Generated from `css/core/style.css` (`:root`, lines 38–181) and `css/content/style.css` (shared tokens, lines 11–22), with component recipes drawn from `css/core/style.css` and `css/content/pages.css`. Decoration section (§13) derived from `css/core/style.css` Layer 3 / 3.5, `index.html` deco layers, `js/core/animations.js`, `js/core/content-renderer.js`, and `css/core/responsive.css`. Values transcribed verbatim; component blocks are reference recipes, not byte-for-byte copies of every line.*

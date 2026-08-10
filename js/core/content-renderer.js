@@ -83,6 +83,46 @@ var ContentRenderer = (function () {
     return tokens;
   }
 
+  /* ── VO cue helpers — cue ids come from VO-narration.md.
+     Key scheme: 's' + page.id with '.' → '_', then '_' + suffix
+     (e.g. page 1.1 + 'wrong_tap' → 's1_1_wrong_tap'). ── */
+  function _voKey(page, suffix) {
+    return 's' + String(page.id).replace('.', '_') + '_' + suffix;
+  }
+  /* Immediate cue (wrong / correct / update feedback) — interrupts narration. */
+  function _vo(page, suffix) {
+    if (typeof Narration !== 'undefined') Narration.play(_voKey(page, suffix));
+  }
+  /* Chained cue (reveals) — waits for the current clip to end first. */
+  function _voQueue(page, suffix) {
+    if (typeof Narration !== 'undefined') Narration.queue(_voKey(page, suffix));
+  }
+  /* Mount cue chain — fresh entry only; onEnded always fires (see voiceovers.js). */
+  function _voMount(page, suffixes, opts) {
+    opts = opts || {};
+    if (typeof Narration === 'undefined') {
+      if (typeof opts.onEnded === 'function') opts.onEnded();
+      return;
+    }
+    Narration.playMount(page.id, suffixes.map(function (s) { return _voKey(page, s); }), opts);
+  }
+  /* VO-synced advance: run fn after BOTH minMs elapsed AND narration has
+     finished speaking — a page/question change must never cut off a clip
+     that is still playing. Falls back to a plain timer when VO is absent. */
+  function _voIdle(page, minMs, fn) {
+    setTimeout(function () {
+      if (_currentPageId !== page.id) return;
+      if (typeof Narration !== 'undefined' && typeof Narration.onIdle === 'function') {
+        Narration.onIdle(function () {
+          if (_currentPageId !== page.id) return;
+          fn();
+        });
+      } else {
+        fn();
+      }
+    }, minMs);
+  }
+
   /* ── Public: render a page by id into #content-area ── */
   function renderPage(pageId) {
     var page = _findPage(pageId);
@@ -416,12 +456,6 @@ var ContentRenderer = (function () {
 
     if (typeof launchConfetti === 'function') launchConfetti();
 
-    if (typeof Narration !== 'undefined') {
-      Narration.schedule([
-        { delay: 700, file: 'reveal_1_1' }
-      ]);
-    }
-
     setTimeout(function () { if (_currentPageId === page.id) renderPage(page.next); }, 6000);
   }
 
@@ -464,13 +498,6 @@ var ContentRenderer = (function () {
     wrap.appendChild(btn);
 
     area.appendChild(wrap);
-
-    if (typeof Narration !== 'undefined' && page.id === '2.0') {
-      Narration.schedule([
-        { delay: 0,    file: 'load_2_0' },
-        { delay: 8000, file: 'load_2_0_2' }
-      ]);
-    }
   }
 
   /* ══════════════════════════════════════════════════════
@@ -522,12 +549,10 @@ var ContentRenderer = (function () {
             anime({ targets: colEl, scale: [1, 1.12, 1.06], duration: 420, easing: 'easeOutBack' });
           }
           if (typeof playCorrect === 'function') playCorrect();
-          if (typeof Narration !== 'undefined' && page.id === '2.1') Narration.play('correct_tap_2_1');
           setTimeout(function () { if (_currentPageId === page.id) renderPage(page.next); }, 4000);
         } else {
           colEl.classList.add('cp-digit-col--wrong-tap');
           if (typeof playWrong === 'function') playWrong();
-          if (typeof Narration !== 'undefined' && page.id === '2.1') Narration.play('wrong_tap_2_1');
           setTimeout(function () { colEl.classList.remove('cp-digit-col--wrong-tap'); }, 600);
         }
       }
@@ -542,11 +567,6 @@ var ContentRenderer = (function () {
 
     wrap.appendChild(grid);
     area.appendChild(wrap);
-
-    if (typeof Narration !== 'undefined' && page.id === '2.1') {
-      Narration.schedule([{ delay: 0, file: 'load_2_1' }]);
-    }
-
   }
 
   /* ══════════════════════════════════════════════════════
@@ -622,15 +642,6 @@ var ContentRenderer = (function () {
 
     area.appendChild(wrap);
 
-    if (typeof Narration !== 'undefined') {
-      var _s2RevealMap = { '2.2': 'reveal_2_2', '2.3': 'reveal_2_3', '2.4': 'reveal_2_4', '2.5': 'reveal_2_5' };
-      var _s2RevealKey = _s2RevealMap[page.id];
-      if (_s2RevealKey) {
-        /* 200ms: voice leads the active-column pop-in (which starts at 260ms) */
-        Narration.schedule([{ delay: 200, file: _s2RevealKey }]);
-      }
-    }
-
     /* Auto-advance */
     setTimeout(function () { if (_currentPageId === page.id) renderPage(page.next); }, page.autoDelay);
   }
@@ -662,12 +673,10 @@ var ContentRenderer = (function () {
           answered = true;
           card.classList.add('cp-hook-card--happy');
           if (typeof playCorrect === 'function') playCorrect();
-          if (typeof Narration !== 'undefined' && page.id === '2.6') Narration.play('correct_2_6');
           setTimeout(function () { renderPage(page.next); }, 900);
         } else {
           card.classList.add('cp-hook-card--shake');
           if (typeof playWrong === 'function') playWrong();
-          if (typeof Narration !== 'undefined' && page.id === '2.6') Narration.play('wrong_2_6');
           setTimeout(function () { card.classList.remove('cp-hook-card--shake'); }, 600);
         }
       }
@@ -682,10 +691,6 @@ var ContentRenderer = (function () {
 
     wrap.appendChild(cards);
     area.appendChild(wrap);
-
-    if (typeof Narration !== 'undefined' && page.id === '2.6') {
-      Narration.schedule([{ delay: 0, file: 'load_2_6' }]);
-    }
   }
 
   /* ══════════════════════════════════════════════════════
@@ -729,20 +734,11 @@ var ContentRenderer = (function () {
     btn.textContent = page.primaryAction.label;
     var nextId = page.primaryAction.next;
     btn.addEventListener('click', function () {
-      if (typeof Narration !== 'undefined' && page.id === '2.7') {
-        Narration.play('continue_2_7');
-        setTimeout(function () { renderPage(nextId); }, 3000);
-      } else {
-        renderPage(nextId);
-      }
+      renderPage(nextId);
     });
     wrap.appendChild(btn);
 
     area.appendChild(wrap);
-
-    if (typeof Narration !== 'undefined' && page.id === '2.7') {
-      Narration.schedule([{ delay: 0, file: 'reveal_2_7' }]);
-    }
   }
 
   /* ══════════════════════════════════════════════════════
@@ -12882,11 +12878,8 @@ var ContentRenderer = (function () {
       }
     }
     btn.style.display = 'none';
-    if (typeof Narration !== 'undefined') {
-      Narration.playScreen(page.id, { next: page.next, onEnded: _revealStartBtn });
-    } else {
-      _revealStartBtn();
-    }
+    /* s1_0_scenario (screen mounts) → s1_0_question (chained) — VO-narration.md S1.0 */
+    _voMount(page, ['scenario', 'question'], { next: page.next, onEnded: _revealStartBtn });
 
     if (typeof anime !== 'undefined') {
       var tokenEls = exprEl.querySelectorAll('.cp-l1i-token');
@@ -13276,9 +13269,10 @@ var ContentRenderer = (function () {
     }
 
     function _afterRoundComplete(round) {
-      if (round.hasCompare) _showCompare(round);
+      if (round.hasCompare) { _voQueue(page, 'compare'); _showCompare(round); }
 
       var isLast = (roundIdx === rounds.length - 1);
+      if (isLast) _voQueue(page, 'complete');
       nextBtn.textContent = isLast ? I18n.t('btnSeeRule') : I18n.t('btnNextRound');
       nextBtn.className   = _sharedContentClasses('cp-l1l-next-btn' + (isLast ? ' cp-l1l-next-btn--final' : ''));
       nextBtn.onclick = function () {
@@ -13287,6 +13281,7 @@ var ContentRenderer = (function () {
           _wipeLeftTo(page.next);
         } else {
           roundIdx++;
+          _vo(page, 'next_round');
           _loadRound(roundIdx);
         }
       };
@@ -13415,6 +13410,7 @@ var ContentRenderer = (function () {
         }
       }
 
+      _voQueue(page, 'tap_finish');
       guideText.textContent = I18n.t('guideGreatNowTapFinish', { op: '+' });
       phase = 'add-wait';
     }
@@ -13434,6 +13430,7 @@ var ContentRenderer = (function () {
           if (mulOpTile) anime({ targets: mulOpTile, scale: [1, 1.18, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
         }
         /* Meera gives a hint in her speech bubble */
+        _vo(page, 'wrong_tap');
         if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
         meeraBubble.classList.remove('cp-l1l-bubble--faded', 'cp-l1l-bubble--guide-prompt');
         meeraBText.textContent = I18n.t('guideLookAgainMul');
@@ -13447,6 +13444,7 @@ var ContentRenderer = (function () {
       /* correct — numbers slide toward each other and collide */
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
+      _vo(page, 'correct_tap');
       guideText.textContent = I18n.t('guideWatchTogether');
       /* Meera gives a compliment */
       if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
@@ -13577,8 +13575,8 @@ var ContentRenderer = (function () {
     }
 
     /* ── Boot ── */
-    /* Narration plays as a spoken intro; tile interactions stay usable. */
-    if (typeof Narration !== 'undefined') Narration.playScreen(page.id, { next: page.next });
+    /* s1_1_intro (screen mounts) — input is gated until the clip ends (VO gate). */
+    _voMount(page, ['intro'], { next: page.next });
     _loadRound(0);
   }
 
@@ -13717,14 +13715,12 @@ var ContentRenderer = (function () {
         btn.style.opacity = '1';
       }
     }
-    if (typeof Narration !== 'undefined') {
-      Narration.playScreen(page.id, {
-        next: page.next,
-        onEnded: function () { _narrDone = true; _maybeRevealRevealBtn(); }
-      });
-    } else {
-      _narrDone = true;
-    }
+    /* s1_2_rule (screen mounts); worked/bodmas_tag cues are queued off the
+       row animations below — VO-narration.md S1.2 */
+    _voMount(page, ['rule'], {
+      next: page.next,
+      onEnded: function () { _narrDone = true; _maybeRevealRevealBtn(); }
+    });
 
     /* -- Animation helpers -- */
     if (typeof anime === 'undefined') {
@@ -13835,12 +13831,14 @@ var ContentRenderer = (function () {
         complete: function () {
           _animateRow(rowEls[0], function () {
             setTimeout(function () {
+              _voQueue(page, 'worked');   /* worked steps animate */
               _animateRow(rowEls[1], function () {
                 setTimeout(function () {
                   _animateRow(rowEls[2], function () {
                     setTimeout(function () {
                       _animateRow(rowEls[3], function () {
                         /* 3. BODMAS tag fades in */
+                        _voQueue(page, 'bodmas_tag');
                         anime({
                           targets: tagEl, opacity: [0, 1], translateY: [10, 0],
                           duration: 380, easing: 'easeOutQuad'
@@ -13898,6 +13896,7 @@ var ContentRenderer = (function () {
     area.appendChild(wrap);
 
     function _onWrong(hintText) {
+      _vo(page, 'q' + (qIdx + 1) + '_wrong');
       feedbackEl.textContent = hintText || '';
       feedbackEl.className   = _sharedContentClasses('cp-l1p-feedback cp-l1p-feedback--hint');
       if (typeof playWrong === 'function') playWrong();
@@ -13910,6 +13909,7 @@ var ContentRenderer = (function () {
 
     function _onCorrect(q, i) {
       answered = true;
+      _vo(page, 'q' + (i + 1) + '_correct');
       feedbackEl.textContent = q.okMsg || 'Correct!';
       feedbackEl.className   = _sharedContentClasses('cp-l1p-feedback cp-l1p-feedback--ok');
       if (typeof playCorrect === 'function') playCorrect();
@@ -13925,8 +13925,7 @@ var ContentRenderer = (function () {
       } else {
         fillEl.style.width = pct + '%';
       }
-      setTimeout(function () {
-        if (_currentPageId !== page.id) return;
+      _voIdle(page, 1500, function () {
         if (i < questions.length - 1) {
           qIdx     = i + 1;
           answered = false;
@@ -13934,10 +13933,11 @@ var ContentRenderer = (function () {
         } else {
           _showCompletion();
         }
-      }, 1500);
+      });
     }
 
     function _showCompletion() {
+      _vo(page, 'complete');
       cardEl.className = _sharedContentClasses('cp-l1p-card cp-l1p-card--complete');
       cardEl.innerHTML = '';
       var msg = _el('p', 'cp-l1p-completion');
@@ -13949,14 +13949,15 @@ var ContentRenderer = (function () {
         anime({ targets: cardEl, opacity: 1, scale: 1, duration: 500, easing: 'easeOutBack' });
       }
       if (page.next) {
-        setTimeout(function () {
-          if (_currentPageId !== page.id) return;
+        _voIdle(page, 2000, function () {
           _wipeLeftTo(page.next);
-        }, 2000);
+        });
       }
     }
 
     function _loadQuestion(q, i) {
+      /* s1_3_q2 / s1_3_q3 — reads the question text (Q1 is voiced by the mount chain) */
+      if (i > 0) _vo(page, 'q' + (i + 1));
       cardEl.className       = _sharedContentClasses('cp-l1p-card cp-l1p-card--' + (q.kind || 'question'));
       labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
@@ -14097,8 +14098,8 @@ var ContentRenderer = (function () {
       }
     }
 
-    /* Narration plays as a spoken intro; answer interactions stay usable. */
-    if (typeof Narration !== 'undefined') Narration.playScreen(page.id, { next: page.next });
+    /* s1_3_q1 (screen mounts) — reads Question 1 text; input is gated until the clip ends (VO gate). */
+    _voMount(page, ['q1'], { next: page.next });
     _loadQuestion(questions[0], 0);
   }
 
@@ -14148,6 +14149,25 @@ var ContentRenderer = (function () {
 
     area.appendChild(wrap);
 
+    /* Keep the Start button hidden until the mount chain ends, then pop it in —
+       same gating as L1 (onEnded always fires, so the button never stays stuck). */
+    function _revealStartBtn() {
+      btn.style.display = '';
+      if (typeof anime !== 'undefined') {
+        anime.set(btn, { opacity: 0, translateY: 14, scale: 0.9 });
+        anime({
+          targets: btn, opacity: 1, translateY: 0, scale: 1,
+          duration: 450, easing: 'easeOutBack',
+          complete: function () { btn.style.transform = ''; }
+        });
+      } else {
+        btn.style.opacity = '1';
+      }
+    }
+    btn.style.display = 'none';
+    /* s2_0_scenario (screen mounts) → s2_0_question (chained) — VO-narration.md S2.0 */
+    _voMount(page, ['scenario', 'question'], { next: page.next, onEnded: _revealStartBtn });
+
     if (typeof anime !== 'undefined') {
       var tokenEls = exprEl.querySelectorAll('.cp-l2i-token');
 
@@ -14155,8 +14175,6 @@ var ContentRenderer = (function () {
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
       anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
-      anime.set(btn,        { opacity: 0, translateY: 14 });
-
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
 
       anime({
@@ -14184,13 +14202,7 @@ var ContentRenderer = (function () {
         }
       });
 
-      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
-
-      anime({
-        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
-        complete: function () { btn.style.transform = ''; }
-      });
-    }
+      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });    }
   }
 
   /* ══════════════════════════════════════════════════════
@@ -14506,9 +14518,10 @@ var ContentRenderer = (function () {
     }
 
     function _afterRoundComplete2(round) {
-      if (round.hasCompare) _showCompare2(round);
+      if (round.hasCompare) { _voQueue(page, 'compare'); _showCompare2(round); }
 
       var isLast = (roundIdx === rounds.length - 1);
+      if (isLast) _voQueue(page, 'complete');
       nextBtn.textContent = isLast ? I18n.t('btnSeeRule') : I18n.t('btnNextRound');
       nextBtn.className   = _sharedContentClasses('cp-l2l-next-btn' + (isLast ? ' cp-l2l-next-btn--final' : ''));
       nextBtn.onclick = function () {
@@ -14517,6 +14530,7 @@ var ContentRenderer = (function () {
           _wipeLeftTo(page.next);
         } else {
           roundIdx++;
+          _vo(page, 'next_round');
           _loadRound2(roundIdx);
         }
       };
@@ -14641,6 +14655,7 @@ var ContentRenderer = (function () {
         }
       }
 
+      _voQueue(page, 'tap_finish');
       guideText.textContent = I18n.t('guideGreatNowTapFinish', { op: '−' });
       phase = 'sub-wait';
     }
@@ -14658,6 +14673,7 @@ var ContentRenderer = (function () {
           var mulOpTile = tilesRow.querySelector('.cp-l2l-tile--mul-op');
           if (mulOpTile) anime({ targets: mulOpTile, scale: [1, 1.18, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
         }
+        _vo(page, 'wrong_tap');
         if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
         meeraBubble.classList.remove('cp-l2l-bubble--faded', 'cp-l2l-bubble--guide-prompt');
         meeraBText.textContent = I18n.t('guideLookAgainMul');
@@ -14670,6 +14686,7 @@ var ContentRenderer = (function () {
 
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
+      _vo(page, 'correct_tap');
       guideText.textContent = I18n.t('guideWatchTogether');
       meeraBText.textContent = I18n.t('praiseOpGoesFirst', { op: '\xd7' });
       if (typeof anime !== 'undefined') {
@@ -14785,6 +14802,8 @@ var ContentRenderer = (function () {
     }
 
     /* ── Boot ── */
+    /* s2_1_intro (screen mounts) — input is gated until the clip ends (VO gate). */
+    _voMount(page, ['intro'], { next: page.next });
     _loadRound2(0);
   }
 
@@ -14902,6 +14921,10 @@ var ContentRenderer = (function () {
 
     area.appendChild(wrap);
 
+    /* sX_2_rule (screen mounts); worked/bodmas_tag cues are queued off the
+       row animations below — VO-narration.md SX.2 */
+    _voMount(page, ['rule'], { next: page.next });
+
     /* -- Fallback without anime -- */
     if (typeof anime === 'undefined') {
       Array.from(wrap.querySelectorAll('[data-tw]')).forEach(function (el) {
@@ -14910,6 +14933,8 @@ var ContentRenderer = (function () {
       });
       Array.from(wrap.querySelectorAll('span')).forEach(function (el) { el.style.opacity = '1'; });
       btn.disabled = false;
+      _voQueue(page, 'worked');
+      _voQueue(page, 'bodmas_tag');
       return;
     }
 
@@ -14968,8 +14993,10 @@ var ContentRenderer = (function () {
         complete: function () {
           var allRows = [ruleRow].concat(stepRowEls);
           (function animNext(i) {
+            if (i === 1) _voQueue(page, 'worked');   /* worked steps animate */
             if (i >= allRows.length) {
               /* 3. BODMAS tag fades in */
+              _voQueue(page, 'bodmas_tag');
               anime({ targets: tagEl, opacity: [0, 1], translateY: [10, 0],
                       duration: 380, easing: 'easeOutQuad' });
               /* 4. Button pops in */
@@ -15035,6 +15062,7 @@ var ContentRenderer = (function () {
     area.appendChild(wrap);
 
     function _onWrong(hintTxt) {
+      _vo(page, 'q' + (qIdx + 1) + '_wrong');
       feedbackEl.textContent = hintTxt || '';
       feedbackEl.className   = _sharedContentClasses('cp-l2p-feedback cp-l2p-feedback--hint');
       if (typeof playWrong === 'function') playWrong();
@@ -15047,6 +15075,7 @@ var ContentRenderer = (function () {
 
     function _onCorrect(q, i) {
       answered = true;
+      _vo(page, 'q' + (i + 1) + '_correct');
       feedbackEl.textContent = q.okMsg || 'Correct!';
       feedbackEl.className   = _sharedContentClasses('cp-l2p-feedback cp-l2p-feedback--ok');
       if (typeof playCorrect === 'function') playCorrect();
@@ -15061,8 +15090,7 @@ var ContentRenderer = (function () {
       } else {
         fillEl.style.width = pct + '%';
       }
-      setTimeout(function () {
-        if (_currentPageId !== page.id) return;
+      _voIdle(page, 1500, function () {
         if (i < questions.length - 1) {
           qIdx     = i + 1;
           answered = false;
@@ -15070,10 +15098,11 @@ var ContentRenderer = (function () {
         } else {
           _showCompletion2();
         }
-      }, 1500);
+      });
     }
 
     function _showCompletion2() {
+      _vo(page, 'complete');
       cardEl.innerHTML = '';
       var msg = _el('p', 'cp-l2p-completion');
       msg.textContent = page.completionMsg || 'Well done!';
@@ -15084,14 +15113,15 @@ var ContentRenderer = (function () {
         anime({ targets: cardEl, opacity: 1, scale: 1, duration: 500, easing: 'easeOutBack' });
       }
       if (page.next) {
-        setTimeout(function () {
-          if (_currentPageId !== page.id) return;
+        _voIdle(page, 2000, function () {
           _wipeLeftTo(page.next);
-        }, 2000);
+        });
       }
     }
 
     function _loadQuestion2(q, i) {
+      /* s2_3_q2 / s2_3_q3 — reads the question text (Q1 is voiced by the mount chain) */
+      if (i > 0) _vo(page, 'q' + (i + 1));
       labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
@@ -15231,6 +15261,8 @@ var ContentRenderer = (function () {
       }
     }
 
+    /* s2_3_q1 (screen mounts) — reads Question 1 text; input is gated until the clip ends (VO gate). */
+    _voMount(page, ['q1'], { next: page.next });
     _loadQuestion2(questions[0], 0);
   }
 
@@ -15280,6 +15312,25 @@ var ContentRenderer = (function () {
 
     area.appendChild(wrap);
 
+    /* Keep the Start button hidden until the mount chain ends, then pop it in —
+       same gating as L1 (onEnded always fires, so the button never stays stuck). */
+    function _revealStartBtn() {
+      btn.style.display = '';
+      if (typeof anime !== 'undefined') {
+        anime.set(btn, { opacity: 0, translateY: 14, scale: 0.9 });
+        anime({
+          targets: btn, opacity: 1, translateY: 0, scale: 1,
+          duration: 450, easing: 'easeOutBack',
+          complete: function () { btn.style.transform = ''; }
+        });
+      } else {
+        btn.style.opacity = '1';
+      }
+    }
+    btn.style.display = 'none';
+    /* s3_0_scenario (screen mounts) → s3_0_question (chained) — VO-narration.md S3.0 */
+    _voMount(page, ['scenario', 'question'], { next: page.next, onEnded: _revealStartBtn });
+
     if (typeof anime !== 'undefined') {
       var tokenEls = exprEl.querySelectorAll('.cp-l3i-token');
 
@@ -15287,8 +15338,6 @@ var ContentRenderer = (function () {
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
       anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
-      anime.set(btn,        { opacity: 0, translateY: 14 });
-
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
 
       anime({
@@ -15316,13 +15365,7 @@ var ContentRenderer = (function () {
         }
       });
 
-      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
-
-      anime({
-        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
-        complete: function () { btn.style.transform = ''; }
-      });
-    }
+      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });    }
   }
 
   /* ══════════════════════════════════════════════════════
@@ -15641,9 +15684,10 @@ var ContentRenderer = (function () {
     }
 
     function _afterRoundComplete3(round) {
-      if (round.hasCompare) _showCompare3(round);
+      if (round.hasCompare) { _voQueue(page, 'compare'); _showCompare3(round); }
 
       var isLast = (roundIdx === rounds.length - 1);
+      if (isLast) _voQueue(page, 'complete');
       nextBtn.textContent = isLast ? I18n.t('btnSeeRule') : I18n.t('btnNextRound');
       nextBtn.className   = _sharedContentClasses('cp-l3l-next-btn' + (isLast ? ' cp-l3l-next-btn--final' : ''));
       nextBtn.onclick = function () {
@@ -15652,6 +15696,7 @@ var ContentRenderer = (function () {
           _wipeLeftTo(page.next);
         } else {
           roundIdx++;
+          _vo(page, 'next_round');
           _loadRound3(roundIdx);
         }
       };
@@ -15779,6 +15824,7 @@ var ContentRenderer = (function () {
       }
 
       var secOp = reduced.filter(function (rt) { return rt.kind === 'add-op' || rt.kind === 'sub-op'; })[0];
+      _voQueue(page, 'tap_finish');
       guideText.textContent = I18n.t('guideGreatNowTapFinish', { op: (secOp ? secOp.text : '+') });
       phase = 'second-wait';
     }
@@ -15796,6 +15842,7 @@ var ContentRenderer = (function () {
           var divOpTile = tilesRow.querySelector('.cp-l3l-tile--div-op');
           if (divOpTile) anime({ targets: divOpTile, scale: [1, 1.18, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
         }
+        _vo(page, 'wrong_tap');
         if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
         meeraBubble.classList.remove('cp-l3l-bubble--faded', 'cp-l3l-bubble--guide-prompt');
         meeraBText.textContent = I18n.t('guideLookAgainDiv');
@@ -15808,6 +15855,7 @@ var ContentRenderer = (function () {
 
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
+      _vo(page, 'correct_tap');
       guideText.textContent = I18n.t('guideWatchTogether');
       meeraBText.textContent = I18n.t('praiseOpGoesFirst', { op: '\xf7' });
       if (typeof anime !== 'undefined') {
@@ -15923,6 +15971,8 @@ var ContentRenderer = (function () {
       _renderTiles3(round);
     }
 
+    /* s3_1_intro (screen mounts) — input is gated until the clip ends (VO gate). */
+    _voMount(page, ['intro'], { next: page.next });
     _loadRound3(0);
   }
 
@@ -15972,6 +16022,7 @@ var ContentRenderer = (function () {
     area.appendChild(wrap);
 
     function _onWrong3(hintTxt) {
+      _vo(page, 'q' + (qIdx + 1) + '_wrong');
       feedbackEl.textContent = hintTxt || '';
       feedbackEl.className   = _sharedContentClasses('cp-l3p-feedback cp-l3p-feedback--hint');
       if (typeof playWrong === 'function') playWrong();
@@ -15984,6 +16035,7 @@ var ContentRenderer = (function () {
 
     function _onCorrect3(q, i) {
       answered = true;
+      _vo(page, 'q' + (i + 1) + '_correct');
       feedbackEl.textContent = q.okMsg || 'Correct!';
       feedbackEl.className   = _sharedContentClasses('cp-l3p-feedback cp-l3p-feedback--ok');
       if (typeof playCorrect === 'function') playCorrect();
@@ -15998,8 +16050,7 @@ var ContentRenderer = (function () {
       } else {
         fillEl.style.width = pct + '%';
       }
-      setTimeout(function () {
-        if (_currentPageId !== page.id) return;
+      _voIdle(page, 1500, function () {
         if (i < questions.length - 1) {
           qIdx     = i + 1;
           answered = false;
@@ -16007,10 +16058,11 @@ var ContentRenderer = (function () {
         } else {
           _showCompletion3();
         }
-      }, 1500);
+      });
     }
 
     function _showCompletion3() {
+      _vo(page, 'complete');
       cardEl.innerHTML = '';
       var msg = _el('p', 'cp-l3p-completion');
       msg.textContent = page.completionMsg || 'Well done!';
@@ -16021,14 +16073,15 @@ var ContentRenderer = (function () {
         anime({ targets: cardEl, opacity: 1, scale: 1, duration: 500, easing: 'easeOutBack' });
       }
       if (page.next) {
-        setTimeout(function () {
-          if (_currentPageId !== page.id) return;
+        _voIdle(page, 2000, function () {
           _wipeLeftTo(page.next);
-        }, 2000);
+        });
       }
     }
 
     function _loadQuestion3(q, i) {
+      /* s3_3_q2 / s3_3_q3 — reads the question text (Q1 is voiced by the mount chain) */
+      if (i > 0) _vo(page, 'q' + (i + 1));
       labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
@@ -16169,6 +16222,8 @@ var ContentRenderer = (function () {
       }
     }
 
+    /* s3_3_q1 (screen mounts) — reads Question 1 text; input is gated until the clip ends (VO gate). */
+    _voMount(page, ['q1'], { next: page.next });
     _loadQuestion3(questions[0], 0);
   }
 
@@ -16217,6 +16272,25 @@ var ContentRenderer = (function () {
     wrap.appendChild(btn);
     area.appendChild(wrap);
 
+    /* Keep the Start button hidden until the mount chain ends, then pop it in —
+       same gating as L1 (onEnded always fires, so the button never stays stuck). */
+    function _revealStartBtn() {
+      btn.style.display = '';
+      if (typeof anime !== 'undefined') {
+        anime.set(btn, { opacity: 0, translateY: 14, scale: 0.9 });
+        anime({
+          targets: btn, opacity: 1, translateY: 0, scale: 1,
+          duration: 450, easing: 'easeOutBack',
+          complete: function () { btn.style.transform = ''; }
+        });
+      } else {
+        btn.style.opacity = '1';
+      }
+    }
+    btn.style.display = 'none';
+    /* s4_0_scenario (screen mounts) → s4_0_question (chained) — VO-narration.md S4.0 */
+    _voMount(page, ['scenario', 'question'], { next: page.next, onEnded: _revealStartBtn });
+
     if (typeof anime !== 'undefined') {
       var tokenEls = exprEl.querySelectorAll('.cp-l4i-token');
 
@@ -16224,8 +16298,6 @@ var ContentRenderer = (function () {
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
       anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
-      anime.set(btn,        { opacity: 0, translateY: 14 });
-
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
 
       anime({
@@ -16253,13 +16325,7 @@ var ContentRenderer = (function () {
         }
       });
 
-      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
-
-      anime({
-        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
-        complete: function () { btn.style.transform = ''; }
-      });
-    }
+      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });    }
   }
 
   /* ══════════════════════════════════════════════════════
@@ -16549,8 +16615,9 @@ var ContentRenderer = (function () {
     }
 
     function _afterRoundComplete4(round) {
-      if (round.hasCompare) _showCompare4(round);
+      if (round.hasCompare) { _voQueue(page, 'compare'); _showCompare4(round); }
       var isLast = (roundIdx === rounds.length - 1);
+      if (isLast) _voQueue(page, 'complete');
       nextBtn.textContent = isLast ? I18n.t('btnSeeRule') : I18n.t('btnNextRound');
       nextBtn.className   = _sharedContentClasses('cp-l4l-next-btn' + (isLast ? ' cp-l4l-next-btn--final' : ''));
       nextBtn.onclick = function () {
@@ -16559,6 +16626,7 @@ var ContentRenderer = (function () {
           _wipeLeftTo(page.next);
         } else {
           roundIdx++;
+          _vo(page, 'next_round');
           _loadRound4(roundIdx);
         }
       };
@@ -16670,6 +16738,7 @@ var ContentRenderer = (function () {
         }
       }
       var secOp = reduced.filter(function (rt) { return rt.kind === 'add-op' || rt.kind === 'sub-op'; })[0];
+      _voQueue(page, 'tap_finish');
       guideText.textContent = I18n.t('guideGreatNowTapFinish', { op: (secOp ? secOp.text : '+') });
       phase = 'second-wait';
     }
@@ -16687,6 +16756,7 @@ var ContentRenderer = (function () {
           var ltrOpTile = tilesRow.querySelector('.cp-l4l-tile--ltr-op');
           if (ltrOpTile) anime({ targets: ltrOpTile, scale: [1, 1.18, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
         }
+        _vo(page, 'wrong_tap');
         if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
         meeraBubble.classList.remove('cp-l4l-bubble--faded', 'cp-l4l-bubble--guide-prompt');
         meeraBText.textContent = I18n.t('guideWhichFirstLtr', { a: '+', b: '−' });
@@ -16698,6 +16768,7 @@ var ContentRenderer = (function () {
       }
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
+      _vo(page, 'correct_tap');
       guideText.textContent = I18n.t('guideWatchTogether');
       meeraBText.textContent = I18n.t('praiseLtrBrilliant');
       if (typeof anime !== 'undefined') {
@@ -16800,6 +16871,8 @@ var ContentRenderer = (function () {
       _renderTiles4(round);
     }
 
+    /* s4_1_intro (screen mounts) — input is gated until the clip ends (VO gate). */
+    _voMount(page, ['intro'], { next: page.next });
     _loadRound4(0);
   }
 
@@ -16845,6 +16918,7 @@ var ContentRenderer = (function () {
     area.appendChild(wrap);
 
     function _onWrong4(hintTxt) {
+      _vo(page, 'q' + (qIdx + 1) + '_wrong');
       feedbackEl.textContent = hintTxt || '';
       feedbackEl.className   = _sharedContentClasses('cp-l4p-feedback cp-l4p-feedback--hint');
       if (typeof playWrong === 'function') playWrong();
@@ -16857,6 +16931,7 @@ var ContentRenderer = (function () {
 
     function _onCorrect4(q, i) {
       answered = true;
+      _vo(page, 'q' + (i + 1) + '_correct');
       feedbackEl.textContent = q.okMsg || 'Correct!';
       feedbackEl.className   = _sharedContentClasses('cp-l4p-feedback cp-l4p-feedback--ok');
       if (typeof playCorrect === 'function') playCorrect();
@@ -16871,8 +16946,7 @@ var ContentRenderer = (function () {
       } else {
         fillEl.style.width = pct + '%';
       }
-      setTimeout(function () {
-        if (_currentPageId !== page.id) return;
+      _voIdle(page, 1500, function () {
         if (i < questions.length - 1) {
           qIdx     = i + 1;
           answered = false;
@@ -16880,10 +16954,11 @@ var ContentRenderer = (function () {
         } else {
           _showCompletion4();
         }
-      }, 1500);
+      });
     }
 
     function _showCompletion4() {
+      _vo(page, 'complete');
       cardEl.innerHTML = '';
       var msg = _el('p', 'cp-l4p-completion');
       msg.textContent = page.completionMsg || 'Well done!';
@@ -16894,14 +16969,15 @@ var ContentRenderer = (function () {
         anime({ targets: cardEl, opacity: 1, scale: 1, duration: 500, easing: 'easeOutBack' });
       }
       if (page.next) {
-        setTimeout(function () {
-          if (_currentPageId !== page.id) return;
+        _voIdle(page, 2000, function () {
           _wipeLeftTo(page.next);
-        }, 2000);
+        });
       }
     }
 
     function _loadQuestion4(q, i) {
+      /* s4_3_q2 / s4_3_q3 — reads the question text (Q1 is voiced by the mount chain) */
+      if (i > 0) _vo(page, 'q' + (i + 1));
       labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
@@ -17040,6 +17116,8 @@ var ContentRenderer = (function () {
       }
     }
 
+    /* s4_3_q1 (screen mounts) — reads Question 1 text; input is gated until the clip ends (VO gate). */
+    _voMount(page, ['q1'], { next: page.next });
     _loadQuestion4(questions[0], 0);
   }
 
@@ -17088,6 +17166,25 @@ var ContentRenderer = (function () {
     wrap.appendChild(btn);
     area.appendChild(wrap);
 
+    /* Keep the Start button hidden until the mount chain ends, then pop it in —
+       same gating as L1 (onEnded always fires, so the button never stays stuck). */
+    function _revealStartBtn() {
+      btn.style.display = '';
+      if (typeof anime !== 'undefined') {
+        anime.set(btn, { opacity: 0, translateY: 14, scale: 0.9 });
+        anime({
+          targets: btn, opacity: 1, translateY: 0, scale: 1,
+          duration: 450, easing: 'easeOutBack',
+          complete: function () { btn.style.transform = ''; }
+        });
+      } else {
+        btn.style.opacity = '1';
+      }
+    }
+    btn.style.display = 'none';
+    /* s5_0_scenario (screen mounts) → s5_0_question (chained) — VO-narration.md S5.0 */
+    _voMount(page, ['scenario', 'question'], { next: page.next, onEnded: _revealStartBtn });
+
     if (typeof anime !== 'undefined') {
       var tokenEls = exprEl.querySelectorAll('.cp-l5i-token');
 
@@ -17095,8 +17192,6 @@ var ContentRenderer = (function () {
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
       anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
-      anime.set(btn,        { opacity: 0, translateY: 14 });
-
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
 
       anime({
@@ -17124,13 +17219,7 @@ var ContentRenderer = (function () {
         }
       });
 
-      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
-
-      anime({
-        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
-        complete: function () { btn.style.transform = ''; }
-      });
-    }
+      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });    }
   }
 
   /* ══════════════════════════════════════════════════════
@@ -17420,8 +17509,9 @@ var ContentRenderer = (function () {
     }
 
     function _afterRoundComplete5(round) {
-      if (round.hasCompare) _showCompare5(round);
+      if (round.hasCompare) { _voQueue(page, 'compare'); _showCompare5(round); }
       var isLast = (roundIdx === rounds.length - 1);
+      if (isLast) _voQueue(page, 'complete');
       nextBtn.textContent = isLast ? I18n.t('btnSeeRule') : I18n.t('btnNextRound');
       nextBtn.className   = _sharedContentClasses('cp-l5l-next-btn' + (isLast ? ' cp-l5l-next-btn--final' : ''));
       nextBtn.onclick = function () {
@@ -17430,6 +17520,7 @@ var ContentRenderer = (function () {
           _wipeLeftTo(page.next);
         } else {
           roundIdx++;
+          _vo(page, 'next_round');
           _loadRound5(roundIdx);
         }
       };
@@ -17541,6 +17632,7 @@ var ContentRenderer = (function () {
         }
       }
       var secOp = reduced.filter(function (rt) { return rt.kind === 'mul-op' || rt.kind === 'div-op'; })[0];
+      _voQueue(page, 'tap_finish');
       guideText.textContent = I18n.t('guideGreatNowTapFinish', { op: (secOp ? secOp.text : '\xd7') });
       phase = 'second-wait';
     }
@@ -17558,6 +17650,7 @@ var ContentRenderer = (function () {
           var ltrOpTile = tilesRow.querySelector('.cp-l5l-tile--ltr-op');
           if (ltrOpTile) anime({ targets: ltrOpTile, scale: [1, 1.18, 1], duration: 500, delay: 180, easing: 'easeInOutSine' });
         }
+        _vo(page, 'wrong_tap');
         if (meeraFadeTimer) { clearTimeout(meeraFadeTimer); meeraFadeTimer = null; }
         meeraBubble.classList.remove('cp-l5l-bubble--faded', 'cp-l5l-bubble--guide-prompt');
         meeraBText.textContent = I18n.t('guideWhichFirstLtr', { a: '\xd7', b: '\xf7' });
@@ -17569,6 +17662,7 @@ var ContentRenderer = (function () {
       }
       phase = 'merging';
       if (typeof playCorrect === 'function') playCorrect();
+      _vo(page, 'correct_tap');
       guideText.textContent = I18n.t('guideWatchTogether');
       meeraBText.textContent = I18n.t('praiseLtrBrilliant');
       if (typeof anime !== 'undefined') {
@@ -17671,6 +17765,8 @@ var ContentRenderer = (function () {
       _renderTiles5(round);
     }
 
+    /* s5_1_intro (screen mounts) — input is gated until the clip ends (VO gate). */
+    _voMount(page, ['intro'], { next: page.next });
     _loadRound5(0);
   }
 
@@ -17716,6 +17812,7 @@ var ContentRenderer = (function () {
     area.appendChild(wrap);
 
     function _onWrong5(hintTxt) {
+      _vo(page, 'q' + (qIdx + 1) + '_wrong');
       feedbackEl.textContent = hintTxt || '';
       feedbackEl.className   = _sharedContentClasses('cp-l5p-feedback cp-l5p-feedback--hint');
       if (typeof playWrong === 'function') playWrong();
@@ -17728,6 +17825,7 @@ var ContentRenderer = (function () {
 
     function _onCorrect5(q, i) {
       answered = true;
+      _vo(page, 'q' + (i + 1) + '_correct');
       feedbackEl.textContent = q.okMsg || 'Correct!';
       feedbackEl.className   = _sharedContentClasses('cp-l5p-feedback cp-l5p-feedback--ok');
       if (typeof playCorrect === 'function') playCorrect();
@@ -17742,8 +17840,7 @@ var ContentRenderer = (function () {
       } else {
         fillEl.style.width = pct + '%';
       }
-      setTimeout(function () {
-        if (_currentPageId !== page.id) return;
+      _voIdle(page, 1500, function () {
         if (i < questions.length - 1) {
           qIdx     = i + 1;
           answered = false;
@@ -17751,10 +17848,11 @@ var ContentRenderer = (function () {
         } else {
           _showCompletion5();
         }
-      }, 1500);
+      });
     }
 
     function _showCompletion5() {
+      _vo(page, 'complete');
       cardEl.innerHTML = '';
       var msg = _el('p', 'cp-l5p-completion');
       msg.textContent = page.completionMsg || 'Well done!';
@@ -17765,14 +17863,15 @@ var ContentRenderer = (function () {
         anime({ targets: cardEl, opacity: 1, scale: 1, duration: 500, easing: 'easeOutBack' });
       }
       if (page.next) {
-        setTimeout(function () {
-          if (_currentPageId !== page.id) return;
+        _voIdle(page, 2000, function () {
           _wipeLeftTo(page.next);
-        }, 2000);
+        });
       }
     }
 
     function _loadQuestion5(q, i) {
+      /* s5_3_q2 / s5_3_q3 — reads the question text (Q1 is voiced by the mount chain) */
+      if (i > 0) _vo(page, 'q' + (i + 1));
       labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
@@ -17911,6 +18010,8 @@ var ContentRenderer = (function () {
       }
     }
 
+    /* s5_3_q1 (screen mounts) — reads Question 1 text; input is gated until the clip ends (VO gate). */
+    _voMount(page, ['q1'], { next: page.next });
     _loadQuestion5(questions[0], 0);
   }
 
@@ -17959,6 +18060,25 @@ var ContentRenderer = (function () {
     wrap.appendChild(btn);
     area.appendChild(wrap);
 
+    /* Keep the Start button hidden until the mount chain ends, then pop it in —
+       same gating as L1 (onEnded always fires, so the button never stays stuck). */
+    function _revealStartBtn() {
+      btn.style.display = '';
+      if (typeof anime !== 'undefined') {
+        anime.set(btn, { opacity: 0, translateY: 14, scale: 0.9 });
+        anime({
+          targets: btn, opacity: 1, translateY: 0, scale: 1,
+          duration: 450, easing: 'easeOutBack',
+          complete: function () { btn.style.transform = ''; }
+        });
+      } else {
+        btn.style.opacity = '1';
+      }
+    }
+    btn.style.display = 'none';
+    /* s6_0_scenario (screen mounts) → s6_0_question (chained) — VO-narration.md S6.0 */
+    _voMount(page, ['scenario', 'question'], { next: page.next, onEnded: _revealStartBtn });
+
     if (typeof anime !== 'undefined') {
       var tokenEls = exprEl.querySelectorAll('.cp-l6i-token');
 
@@ -17966,8 +18086,6 @@ var ContentRenderer = (function () {
       anime.set(exprBox,    { opacity: 0, scale: 0.88 });
       anime.set(tokenEls,   { opacity: 0, translateY: 20, scale: 0.6 });
       anime.set(qEl,        { opacity: 0 });
-      anime.set(btn,        { opacity: 0, translateY: 14 });
-
       anime({ targets: scenarioEl, opacity: 1, translateY: 0, duration: 500, easing: 'easeOutQuad' });
 
       anime({
@@ -17995,13 +18113,7 @@ var ContentRenderer = (function () {
         }
       });
 
-      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });
-
-      anime({
-        targets: btn, opacity: 1, translateY: 0, duration: 450, delay: 1020, easing: 'easeOutBack',
-        complete: function () { btn.style.transform = ''; }
-      });
-    }
+      anime({ targets: qEl, opacity: 1, duration: 420, delay: 820 });    }
   }
 
   /* ══════════════════════════════════════════════════════
@@ -18291,8 +18403,9 @@ var ContentRenderer = (function () {
     }
 
     function _afterRoundComplete6(round) {
-      if (round.hasCompare) _showCompare6(round);
+      if (round.hasCompare) { _voQueue(page, 'compare'); _showCompare6(round); }
       var isLast = (roundIdx === rounds.length - 1);
+      if (isLast) _voQueue(page, 'complete');
       nextBtn.textContent = isLast ? I18n.t('btnSeeRule') : (I18n.t('btnNextRound') + ' ►');
       nextBtn.className   = _sharedContentClasses('cp-l6l-next-btn' + (isLast ? ' cp-l6l-next-btn--final' : ''));
       nextBtn.onclick = function () {
@@ -18301,6 +18414,7 @@ var ContentRenderer = (function () {
           _wipeLeftTo(page.next);
         } else {
           roundIdx++;
+          _vo(page, 'next_round');
           _loadRound6(roundIdx);
         }
       };
@@ -18422,6 +18536,7 @@ var ContentRenderer = (function () {
           anime({ targets: resultTile, scale: [0, 1.38, 1], opacity: 1, duration: 580, delay: 100, easing: 'easeOutBack' });
         }
       }
+      _voQueue(page, 'tap_finish');
       guideText.textContent = I18n.t('guideGreatNowTapFinish', { op: '\xd7' });
       phase = 'second-wait';
     }
@@ -18431,6 +18546,7 @@ var ContentRenderer = (function () {
       if (phase !== 'idle') return;
       phase = 'bracket-merge';
       if (typeof playCorrect === 'function') playCorrect();
+      _vo(page, 'correct_tap');
       guideText.textContent = I18n.t('guideBracketsCollapse');
       meeraBText.textContent = I18n.t('praiseBracketsAmazing');
       if (typeof anime !== 'undefined') {
@@ -18471,6 +18587,7 @@ var ContentRenderer = (function () {
     /* Wrong tap — shake and show hint */
     function _onWrongTap6(tappedTile) {
       if (typeof playWrong === 'function') playWrong();
+      _vo(page, 'wrong_tap');
       tappedTile.classList.add('cp-l6l-tile--wrong');
       setTimeout(function () { tappedTile.classList.remove('cp-l6l-tile--wrong'); }, 700);
       if (typeof anime !== 'undefined') {
@@ -18581,6 +18698,8 @@ var ContentRenderer = (function () {
       _renderTiles6(round);
     }
 
+    /* s6_1_intro (screen mounts) — input is gated until the clip ends (VO gate). */
+    _voMount(page, ['intro'], { next: page.next });
     _loadRound6(0);
   }
 
@@ -18627,6 +18746,7 @@ var ContentRenderer = (function () {
     area.appendChild(wrap);
 
     function _onWrong6(hintTxt) {
+      _vo(page, 'q' + (qIdx + 1) + '_wrong');
       feedbackEl.textContent = hintTxt || '';
       feedbackEl.className   = _sharedContentClasses('cp-l6p-feedback cp-l6p-feedback--hint');
       if (typeof playWrong === 'function') playWrong();
@@ -18639,6 +18759,7 @@ var ContentRenderer = (function () {
 
     function _onCorrect6(q, i) {
       answered = true;
+      _vo(page, 'q' + (i + 1) + '_correct');
       feedbackEl.textContent = q.okMsg || 'Correct!';
       feedbackEl.className   = _sharedContentClasses('cp-l6p-feedback cp-l6p-feedback--ok');
       if (typeof playCorrect === 'function') playCorrect();
@@ -18653,8 +18774,7 @@ var ContentRenderer = (function () {
       } else {
         fillEl.style.width = pct + '%';
       }
-      setTimeout(function () {
-        if (_currentPageId !== page.id) return;
+      _voIdle(page, 1500, function () {
         if (i < questions.length - 1) {
           qIdx     = i + 1;
           answered = false;
@@ -18662,10 +18782,11 @@ var ContentRenderer = (function () {
         } else {
           _showCompletion6();
         }
-      }, 1500);
+      });
     }
 
     function _showCompletion6() {
+      _vo(page, 'complete');
       cardEl.innerHTML = '';
       var msg = _el('p', 'cp-l6p-completion');
       msg.textContent = page.completionMsg || 'Well done!';
@@ -18676,14 +18797,15 @@ var ContentRenderer = (function () {
         anime({ targets: cardEl, opacity: 1, scale: 1, duration: 500, easing: 'easeOutBack' });
       }
       if (page.next) {
-        setTimeout(function () {
-          if (_currentPageId !== page.id) return;
+        _voIdle(page, 2000, function () {
           _wipeLeftTo(page.next);
-        }, 2000);
+        });
       }
     }
 
     function _loadQuestion6(q, i) {
+      /* s6_3_q2 / s6_3_q3 — reads the question text (Q1 is voiced by the mount chain) */
+      if (i > 0) _vo(page, 'q' + (i + 1));
       labelEl.textContent    = I18n.t('counterQuestionNofTotal', { n: i + 1, total: questions.length });
       exprEl.textContent     = q.expression || '';
       exprEl.style.display   = q.expression ? '' : 'none';
@@ -18830,6 +18952,8 @@ var ContentRenderer = (function () {
       }
     }
 
+    /* s6_3_q1 (screen mounts) — reads Question 1 text; input is gated until the clip ends (VO gate). */
+    _voMount(page, ['q1'], { next: page.next });
     _loadQuestion6(questions[0], 0);
   }
 
@@ -19106,6 +19230,9 @@ var ContentRenderer = (function () {
 
     area.appendChild(wrap);
 
+    /* s8_0_intro (screen mounts) — input is gated until the clip ends (VO gate). */
+    _voMount(page, ['intro'], { next: page.next });
+
     /* ── State ── */
     var correctOrder = page.correctOrder;
     var tileEls      = {};
@@ -19312,6 +19439,7 @@ var ContentRenderer = (function () {
         feedbackEl.textContent = page.wrongHint || 'Not quite! Think about which operation comes first in BODMAS.';
         feedbackEl.className   = 'cp-l8bl-feedback cp-l8bl-feedback--hint';
         if (typeof playWrong === 'function') playWrong();
+        _vo(page, 'wrong');
         if (typeof anime !== 'undefined') {
           anime({ targets: wrap, translateX: [0, -8, 8, -6, 6, 0], duration: 380, easing: 'easeInOutSine' });
         }
@@ -19324,6 +19452,7 @@ var ContentRenderer = (function () {
     function _showSuccess() {
       if (typeof playCorrect === 'function') playCorrect();
       if (typeof launchConfetti === 'function') launchConfetti();
+      _vo(page, 'correct');
 
       wrap.innerHTML = '';
 
@@ -19364,6 +19493,7 @@ var ContentRenderer = (function () {
         bodmasRow.appendChild(lEl);
       });
       wrap.appendChild(bodmasRow);
+      _voQueue(page, 'recite');   /* B-O-D-M-A-S letter row reveals */
 
       /* Celebration message */
       var msgEl = _el('p', 'cp-l8bl-success-msg');
@@ -19626,6 +19756,7 @@ var ContentRenderer = (function () {
                 setTimeout(function () { btn.classList.remove('cp-l9nb-op-tile--wrong'); }, 700);
                 hintEl.textContent = page.wrongHint || '';
                 if (typeof playWrong === 'function') playWrong();
+                _vo(page, 'wrong');
                 if (typeof anime !== 'undefined') {
                   anime({ targets: stripWrap, translateX: [0, -8, 8, -6, 6, 0], duration: 360, easing: 'easeInOutSine' });
                 }
@@ -19673,6 +19804,9 @@ var ContentRenderer = (function () {
         _hidePad();
         _updateDrop();
         var nextStep = q.steps[stepIdx];
+        /* sub-expression solved → phase hint for the next step */
+        _vo(page, 'step_correct');
+        _voQueue(page, nextStep.phase === 'middle' ? 'hint_middle' : 'hint_last');
         hintEl.textContent = _getHint(nextStep.phase);
         _renderStrip(step.reducedExpression);
         if (typeof anime !== 'undefined') {
@@ -19697,26 +19831,29 @@ var ContentRenderer = (function () {
       exprBox.appendChild(ansWrap);
       hintEl.textContent = '';
       if (typeof playCorrect === 'function') playCorrect();
+      _vo(page, 'q_complete');
       if (typeof anime !== 'undefined') {
         anime.set(ansWrap, { opacity: 0, scale: 0.9 });
         anime({ targets: ansWrap, opacity: 1, scale: 1, duration: 480, easing: 'easeOutBack' });
       }
 
       if (qIdx < questions.length - 1) {
-        setTimeout(function () {
+        _voIdle(page, 3000, function () {
           qIdx++;
           stepIdx = 0;
           exprBox.innerHTML = '';
           var newStrip = _el('div', 'cp-l9nb-strip');
           stripWrap = newStrip;
           exprBox.appendChild(newStrip);
+          _vo(page, 'next_q');
           _loadStep();
-        }, 3000);
+        });
       } else {
+        _voQueue(page, 'complete');   /* both questions done */
         if (typeof launchConfetti === 'function') launchConfetti();
-        setTimeout(function () {
-          if (_currentPageId === page.id && page.next) renderPage(page.next);
-        }, 3000);
+        _voIdle(page, 3000, function () {
+          if (page.next) renderPage(page.next);
+        });
       }
     }
 
@@ -19754,6 +19891,8 @@ var ContentRenderer = (function () {
 
     submitBtn.addEventListener('click', function () { _runCheck(); });
 
+    /* s9_0_intro (screen mounts) — input is gated until the clip ends (VO gate). */
+    _voMount(page, ['intro'], { next: page.next });
     _loadStep();
   }
 
@@ -20141,6 +20280,7 @@ var ContentRenderer = (function () {
       _updatePhaseEl();
       _renderExpr();
       _updateTray();
+      if (openGap !== null && closeGap === null) _vo(page, 'tap_close');
       if (openGap !== null && closeGap !== null) _evaluate();
     }
 
@@ -20157,6 +20297,7 @@ var ContentRenderer = (function () {
         _updatePhaseEl();
         _renderExpr();
         _updateTray();
+        _vo(page, 'tap_close');
       } else if (phase === 'place-close') {
         if (gapIdx === openGap) return;
         if (gapIdx < openGap) { var tmp = openGap; openGap = gapIdx; closeGap = tmp; }
@@ -20175,6 +20316,7 @@ var ContentRenderer = (function () {
 
     function _onCorrect() {
       if (typeof playCorrect === 'function') playCorrect();
+      _vo(page, 'correct');
       var pz = puzzles[puzzleIdx];
       var tokens = pz.tokens;
       var subVal = _evalSub(tokens.slice(openGap, closeGap));
@@ -20211,14 +20353,17 @@ var ContentRenderer = (function () {
         }
         var dots = dotsRow.querySelectorAll('.cp-l9ib-dot');
         if (dots[puzzleIdx]) dots[puzzleIdx].className = _sharedContentClasses('cp-l9ib-dot cp-l9ib-dot--done');
-        if (puzzleIdx === puzzles.length - 1 && typeof launchConfetti === 'function') launchConfetti();
+        if (puzzleIdx === puzzles.length - 1) {
+          _voQueue(page, 'complete');   /* all 4 puzzles done */
+          if (typeof launchConfetti === 'function') launchConfetti();
+        }
       }, 2600);
 
-      /* Advance (4300ms) */
-      setTimeout(function () {
-        if (_currentPageId !== page.id) return;
+      /* Advance (4.3s min, and never mid-VO) */
+      _voIdle(page, 4300, function () {
         puzzleIdx++;
         if (puzzleIdx < puzzles.length) {
+          _vo(page, 'next');
           openGap  = null;
           closeGap = null;
           phase    = 'place-open';
@@ -20232,11 +20377,12 @@ var ContentRenderer = (function () {
         } else {
           if (page.next) renderPage(page.next);
         }
-      }, 4300);
+      });
     }
 
     function _onWrong() {
       if (typeof playWrong === 'function') playWrong();
+      _vo(page, 'wrong');
       var tgtEl = exprBox.querySelector('.cp-l9ib-target');
       if (tgtEl) tgtEl.classList.add('cp-l9ib-target--wrong');
       if (typeof anime !== 'undefined') {
@@ -20264,6 +20410,8 @@ var ContentRenderer = (function () {
     }
 
     /* Init */
+    /* s9_1_intro (screen mounts) — bracket placement stays usable. */
+    _voMount(page, ['intro'], { next: page.next });
     _updateDots();
     _updatePhaseEl();
     labelEl.textContent = I18n.t('counterPuzzleNofTotal', { n: 1, total: puzzles.length });
@@ -20316,6 +20464,7 @@ var ContentRenderer = (function () {
     area.appendChild(wrap);
 
     function _onWrongBr(hint) {
+      _vo(page, 'wrong');
       feedbackEl.textContent = hint || I18n.t('rapidWrongHint');
       feedbackEl.className   = _sharedContentClasses('cp-l9br-feedback cp-l9br-feedback--wrong');
       if (typeof playWrong === 'function') playWrong();
@@ -20396,13 +20545,15 @@ var ContentRenderer = (function () {
                   answered = true;
                   btn.classList.add('cp-l9br-op-btn--correct');
                   if (typeof playCorrect === 'function') playCorrect();
+                  _vo(page, 'q' + q.n + '_correct');
+                  if (q.n === total) _voQueue(page, 'complete');   /* all 6 done */
                   feedbackEl.textContent = q.okMsg || 'Correct!';
                   feedbackEl.className   = _sharedContentClasses('cp-l9br-feedback cp-l9br-feedback--correct');
                   if (typeof anime !== 'undefined') {
                     anime.set(feedbackEl, { opacity: 0 });
                     anime({ targets: feedbackEl, opacity: 1, duration: 220 });
                   }
-                  setTimeout(_advanceQuestion, 2500);
+                  _voIdle(page, 2500, _advanceQuestion);
                 } else {
                   btn.classList.add('cp-l9br-op-btn--wrong');
                   setTimeout(function () { btn.classList.remove('cp-l9br-op-btn--wrong'); }, 700);
@@ -20426,6 +20577,8 @@ var ContentRenderer = (function () {
       }
     }
 
+    /* s9_2_intro (screen mounts) — input is gated until the clip ends (VO gate). */
+    _voMount(page, ['intro'], { next: page.next });
     _loadQuestion();
   }
 
@@ -20476,10 +20629,13 @@ var ContentRenderer = (function () {
 
     if (typeof launchConfetti === 'function') launchConfetti();
 
+    /* s9_3_champion (screen mounts) → s9_3_recap queued for the rule-card reveal */
+    _voMount(page, ['champion']);
+    _voQueue(page, 'recap');
+
     if (typeof anime !== 'undefined') {
       anime.set(wrap, { opacity: 0, translateY: 20 });
       anime({ targets: wrap, opacity: 1, translateY: 0, duration: 520, easing: 'easeOutCubic' });
-      anime({ targets: fillEl, width: '100%', duration: 1200, delay: 300, easing: 'easeOutQuad' });
       var cardEls = grid.querySelectorAll('.cp-l9rs-card');
       cardEls.forEach(function (c, i) {
         anime.set(c, { opacity: 0, scale: 0.85 });

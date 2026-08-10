@@ -54,6 +54,22 @@
   animation: handNudgeTap 3.6s ease-in-out forwards;
 }
 
+/* Tap-once: single hover → press → release cycle, used when the nudge
+   visits several elements in sequence — 1.9 s per element (duration must
+   stay in sync with TAP_ONCE_MS in hand-nudge.js) */
+@keyframes handNudgeTapOnce {
+  0%   { opacity: 0; transform: translateY(-10px) scale(0.75); }
+  14%  { opacity: 1; transform: translateY(0)     scale(1.0);  }
+  36%  { opacity: 1; transform: translateY(-5px)  scale(1.35); } /* raise / wind-up */
+  60%  { opacity: 1; transform: translateY(10px)  scale(0.78); } /* press in       */
+  80%  { opacity: 1; transform: translateY(0)     scale(1.0);  } /* release        */
+  100% { opacity: 0; transform: translateY(-8px)  scale(0.85); }
+}
+
+.hand-nudge--tap-once {
+  animation: handNudgeTapOnce 1.9s ease-in-out forwards;
+}
+
 /* Drag: position/opacity driven entirely by anime.js */
 .hand-nudge--drag {
   transition: none;

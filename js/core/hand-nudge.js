@@ -7,6 +7,7 @@ var HandNudge = (function () {
   var _img         = null;
   var _showTimer   = null;
   var _hideTimer   = null;
+  var _seqTimer    = null;
   var _revealTimer = null;
   var _revealedGap = null;   /* gap opened by the drag nudge, restored on hide */
   var _observer    = null;
@@ -48,6 +49,16 @@ var HandNudge = (function () {
     '.cp-l6l-tile--mul-op'
   ].join(', ');
 
+  /* Practice-page option groups — every member of a group is a valid tap
+     target, so the nudge visits each of them in sequence.  Restricted to
+     <button>s so descendant spans/labels sharing the class stem don't match. */
+  var SEL_TAP_GROUPS = [
+    'button[class*="p-op-btn"]:not(:disabled)',
+    'button[class*="p-rule-opt"]:not(:disabled)',
+    'button[class*="p-choice-btn"]:not(:disabled)',
+    'button[class*="p-method-card"]:not(:disabled)'
+  ];
+
   /* All other tappable / clickable interactive elements */
   var SEL_TAPPABLE = [
     '[class*="l-tiles"] > button:not(:disabled)',
@@ -85,6 +96,7 @@ var HandNudge = (function () {
 
   function hide() {
     clearTimeout(_hideTimer);
+    clearTimeout(_seqTimer);
     clearTimeout(_revealTimer);
     if (_revealedGap) {
       _revealedGap.classList.remove('cp-l9ib-gap--demo');
@@ -117,6 +129,39 @@ var HandNudge = (function () {
     hand.className     = 'hand-nudge hand-nudge--tap';
 
     _hideTimer = setTimeout(hide, 4600);
+    _armDismiss();
+  }
+
+  /* ── Sequential tap — visits each element in turn so the student sees
+        that every option is clickable, not just the first one ──────────── */
+
+  var TAP_ONCE_MS = 1900; /* must match handNudgeTapOnce duration in CSS */
+
+  function showTapSeq(els) {
+    els = Array.prototype.filter.call(els || [], function (el) {
+      var r = el.getBoundingClientRect();
+      return r.width || r.height;
+    });
+    if (!els.length) return;
+    if (els.length === 1) { showTap(els[0]); return; }
+
+    var hand = _getImg();
+
+    function _tapAt(i) {
+      var rect = els[i].getBoundingClientRect();
+      hand.style.opacity = '';
+      hand.style.left    = (rect.left + rect.width  * 0.5 - HAND_OFFSET_X) + 'px';
+      hand.style.top     = (rect.top  + rect.height * 0.5 - HAND_OFFSET_Y) + 'px';
+      hand.className     = 'hand-nudge';      /* reset … */
+      void hand.offsetWidth;                  /* … force reflow … */
+      hand.className     = 'hand-nudge hand-nudge--tap-once'; /* … restart */
+      if (i + 1 < els.length) {
+        _seqTimer = setTimeout(function () { _tapAt(i + 1); }, TAP_ONCE_MS);
+      }
+    }
+
+    _tapAt(0);
+    _hideTimer = setTimeout(hide, TAP_ONCE_MS * els.length + 700);
     _armDismiss();
   }
 
@@ -203,14 +248,25 @@ var HandNudge = (function () {
       return;
     }
 
-    /* 4. Priority operator (the specific op the student must tap first) */
-    var opTile = area.querySelector(SEL_PRIORITY_OP);
-    if (opTile) {
-      showTap(opTile);
+    /* 4. Priority operator(s) — when the lab has two tappable ops (e.g.
+          − and + in L4, × and ÷ in L5) visit each so the student sees
+          both are clickable, not just the first */
+    var opTiles = area.querySelectorAll(SEL_PRIORITY_OP);
+    if (opTiles.length) {
+      showTapSeq(opTiles);
       return;
     }
 
-    /* 5. Any other tappable element */
+    /* 5. Practice option groups — nudge every option in the group in turn */
+    for (var g = 0; g < SEL_TAP_GROUPS.length; g++) {
+      var opts = area.querySelectorAll(SEL_TAP_GROUPS[g]);
+      if (opts.length >= 2) {
+        showTapSeq(opts);
+        return;
+      }
+    }
+
+    /* 6. Any other tappable element */
     var tap = area.querySelector(SEL_TAPPABLE);
     if (tap) showTap(tap);
   }
@@ -236,7 +292,7 @@ var HandNudge = (function () {
     }
   }
 
-  return { init: init, showTap: showTap, showDrag: showDrag, hide: hide };
+  return { init: init, showTap: showTap, showTapSeq: showTapSeq, showDrag: showDrag, hide: hide };
 
 }());
 
