@@ -1,2 +1,8 @@
 .vercel/
 .vscode/
+
+# VO regeneration tooling — secrets, staging audio and rollback backups.
+# The generated MP3s in assets/sounds/vo/ ARE committed; these are not.
+tools/vo/.env.local
+tools/vo/.out/
+tools/vo/.backup-*/

@@ -170,7 +170,13 @@ function buildLoadingHTML() {
 function handleReset() {
   if (window.CONTENT_MODE && typeof ContentRenderer !== 'undefined') {
     var pageId = ContentRenderer.getCurrentPageId();
-    if (pageId) ContentRenderer.renderPage(pageId);
+    if (!pageId) return;
+    /* A reset is a clean re-entry, so the page's mount narration replays too
+       (renderPage alone would skip it as already-played). */
+    if (typeof Narration !== 'undefined' && Narration.forgetMount) {
+      Narration.forgetMount(pageId);
+    }
+    ContentRenderer.renderPage(pageId);
   }
 }
 

@@ -1,0 +1,42 @@
+{
+  "_readme": [
+    "Tuning + text fixes for tools/vo/generate.js. Editing this file changes ONLY",
+    "the generated audio — no game code reads it.",
+    "",
+    "cueText       — per-cue replacement for the VO Text column of VO-narration.md.",
+    "                Required for every cue whose table text contains a [placeholder],",
+    "                because a TTS engine speaks the brackets out loud.",
+    "pronunciation — whole-word, case-insensitive substitutions applied to every cue.",
+    "voiceSettings — passed straight through to the ElevenLabs request.",
+    "modelId       — eleven_multilingual_v2 (best quality) | eleven_turbo_v2_5 | eleven_flash_v2_5.",
+    "outputFormat  — mp3_44100_128 matches the existing files. mp3_44100_64 halves size",
+    "                if the 5.7 MB VO payload is too heavy for low-end Android.",
+    "seed          — fixed integer keeps re-runs byte-stable where the model supports it.",
+    "                Set to null to let the API choose."
+  ],
+
+  "modelId": "eleven_multilingual_v2",
+  "outputFormat": "mp3_44100_128",
+  "seed": 20260811,
+
+  "voiceSettings": {
+    "stability": 0.5,
+    "similarity_boost": 0.75,
+    "style": 0.3,
+    "use_speaker_boost": true
+  },
+
+  "cueText": {
+    "s1_1_compare": "Two different answers for the same sum! Multiplication first gives the answer shown here.",
+    "s2_1_compare": "Two different answers for the same sum! Multiplication first gives the answer shown here.",
+    "s3_1_compare": "Two different answers for the same sum! Division first gives the answer shown here.",
+    "s4_1_compare": "Two different answers for the same sum! Left to right gives the answer shown here.",
+    "s5_1_compare": "Two different answers for the same sum! Left to right gives the answer shown here.",
+    "s6_1_compare": "Brackets change the answer! Brackets first gives the answer shown here."
+  },
+
+  "pronunciation": {
+    "laddoos": "luh-doos",
+    "laddoo": "luh-doo"
+  }
+}

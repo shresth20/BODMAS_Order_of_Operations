@@ -49,13 +49,24 @@ var Narration = (function () {
   var _mountActive  = false;/* a playMount chain is in progress */
   var _idleCbs      = [];   /* callbacks waiting for narration to go idle */
 
-  /* ── Input gate: while narration speaks, user input is paused ───────────
-     A transparent overlay swallows pointer input and Enter/Space activation
-     until the current clip (and anything queued) finishes. It is released on
-     ended/error/autoplay-block/stop, plus a watchdog, so a bad file can never
-     lock the learner out. The narration itself stays supplementary — a muted
-     device just sees the gate lift almost immediately (no audio => idle). */
-  var _gateEl    = null;
+  /* ── Input gate: while narration speaks, learner input is paused ────────
+     Implemented as a capture-phase event filter (not a full-screen overlay)
+     so the persistent chrome never goes dead while a clip plays: the header
+     controls (reset / info / language / fullscreen), the modals they open,
+     and the dev skip nav stay live at all times. Everything else — board,
+     content, feedback — is swallowed until the current clip (and anything
+     queued) finishes. Released on ended/error/autoplay-block/stop plus a
+     watchdog, so a bad file can never lock the learner out. The narration
+     itself stays supplementary — a muted device just sees the gate lift
+     almost immediately (no audio => idle). */
+  var GATE_ALLOW_SEL = '#header, .modal-overlay, #dev-skip';
+
+  /* Pointer/tap events swallowed while the gate is up. touch* are bound
+     non-passive so preventDefault() actually suppresses the tap. */
+  var GATE_EVENTS = ['pointerdown', 'pointerup', 'mousedown', 'mouseup',
+                     'click', 'dblclick', 'touchstart', 'touchend'];
+
+  var _gateOn    = false;
   var _gateTimer = null;
   var _gateSince = 0;
 
@@ -64,38 +75,64 @@ var Narration = (function () {
            (!_current || _current.paused || _current.ended);
   }
 
+  /* Mirror the speaking state onto <body> so CSS can make the content area
+     properly inert — no taps, so no handler runs and the shared button click
+     sound never fires, and continue/next CTAs stay hidden until the cue ends.
+     Styling lives in css/core/style.css under `body.vo-speaking`. */
+  function _syncBodyFlags() {
+    if (!document.body) return;
+    document.body.classList.toggle('vo-speaking', !_isIdle());
+  }
+
+  /* True when the event target sits inside always-interactive chrome. */
+  function _gateAllows(node) {
+    var el = (node && node.nodeType === 1) ? node
+           : (node && node.parentElement) ? node.parentElement
+           : null;
+    return !!(el && el.closest && el.closest(GATE_ALLOW_SEL));
+  }
+
+  function _gatePointer(e) {
+    if (!_gateOn || _gateAllows(e.target)) return;
+    if (e.cancelable) e.preventDefault();
+    e.stopPropagation();
+  }
+
   function _gateKeydown(e) {
-    if (_gateEl && _gateEl.parentNode && (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar')) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    if (!_gateOn) return;
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+    if (_gateAllows(e.target) || _gateAllows(document.activeElement)) return;
+    e.preventDefault();
+    e.stopPropagation();
   }
 
   function _gateShow() {
-    if (!_gateEl) {
-      _gateEl = document.createElement('div');
-      _gateEl.id = 'vo-input-gate';
-      _gateEl.setAttribute('aria-hidden', 'true');
-      _gateEl.style.cssText =
-        'position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483000;' +
-        'background:transparent;cursor:default;';
-      document.addEventListener('keydown', _gateKeydown, true);
-    }
-    if (!_gateEl.parentNode) {
-      document.body.appendChild(_gateEl);
+    if (!_gateOn) {
+      _gateOn    = true;
       _gateSince = Date.now();
+      GATE_EVENTS.forEach(function (type) {
+        document.addEventListener(type, _gatePointer, { capture: true, passive: false });
+      });
+      document.addEventListener('keydown', _gateKeydown, true);
     }
     if (!_gateTimer) _gateTimer = setInterval(_syncGate, 400);
   }
 
   function _gateHide() {
-    if (_gateEl && _gateEl.parentNode) _gateEl.parentNode.removeChild(_gateEl);
+    if (_gateOn) {
+      _gateOn = false;
+      GATE_EVENTS.forEach(function (type) {
+        document.removeEventListener(type, _gatePointer, true);
+      });
+      document.removeEventListener('keydown', _gateKeydown, true);
+    }
     if (_gateTimer) { clearInterval(_gateTimer); _gateTimer = null; }
   }
 
   /* Recompute gate + flush idle callbacks. Called after every state change
      and by the watchdog interval while the gate is up. */
   function _syncGate() {
+    _syncBodyFlags();
     if (_isIdle()) {
       _gateHide();
       if (_idleCbs.length) {
@@ -106,7 +143,7 @@ var Narration = (function () {
     } else {
       /* Watchdog: no clip in this module exceeds ~15s — a gate up for 25s
          means a wedged element. Release everything rather than trap input. */
-      if (_gateEl && _gateEl.parentNode && Date.now() - _gateSince > 25000) {
+      if (_gateOn && Date.now() - _gateSince > 25000) {
         console.warn('[Narration] input gate watchdog fired — releasing');
         stop();
         return;
@@ -256,6 +293,7 @@ var Narration = (function () {
       if (done) return;
       done = true;
       _mountActive = false;
+      _syncBodyFlags();   /* before onEnded, so a CTA reveal is not hidden mid-animation */
       if (timer) { clearTimeout(timer); timer = null; }
       if (typeof opts.onEnded === 'function') opts.onEnded();
       _drainQueue(_gen);   /* cues queued while the chain spoke play now */
@@ -357,6 +395,15 @@ var Narration = (function () {
     document.addEventListener('touchstart', fn, { capture: true, passive: true });
   }
 
+  /* Forget a page's mount-cue memory so its next render narrates again.
+     Reset must return the page to a clean initial state, narration included —
+     without this, playMount() sees the page as already-played and skips
+     straight to onEnded. Omit pageId to forget every page. */
+  function forgetMount(pageId) {
+    if (pageId === undefined || pageId === null) { _playedMounts = {}; return; }
+    delete _playedMounts[pageId];
+  }
+
   function speak() {}
 
   /* Eagerly warm the very first screen so it starts the instant 1.0 renders. */
@@ -364,6 +411,7 @@ var Narration = (function () {
 
   return {
     play: play, stop: stop, queue: queue, speak: speak,
-    playMount: playMount, prefetchPage: prefetchPage, onIdle: onIdle
+    playMount: playMount, forgetMount: forgetMount,
+    prefetchPage: prefetchPage, onIdle: onIdle
   };
 }());

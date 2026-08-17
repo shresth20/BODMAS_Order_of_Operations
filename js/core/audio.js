@@ -28,9 +28,15 @@ var _sounds   = {};
   } catch(e) {}
 })();
 
-/* Single capture-phase listener — plays click sound on every button press */
+/* Single capture-phase listener — plays click sound on every button press.
+   Stays silent for content-area buttons while narration speaks: those taps are
+   gated (see voiceovers.js), and a click sound with no effect reads as a bug.
+   Header chrome keeps its sound — it is never gated. */
 document.addEventListener('click', function(e) {
-  if (e.target.closest('button')) _playSound(_sounds.click);
+  var btn = e.target && e.target.closest ? e.target.closest('button') : null;
+  if (!btn) return;
+  if (document.body.classList.contains('vo-speaking') && btn.closest('#content-area')) return;
+  _playSound(_sounds.click);
 }, true);
 
 /* Called on first submit — creates AudioContext for playComplete tones */

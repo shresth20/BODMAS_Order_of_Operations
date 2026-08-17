@@ -253,6 +253,11 @@ trust the code and fix this file.
 - **Fresh entry only, by construction:** the first time a page's mount chain fires,
   the page id is recorded in `_playedMounts`; every later visit skips the chain but
   still calls `onEnded`, so anything gated on it is never left locked.
+- **Reset is the one exception:** the header Reset button calls
+  `Narration.forgetMount(pageId)` before re-rendering, which drops that page's
+  `_playedMounts` entry so the mount chain narrates again — reset returns the page to
+  a clean initial state, narration included. It is per-page and one-shot (the replay
+  re-records the id); `forgetMount()` with no argument clears every page.
 - `onEnded` fires **exactly once** — after the last clip's natural end, or on file
   error, autoplay block, or the safety timeout (clip duration + 1.5 s once metadata
   is known, hard 20 s cap otherwise). Screens gate buttons on it (each `SX.0` intro
@@ -270,11 +275,33 @@ and feedback strings are shown by their own animation timelines (anime.js) the m
 their event happens, regardless of whether audio is playing, muted, or missing.
 
 - **Input gate:** while any cue is speaking (single clip, queue, or mount chain), a
-  transparent overlay (`#vo-input-gate` in `voiceovers.js`) blocks pointer input and
-  Enter/Space activation. The learner can only interact once the narration for the
-  current moment has finished — e.g. practice options are not tappable until the
-  question cue ends. The gate releases on `ended`, file error, autoplay block, or a
-  25 s watchdog, so a bad/blocked file can never lock the learner out.
+  capture-phase event filter (`_gateShow`/`_gatePointer` in `voiceovers.js`) swallows
+  pointer input and Enter/Space activation. The learner can only interact with the
+  board once the narration for the current moment has finished — e.g. practice options
+  are not tappable until the question cue ends. The gate releases on `ended`, file
+  error, autoplay block, or a 25 s watchdog, so a bad/blocked file can never lock the
+  learner out.
+  **Always exempt** (`GATE_ALLOW_SEL`), never gated at any point: the header controls
+  (reset / info / language / fullscreen), the modals they open (`.modal-overlay`), and
+  the temporary dev skip nav (`#dev-skip`). Persistent chrome must stay live even
+  mid-clip — a teacher needs reset, language and fullscreen on demand.
+- **The content area is properly inert, not merely unresponsive.** `voiceovers.js`
+  mirrors the speaking state as `body.vo-speaking`; `css/core/style.css` kills
+  `pointer-events` on `#content-area` and **every descendant** with `!important`
+  (some content controls set `pointer-events: auto` themselves — the lab next-buttons,
+  the insert-bracket gaps — and would otherwise stay tappable). Because taps never
+  land, no hover/active affordance appears and the shared button click SFX never
+  fires. `audio.js` also guards that SFX directly for content-area buttons while
+  `.vo-speaking` is set — a click sound with no effect reads as a bug to a student.
+  Header chrome keeps its click sound; it is never gated.
+- **Continue / next / start CTAs inside the content area appear only after the page's
+  narration finishes.** A CSS rule hides `#content-area button` whose class contains
+  `-cta`, `-next`, `-continue`, `-begin` or `-start` while `.vo-speaking` is set,
+  using `visibility` (not `display`) so nothing reflows when the button appears and
+  so it never fights the inline opacity/transform of an anime.js reveal. `playMount`
+  clears the flag *before* calling `onEnded`, so screens that reveal their own button
+  that way (`_revealStartBtn`) animate in fully visible. **Keep new CTA class names in
+  that naming family**, or add the class to the rule.
 - **VO-synced advance:** every auto-advance (next practice question, completion wipe,
   next nested-brackets question, next bracket puzzle, review advance) runs through
   `_voIdle(page, minMs, fn)` in `content-renderer.js` — `fn` fires after **both** the

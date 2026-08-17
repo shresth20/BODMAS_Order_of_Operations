@@ -566,6 +566,36 @@ body:has(.cp-l6i-wrap) .content-deco--l6-5 { display: block; }
   position: relative; overflow: hidden;
 }
 
+/* ── Narration gate: content area is inert while a cue speaks ──────────────
+   `body.vo-speaking` is toggled by js/content/voiceovers.js for the whole time
+   any cue is speaking (clip, queue or mount chain). Scope is #content-area
+   ONLY — the header controls, their modals and the dev skip nav stay live at
+   all times, and so does their click sound.
+
+   pointer-events is killed on every descendant with !important because some
+   content controls set `pointer-events: auto` themselves (e.g. the lab
+   next-buttons, the insert-bracket gaps) and would otherwise stay tappable.
+   Taps never reach a handler, so nothing runs and — because the shared click
+   SFX rides a click listener — no click sound plays either. Keyboard
+   activation is blocked in voiceovers.js (Enter/Space). */
+body.vo-speaking #content-area,
+body.vo-speaking #content-area * {
+  pointer-events: none !important;
+}
+
+/* Continue / next / start CTAs inside the content area appear only once the
+   page's narration has finished — matched on the -cta/-next/-continue/-begin/
+   -start naming used by the content pages. `visibility` (not `display`) keeps
+   the layout box, so nothing reflows when the button appears, and it never
+   fights the inline opacity/transform that anime.js reveal animations set. */
+body.vo-speaking #content-area button[class*="-cta"],
+body.vo-speaking #content-area button[class*="-next"],
+body.vo-speaking #content-area button[class*="-continue"],
+body.vo-speaking #content-area button[class*="-begin"],
+body.vo-speaking #content-area button[class*="-start"] {
+  visibility: hidden;
+}
+
 /* ── Loader overlay (full-screen blur, blocks all interaction) ── */
 .loader-overlay {
   position: fixed;
